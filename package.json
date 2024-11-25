@@ -6,21 +6,34 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "vite build",
-    "build:types": "tsc"
+    "build": "vite build && tsc",
+    "format": "prettier --write 'src/**/*.{ts,tsx,js,jsx}'",
+    "prepare": "husky"
   },
-  "keywords": ["react", "components", "typescript", "library", "taktik"],
+  "keywords": [
+    "react",
+    "components",
+    "typescript",
+    "library",
+    "taktik"
+  ],
   "dependencies": {
+    "husky": "^9.1.7",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": "prettier --write"
+  },
   "devDependencies": {
-    "vite": "5.4.11",
-    "vite-plugin-dts": "4.3.0",
-    "@vitejs/plugin-react": "4.3.3",
+    "lint-staged": "15.2.10",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "4.3.3",
     "globals": "15.12.0",
-    "typescript": "5.7.2"
+    "prettier": "^3.3.3",
+    "typescript": "5.7.2",
+    "vite": "5.4.11",
+    "vite-plugin-dts": "4.3.0"
   }
 }
