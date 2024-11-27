@@ -8,7 +8,8 @@
   "scripts": {
     "build": "vite build && tsc",
     "format": "prettier --write 'src/**/*.{ts,tsx,js,jsx}'",
-    "prepare": "husky"
+    "prepare": "husky",
+    "storybook": "storybook dev -p 6006"
   },
   "keywords": [
     "react",
@@ -18,22 +19,33 @@
     "taktik"
   ],
   "dependencies": {
-    "husky": "^9.1.7",
+    "@emotion/react": "11.13.5",
+    "@emotion/styled": "11.13.5",
+    "@mui/icons-material": "^6.1.8",
+    "@mui/material": "6.1.8",
+    "@storybook/addon-essentials": "8.4.5",
+    "@storybook/react": "8.4.5",
+    "husky": "9.1.7",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-data-grid": "7.0.0-beta.47",
+    "react-dom": "18.3.1",
+    "storybook": "^8.4.5"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": "prettier --write"
   },
   "devDependencies": {
-    "lint-staged": "15.2.10",
+    "@storybook/react-vite": "^8.4.5",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "4.3.3",
     "globals": "15.12.0",
+    "lint-staged": "15.2.10",
     "prettier": "^3.3.3",
     "typescript": "5.7.2",
     "vite": "5.4.11",
-    "vite-plugin-dts": "4.3.0"
+    "vite-plugin-dts": "4.3.0",
+    "vite-plugin-static-copy": "2.1.0",
+    "vite-plugin-svgr": "4.3.0"
   }
 }
