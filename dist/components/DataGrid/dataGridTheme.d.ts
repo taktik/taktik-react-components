@@ -1,0 +1,23 @@
+export type DataGridTheme = {
+    '--rdg-color'?: string;
+    '--rdg-header-color'?: string;
+    '--rdg-border-color'?: string;
+    '--rdg-summary-border-color'?: string;
+    '--rdg-background-color'?: string;
+    '--rdg-header-background-color'?: string;
+    '--rdg-header-draggable-background-color'?: string;
+    '--rdg-row-hover-background-color'?: string;
+    '--rdg-row-selected-background-color'?: string;
+    '--rdg-row-selected-hover-background-color'?: string;
+    '--rdg-checkbox-focus-color'?: string;
+    '--rdg-selection-color'?: string;
+    '--rdg-font-size'?: string;
+    '--rdg-cell-frozen-box-shadow'?: string;
+    '--rdg-line-height'?: string;
+    '--rdg-font-weight'?: string;
+    '--rdg-font-family'?: string;
+    '--rdg-border-size'?: string;
+    '--rdg-cell-padding'?: string;
+    '--rdg-border-radius-container'?: string;
+};
+export declare const defaultTheme: DataGridTheme;
