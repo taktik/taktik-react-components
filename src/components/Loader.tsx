@@ -22,7 +22,7 @@ export const StyledLoader = styled.div<{ $color?: LoaderColor }>`
         height: 4px; // 13px
         transform: translateY(-50%);
         border-radius: 50%;
-        background: ${taktikTheme.gray800};
+        background: ${taktikTheme.gray900};
         ${({ $color, theme }) => {
             switch ($color) {
                 case 'primary': {

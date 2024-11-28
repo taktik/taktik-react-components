@@ -4,7 +4,10 @@ import styled from '@emotion/styled'
 import MUIIconButton from '@mui/material/IconButton'
 import { taktikTheme } from './theme'
 
-export const IconButton = styled(MUIIconButton)<{
+export const IconButton = styled(MUIIconButton, {
+    shouldForwardProp: (prop) =>
+        !['$background', '$hoverBackground', '$activeBackground', '$color'].includes(prop)
+})<{
     $background?: string
     $hoverBackground?: string
     $activeBackground?: string

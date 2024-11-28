@@ -3,6 +3,7 @@ import { taktikTheme } from '../theme'
 
 export const Container = styled.div`
   width: 100%;
+  position: relative;
   height: 100%;
 
   *::-webkit-scrollbar {
