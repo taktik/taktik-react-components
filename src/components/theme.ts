@@ -1,4 +1,85 @@
-export const taktikTheme = {
+export interface ITheme {
+    mainToolBarColor: 'hsl(214, 74%, 17%)'
+    /* Gray */
+    gray900: string
+    gray800: string
+    gray700: string
+    gray600: string
+    gray500: string
+    gray400: string
+    gray300: string
+    gray200: string
+    /* Primary */
+    gray100: string
+    primary900: string
+    primary800: string
+    primary700: string
+    primary600: string
+    primary500: string
+    primary400: string
+    primary300: string
+    primary200: string
+    primary100: string
+    primary50: string
+    /* Teal */
+    forcewhite: string
+    teal900: string
+    teal800: string
+    teal700: string
+    teal600: string
+    teal500: string
+    teal400: string
+    teal300: string
+    teal200: string
+    teal100: string
+    teal50: string
+    /* Pink */
+    pink900: string
+    pink800: string
+    pink700: string
+    pink600: string
+    pink500: string
+    pink400: string
+    pink300: string
+    pink200: string
+    pink100: string
+    pink50: string
+    /* Red */
+    red900: string
+    red800: string
+    red700: string
+    red600: string
+    red500: string
+    red400: string
+    red300: string
+    red200: string
+    red100: string
+    red50: string
+    /* Yellow */
+    yellow900: string
+    yellow800: string
+    yellow700: string
+    yellow600: string
+    yellow500: string
+    yellow400: string
+    yellow300: string
+    yellow200: string
+    yellow100: string
+    yellow50: string
+    /* Purple */
+    purple50: string
+    purple100: string
+    purple200: string
+    purple300: string
+    purple400: string
+    purple500: string
+    purple600: string
+    purple700: string
+    purple800: string
+    purple900: string
+}
+
+export const taktikTheme: ITheme = {
     mainToolBarColor: 'hsl(214, 74%, 17%)',
     /* Gray */
     gray900: '#1E252D',
