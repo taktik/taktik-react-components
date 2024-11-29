@@ -58,7 +58,7 @@ export const DataGrid = React.memo(({ theme, loading, ...rest }: DataGridProps<R
             {loading ? (
                 <ContainerLoading>
                     <div></div>
-                    <Loader color={'secondary'} />
+                    <Loader color={taktikTheme.primary500} />
                 </ContainerLoading>
             ) : null}
         </Container>

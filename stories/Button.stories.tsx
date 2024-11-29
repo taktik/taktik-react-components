@@ -2,20 +2,11 @@ import { Button } from '../dist'
 import { StoryObj } from '@storybook/react'
 import LogoutIcon from '@mui/icons-material/Logout'
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
-import styled from '@emotion/styled'
+import { Container } from './Container'
 
 export default {
     component: Button
 }
-
-const Container = styled.div`
-    height: 100%;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-`
 
 export const Buttons = () => {
     return (

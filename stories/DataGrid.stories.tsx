@@ -28,14 +28,7 @@ const columns: ColumnDefinition<Row>[] = [
     { name: 'Column 5', key: 'col5' }
 ]
 
-export const DataGridLightMode: { args: DataGridProps<Row> } = {
-    args: {
-        rows,
-        columns
-    }
-}
-
-export const DataGridDarkMode: StoryObj = {
+export const BasicDataGrid: StoryObj = {
     parameters: {
         backgrounds: {
             default: 'dark'
@@ -43,12 +36,7 @@ export const DataGridDarkMode: StoryObj = {
     },
     args: {
         rows,
-        columns,
-        theme: {
-            '--rdg-color': 'white',
-            '--rdg-header-color': 'white',
-            '--rdg-border-color': 'white'
-        }
+        columns
     }
 }
 
@@ -64,12 +52,7 @@ export const DataGridColumnResize: StoryObj = {
     },
     args: {
         rows,
-        columns: columnsResizable,
-        theme: {
-            '--rdg-color': 'white',
-            '--rdg-header-color': 'white',
-            '--rdg-border-color': 'white'
-        }
+        columns: columnsResizable
     }
 }
 type Comparator = (a: Row, b: Row) => number
@@ -168,5 +151,13 @@ export const DataGridActionColumn: { args: DataGridProps<Row> } = {
     args: {
         rows,
         columns: columnsWithActionColumn
+    }
+}
+
+export const DataGridLoading: { args: DataGridProps<Row> } = {
+    args: {
+        loading: true,
+        rows,
+        columns
     }
 }

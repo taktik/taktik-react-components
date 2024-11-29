@@ -2,7 +2,10 @@ import MUIChip from '@mui/material/Chip'
 import styled from '@emotion/styled'
 import { taktikTheme } from './theme'
 
-export const Chip = styled(MUIChip)`
+export const Chip = styled(MUIChip, { shouldForwardProp: (prop) => !prop.startsWith('$') })<{
+    $color?: string
+    $backgroundColor?: string
+}>`
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -13,5 +16,7 @@ export const Chip = styled(MUIChip)`
     font-style: normal;
     font-weight: 500;
     font-size: 0.65625rem;
-    color: ${taktikTheme.primary50};
+    color: ${({ $color }) => $color ?? taktikTheme.primary500};
+    background: ${({ $backgroundColor }) => $backgroundColor ?? taktikTheme.primary100};
+    width: fit-content;
 `
