@@ -2,7 +2,6 @@ import React from 'react'
 
 import styled from '@emotion/styled'
 import MUIIconButton from '@mui/material/IconButton'
-import { taktikTheme } from './theme'
 
 export const IconButton = styled(MUIIconButton, {
     shouldForwardProp: (prop) =>
@@ -24,11 +23,11 @@ export const IconButton = styled(MUIIconButton, {
     background: ${({ $background }) => $background ?? 'transparent'};
 
     &:hover {
-        background: ${({ $hoverBackground }) => $hoverBackground ?? taktikTheme.gray300};
+        background: ${({ $hoverBackground, theme }) => $hoverBackground ?? theme.gray300};
     }
 
     &:active {
-        background: ${({ $activeBackground }) => $activeBackground ?? taktikTheme.gray400};
+        background: ${({ $activeBackground, theme }) => $activeBackground ?? theme.gray400};
         transition: background 0.1s ease-in-out;
     }
 

@@ -8,11 +8,11 @@ import { DataGridTheme, defaultTheme } from './dataGridTheme'
 import { Container } from './Container'
 import { Loader } from '../Loader'
 import styled from '@emotion/styled'
-import { taktikTheme } from '../theme'
 import { ColumnDefinition, RowDefinition } from './types'
 import { useLocalSorting } from './hooks/useLocalSorting'
 import { useComputeFinalColumns } from './hooks/useComputeFinalColumns'
 import { Checkbox } from '../Checkbox'
+import { useTheme } from '@emotion/react'
 
 export * from 'react-data-grid'
 
@@ -40,7 +40,7 @@ const ContainerLoading = styled.div`
     justify-content: center;
 
     > div:first-child {
-        background-color: ${taktikTheme.primary500};
+        background-color: ${({ theme }) => theme.primary500};
         opacity: 0.1;
 
         position: absolute;
@@ -73,6 +73,8 @@ export const DataGrid = React.memo(
         onSelectedRowsChange,
         ...rest
     }: DataGridProps<RowDefinition>) => {
+        const emotionTheme = useTheme()
+        console.log('emotionTheme', emotionTheme)
         const finalColumns = useComputeFinalColumns({
             columns,
             selectionEnabled: !!onSelectedRowsChange
@@ -134,7 +136,7 @@ export const DataGrid = React.memo(
                 {loading ? (
                     <ContainerLoading>
                         <div></div>
-                        <Loader color={taktikTheme.primary500} />
+                        <Loader color={emotionTheme.primary500} />
                     </ContainerLoading>
                 ) : null}
             </Container>

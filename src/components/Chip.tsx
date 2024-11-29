@@ -1,6 +1,5 @@
 import MUIChip from '@mui/material/Chip'
 import styled from '@emotion/styled'
-import { taktikTheme } from './theme'
 
 export const Chip = styled(MUIChip, { shouldForwardProp: (prop) => !prop.startsWith('$') })<{
     $color?: string
@@ -16,7 +15,7 @@ export const Chip = styled(MUIChip, { shouldForwardProp: (prop) => !prop.startsW
     font-style: normal;
     font-weight: 500;
     font-size: 0.65625rem;
-    color: ${({ $color }) => $color ?? taktikTheme.primary500};
-    background: ${({ $backgroundColor }) => $backgroundColor ?? taktikTheme.primary100};
+    color: ${({ $color, theme }) => $color ?? theme.primary500};
+    background: ${({ $backgroundColor, theme }) => $backgroundColor ?? theme.primary100};
     width: fit-content;
 `

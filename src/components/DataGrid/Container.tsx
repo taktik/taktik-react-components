@@ -1,5 +1,4 @@
 import styled from '@emotion/styled'
-import { taktikTheme } from '../theme'
 
 export const Container = styled.div`
   width: 100%;
@@ -12,22 +11,22 @@ export const Container = styled.div`
   }
 
   *::-webkit-scrollbar-thumb {
-    background-color: ${taktikTheme.primary500};
+    background-color: ${({ theme }) => theme.primary500};
     border-radius: 8px;
     border: none;
   }
 
   *::-webkit-scrollbar-track {
-    background-color: ${taktikTheme.gray100};
+    background-color: ${({ theme }) => theme.gray100};
     border-radius: 8px;
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background-color${taktikTheme.primary500};
+    background-color${({ theme }) => theme.primary500};
   }
 
   *::-webkit-scrollbar-track:hover {
-    background-color: ${taktikTheme.gray200};
+    background-color: ${({ theme }) => theme.gray200};
   }
 
   .rdg {

@@ -1,6 +1,5 @@
 import styled from '@emotion/styled'
 import MUIButton from '@mui/material/Button'
-import { taktikTheme } from './theme'
 import { css } from '@emotion/react'
 
 type Level = 'primary' | 'secondary' | 'default'
@@ -14,25 +13,25 @@ export const Button = styled(MUIButton, {
     padding: 0.125rem 0.75rem 0.125rem 0.5rem;
     height: 2rem;
     border-radius: 4px;
-    ${({ $level }) => {
+    ${({ $level, theme }) => {
         switch ($level) {
             case 'primary': {
                 return css`
-                    background: ${taktikTheme.primary500};
-                    color: ${taktikTheme.gray100};
+                    background: ${theme.primary500};
+                    color: ${theme.gray100};
                 `
             }
             case 'secondary': {
                 return css`
-                    border: 1px solid ${taktikTheme.primary500};
-                    background: ${taktikTheme.gray100};
-                    color: ${taktikTheme.primary500};
+                    border: 1px solid ${theme.primary500};
+                    background: ${theme.gray100};
+                    color: ${theme.primary500};
                 `
             }
             default: {
                 return css`
-                    background: ${taktikTheme.gray100};
-                    color: ${taktikTheme.gray700};
+                    background: ${theme.gray100};
+                    color: ${theme.gray700};
                 `
             }
         }

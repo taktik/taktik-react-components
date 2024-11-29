@@ -52,7 +52,6 @@ export const useLocalSorting = <R extends RowDefinition = RowDefinition>(
     const [sortColumns, setSortedColumns] = useState<SortColumn[]>(defaultSortColumns ?? [])
 
     const sortedRows = useMemo(() => {
-        console.log(sortColumns)
         if (sortColumns.length === 0) return rows
         return [...rows].sort((a, b) => {
             for (const sort of sortColumns) {
@@ -63,8 +62,6 @@ export const useLocalSorting = <R extends RowDefinition = RowDefinition>(
                     column?.sortComparator
                 )
                 const compResult = comparator(a, b)
-                console.log('compResult', compResult)
-                console.log('sort.direction', sort.direction)
                 if (compResult !== 0) {
                     return sort.direction === 'ASC' ? compResult : -compResult
                 }
