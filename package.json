@@ -3,7 +3,8 @@
   "private": false,
   "version": "0.0.8",
   "type": "module",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "vite build && tsc",
     "format": "prettier --write 'src/**/*.{ts,tsx,js,jsx}'",
@@ -41,6 +42,14 @@
     "*.{js,jsx,ts,tsx}": "prettier --write"
   },
   "devDependencies": {
+    "@emotion/react": "11.13.5",
+    "@emotion/styled": "11.13.5",
+    "@mui/icons-material": "^6.1.8",
+    "@mui/material": "6.1.8",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "@storybook/react-vite": "^8.4.5",
     "@vitejs/plugin-react": "4.3.3",
     "globals": "15.12.0",
