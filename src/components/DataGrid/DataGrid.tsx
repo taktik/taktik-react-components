@@ -13,6 +13,7 @@ import { useLocalSorting } from './hooks/useLocalSorting'
 import { useComputeFinalColumns } from './hooks/useComputeFinalColumns'
 import { Checkbox } from '../Checkbox'
 import { useTheme } from '@emotion/react'
+import 'react-data-grid/lib/styles.css'
 
 export * from 'react-data-grid'
 
