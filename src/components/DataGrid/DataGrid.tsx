@@ -1,19 +1,23 @@
-import React, { useCallback } from 'react'
-import Grid, { Column, DataGridProps as DataGridPropsFromLib } from 'react-data-grid'
+import React, { useCallback, useMemo } from 'react'
+import Grid, { DataGridProps as DataGridPropsFromLib, SortColumn } from 'react-data-grid'
 import { DataGridTheme, defaultTheme } from './dataGridTheme'
 import { Container } from './Container'
 import { Loader } from '../Loader'
 import styled from '@emotion/styled'
 import { taktikTheme } from '../theme'
+import { ColumnDefinition, RowDefinition } from './types'
+import { useLocalSorting } from './hooks/useLocalSorting'
+import { useComputeFinalColumns } from './hooks/useComputeFinalColumns'
 
-export type DataGridProps<Row extends RowDefinition> = DataGridPropsFromLib<Row> & {
+export type DataGridProps<Row extends RowDefinition> = Omit<
+    DataGridPropsFromLib<Row>,
+    'columns' | 'rows'
+> & {
+    defaultSortColumns?: SortColumn[]
+    columns: ColumnDefinition<Row>[]
+    rows: Row[]
     theme?: DataGridTheme
     loading?: boolean
-}
-export type ColumnDefinition<Row extends RowDefinition = RowDefinition> = Column<Row>
-
-export type RowDefinition<Row = {}> = Row & {
-    id: string
 }
 
 const ContainerLoading = styled.div`
@@ -35,32 +39,59 @@ const ContainerLoading = styled.div`
         height: 100%;
     }
 `
-export const DataGrid = React.memo(({ theme, loading, ...rest }: DataGridProps<RowDefinition>) => {
-    const computeRawClass = useCallback(
-        (_: RowDefinition, index: number) => {
-            if (index === 0) {
-                return 'first-row'
-            } else if (index === rest.rows.length - 1) {
-                return 'last-row'
-            }
-            return ''
-        },
-        [rest.rows]
-    )
-    return (
-        <Container>
-            <Grid
-                {...rest}
-                rowClass={computeRawClass}
-                rowHeight={50}
-                style={{ ...defaultTheme, ...(theme ?? {}) } as React.CSSProperties}
-            />
-            {loading ? (
-                <ContainerLoading>
-                    <div></div>
-                    <Loader color={taktikTheme.primary500} />
-                </ContainerLoading>
-            ) : null}
-        </Container>
-    )
-})
+
+export const DataGrid = React.memo(
+    ({
+        theme,
+        loading,
+        rows,
+        columns,
+        sortColumns,
+        onSortColumnsChange,
+        defaultSortColumns,
+        ...rest
+    }: DataGridProps<RowDefinition>) => {
+        const finalColumns = useComputeFinalColumns(columns)
+        const {
+            sortedRows: localSortedRows,
+            sortColumns: localSortColumns,
+            setSortedColumns: localSetSortedColumns
+        } = useLocalSorting(finalColumns, rows, defaultSortColumns)
+
+        const isLocalSorting = useMemo(() => !onSortColumnsChange, [onSortColumnsChange])
+        const computeRawClass = useCallback(
+            (_: RowDefinition, index: number) => {
+                if (index === 0) {
+                    return 'first-row'
+                } else if (index === rows.length - 1) {
+                    return 'last-row'
+                }
+                return ''
+            },
+            [rows]
+        )
+
+        return (
+            <Container>
+                <Grid
+                    {...rest}
+                    rows={isLocalSorting ? localSortedRows : rows}
+                    onSortColumnsChange={
+                        isLocalSorting ? localSetSortedColumns : onSortColumnsChange
+                    }
+                    sortColumns={isLocalSorting ? localSortColumns : sortColumns}
+                    columns={finalColumns}
+                    rowClass={computeRawClass}
+                    rowHeight={50}
+                    style={{ ...defaultTheme, ...(theme ?? {}) } as React.CSSProperties}
+                />
+                {loading ? (
+                    <ContainerLoading>
+                        <div></div>
+                        <Loader color={taktikTheme.primary500} />
+                    </ContainerLoading>
+                ) : null}
+            </Container>
+        )
+    }
+)

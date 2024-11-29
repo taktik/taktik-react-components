@@ -1,5 +1,5 @@
 export * from './Button';
-export * from './DataGrid/DataGrid';
+export * from './DataGrid';
 export * from './IconButton';
 export * from './theme';
 export * from './Loader';

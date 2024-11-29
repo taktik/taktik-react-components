@@ -1,12 +1,12 @@
 import React from 'react';
-import { Column, DataGridProps as DataGridPropsFromLib } from 'react-data-grid';
+import { DataGridProps as DataGridPropsFromLib, SortColumn } from 'react-data-grid';
 import { DataGridTheme } from './dataGridTheme';
-export type DataGridProps<Row extends RowDefinition> = DataGridPropsFromLib<Row> & {
+import { ColumnDefinition, RowDefinition } from './types';
+export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib<Row>, 'columns' | 'rows'> & {
+    defaultSortColumns?: SortColumn[];
+    columns: ColumnDefinition<Row>[];
+    rows: Row[];
     theme?: DataGridTheme;
     loading?: boolean;
 };
-export type ColumnDefinition<Row extends RowDefinition = RowDefinition> = Column<Row>;
-export type RowDefinition<Row = {}> = Row & {
-    id: string;
-};
-export declare const DataGrid: React.MemoExoticComponent<({ theme, loading, ...rest }: DataGridProps<RowDefinition>) => import("react/jsx-runtime").JSX.Element>;
+export declare const DataGrid: React.MemoExoticComponent<({ theme, loading, rows, columns, sortColumns, onSortColumnsChange, defaultSortColumns, ...rest }: DataGridProps<RowDefinition>) => import("react/jsx-runtime").JSX.Element>;
