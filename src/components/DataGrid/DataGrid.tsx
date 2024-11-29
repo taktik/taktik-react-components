@@ -1,5 +1,9 @@
-import React, { useCallback, useMemo } from 'react'
-import Grid, { DataGridProps as DataGridPropsFromLib, SortColumn } from 'react-data-grid'
+import React, { useCallback, useEffect, useMemo } from 'react'
+import Grid, {
+    DataGridProps as DataGridPropsFromLib,
+    RenderCheckboxProps,
+    SortColumn
+} from 'react-data-grid'
 import { DataGridTheme, defaultTheme } from './dataGridTheme'
 import { Container } from './Container'
 import { Loader } from '../Loader'
@@ -8,16 +12,22 @@ import { taktikTheme } from '../theme'
 import { ColumnDefinition, RowDefinition } from './types'
 import { useLocalSorting } from './hooks/useLocalSorting'
 import { useComputeFinalColumns } from './hooks/useComputeFinalColumns'
+import { Checkbox } from '../Checkbox'
+
+export * from 'react-data-grid'
 
 export type DataGridProps<Row extends RowDefinition> = Omit<
     DataGridPropsFromLib<Row>,
-    'columns' | 'rows'
+    'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange'
 > & {
+    selectable?: boolean
     defaultSortColumns?: SortColumn[]
     columns: ColumnDefinition<Row>[]
     rows: Row[]
     theme?: DataGridTheme
     loading?: boolean
+    selectedRows?: string[]
+    onSelectedRowsChange?: (rows: string[]) => void
 }
 
 const ContainerLoading = styled.div`
@@ -40,6 +50,16 @@ const ContainerLoading = styled.div`
     }
 `
 
+const RenderCheckbox = React.memo(({ checked, onChange }: RenderCheckboxProps) => {
+    const onChangeFn = useCallback(
+        (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+            onChange(checked, (event.nativeEvent as MouseEvent).shiftKey)
+        },
+        [onChange]
+    )
+    return <Checkbox checked={checked} onChange={onChangeFn} />
+})
+
 export const DataGrid = React.memo(
     ({
         theme,
@@ -49,9 +69,15 @@ export const DataGrid = React.memo(
         sortColumns,
         onSortColumnsChange,
         defaultSortColumns,
+        selectedRows,
+        onSelectedRowsChange,
         ...rest
     }: DataGridProps<RowDefinition>) => {
-        const finalColumns = useComputeFinalColumns(columns)
+        const finalColumns = useComputeFinalColumns({
+            columns,
+            selectionEnabled: !!onSelectedRowsChange
+        })
+
         const {
             sortedRows: localSortedRows,
             sortColumns: localSortColumns,
@@ -71,10 +97,27 @@ export const DataGrid = React.memo(
             [rows]
         )
 
+        /**
+         * Be sure only rows displayed are selected
+         */
+        useEffect(() => {
+            const selectedRowsAvailable = selectedRows?.filter((rowId) =>
+                rows.some((row) => row.id === rowId)
+            )
+            if (selectedRowsAvailable?.length != selectedRows?.length) {
+                onSelectedRowsChange?.(selectedRowsAvailable ?? [])
+            }
+        }, [rows, selectedRows])
+
         return (
             <Container>
                 <Grid
                     {...rest}
+                    selectedRows={selectedRows ? new Set(selectedRows) : undefined}
+                    onSelectedRowsChange={(value: ReadonlySet<unknown>) => {
+                        onSelectedRowsChange?.(Array.from(value) as string[])
+                    }}
+                    rowKeyGetter={(row: RowDefinition) => row.id}
                     rows={isLocalSorting ? localSortedRows : rows}
                     onSortColumnsChange={
                         isLocalSorting ? localSetSortedColumns : onSortColumnsChange
@@ -83,6 +126,9 @@ export const DataGrid = React.memo(
                     columns={finalColumns}
                     rowClass={computeRawClass}
                     rowHeight={50}
+                    renderers={{
+                        renderCheckbox: (props) => <RenderCheckbox {...props} />
+                    }}
                     style={{ ...defaultTheme, ...(theme ?? {}) } as React.CSSProperties}
                 />
                 {loading ? (

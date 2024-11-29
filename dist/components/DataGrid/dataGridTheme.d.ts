@@ -19,5 +19,6 @@ export type DataGridTheme = {
     '--rdg-border-size'?: string;
     '--rdg-cell-padding'?: string;
     '--rdg-border-radius-container'?: string;
+    '--rdg-row-selected-color'?: string;
 };
 export declare const defaultTheme: DataGridTheme;

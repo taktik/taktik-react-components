@@ -70,6 +70,13 @@ export const Container = styled.div`
   }
 
   .rdg-row {
+    &[aria-selected='true'] {
+
+      .rdg-cell {
+        color: var(--rdg-row-selected-color);
+      }
+    }
+
     &.first-row {
       .rdg-cell {
         border-top: solid var(--rdg-border-size) var(--rdg-border-color);
@@ -106,20 +113,4 @@ export const Container = styled.div`
       }
     }
   }
-
-  //.rdg-row-even {
-  //
-  //    .rdg-cell {
-  //        border-top: solid var(--rdg-border-size) var(--rdg-border-color);
-  //        border-bottom: solid var(--rdg-border-size) var(--rdg-border-color);
-  //
-  //        &:first-child {
-  //            border-left: solid var(--rdg-border-size) var(--rdg-border-color);
-  //        }
-  //
-  //        &:last-child {
-  //            border-right: solid var(--rdg-border-size) var(--rdg-border-color);
-  //        }
-  //    }
-  //}
 `

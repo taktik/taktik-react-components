@@ -1,5 +1,5 @@
 import { formatInTimeZone } from 'date-fns-tz'
-import { isValid } from 'date-fns'
+import { isDate, isValid } from 'date-fns'
 
 export enum DATE_FORMAT {
     UTC_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'",
@@ -11,7 +11,8 @@ export const convertDate = (value: unknown, format: string = DATE_FORMAT.UTC_FOR
     if (!value) {
         return ''
     }
-    if (!isValid(value)) {
+    const date = !isDate(value) && typeof value === 'string' ? new Date(value) : value
+    if (!isValid(date)) {
         return '--'
     }
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
