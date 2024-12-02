@@ -6,14 +6,14 @@ import Grid, {
 } from 'react-data-grid'
 import { DataGridTheme, defaultTheme } from './dataGridTheme'
 import { Container } from './Container'
-import { Loader } from '../Loader'
 import styled from '@emotion/styled'
 import { ColumnDefinition, RowDefinition } from './types'
 import { useLocalSorting } from './hooks/useLocalSorting'
 import { useComputeFinalColumns } from './hooks/useComputeFinalColumns'
-import { Checkbox } from '../Checkbox'
-import { useTheme } from '@emotion/react'
+import { DataGridCheckbox } from './DataGridCheckbox'
 import 'react-data-grid/lib/styles.css'
+import { taktikTheme } from '../theme'
+import { PulseLoader } from 'react-spinners'
 
 export * from 'react-data-grid'
 
@@ -58,7 +58,7 @@ const RenderCheckbox = React.memo(({ checked, onChange }: RenderCheckboxProps) =
         },
         [onChange]
     )
-    return <Checkbox checked={checked} onChange={onChangeFn} />
+    return <DataGridCheckbox checked={checked} onChange={onChangeFn} />
 })
 
 export const DataGrid = React.memo(
@@ -74,8 +74,6 @@ export const DataGrid = React.memo(
         onSelectedRowsChange,
         ...rest
     }: DataGridProps<RowDefinition>) => {
-        const emotionTheme = useTheme()
-        console.log('emotionTheme', emotionTheme)
         const finalColumns = useComputeFinalColumns({
             columns,
             selectionEnabled: !!onSelectedRowsChange
@@ -137,7 +135,7 @@ export const DataGrid = React.memo(
                 {loading ? (
                     <ContainerLoading>
                         <div></div>
-                        <Loader color={emotionTheme.primary500} />
+                        <PulseLoader color={taktikTheme.primary500} />
                     </ContainerLoading>
                 ) : null}
             </Container>
