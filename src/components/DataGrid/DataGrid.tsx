@@ -29,6 +29,7 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
     loading?: boolean
     selectedRows?: string[]
     onSelectedRowsChange?: (rows: string[]) => void
+    noDataMessage?: string
 }
 
 const ContainerLoading = styled.div`
@@ -71,6 +72,7 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
     defaultSortColumns,
     selectedRows,
     onSelectedRowsChange,
+    noDataMessage,
     ...rest
 }: DataGridProps<R>) => {
     const finalColumns = useComputeFinalColumns({
@@ -125,7 +127,11 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
                 rowClass={computeRawClass}
                 rowHeight={50}
                 renderers={{
-                    renderCheckbox: (props) => <RenderCheckbox {...props} />
+                    renderCheckbox: (props) => <RenderCheckbox {...props} />,
+                    noRowsFallback: (
+                        <div className={'rdg-no-data'}>{noDataMessage ?? 'No data'}</div>
+                    ),
+                    ...rest.renderers
                 }}
                 style={{ ...defaultTheme, ...(theme ?? {}) } as React.CSSProperties}
             />

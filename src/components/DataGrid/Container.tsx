@@ -51,6 +51,11 @@ export const Container = styled.div`
     padding: var(--rdg-cell-padding) !important;
   }
 
+  .rdg-no-data {
+    text-align: center;
+    grid-column: 1/-1;
+  }
+
   .rdg-cell-resizable {
     > div {
       width: 5px;

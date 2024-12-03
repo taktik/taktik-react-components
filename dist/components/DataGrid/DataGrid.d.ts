@@ -12,7 +12,8 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
     loading?: boolean;
     selectedRows?: string[];
     onSelectedRowsChange?: (rows: string[]) => void;
+    noDataMessage?: string;
 };
 export declare const DataGrid: <R extends RowDefinition = {
     id: string;
-}>({ theme, loading, rows, columns, sortColumns, onSortColumnsChange, defaultSortColumns, selectedRows, onSelectedRowsChange, ...rest }: DataGridProps<R>) => import("react/jsx-runtime").JSX.Element;
+}>({ theme, loading, rows, columns, sortColumns, onSortColumnsChange, defaultSortColumns, selectedRows, onSelectedRowsChange, noDataMessage, ...rest }: DataGridProps<R>) => import("react/jsx-runtime").JSX.Element;
