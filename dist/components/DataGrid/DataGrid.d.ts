@@ -1,4 +1,3 @@
-import React from 'react';
 import { DataGridProps as DataGridPropsFromLib, SortColumn } from 'react-data-grid';
 import { DataGridTheme } from './dataGridTheme';
 import { ColumnDefinition, RowDefinition } from './types';
@@ -14,4 +13,6 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
     selectedRows?: string[];
     onSelectedRowsChange?: (rows: string[]) => void;
 };
-export declare const DataGrid: React.MemoExoticComponent<({ theme, loading, rows, columns, sortColumns, onSortColumnsChange, defaultSortColumns, selectedRows, onSelectedRowsChange, ...rest }: DataGridProps<RowDefinition>) => import("react/jsx-runtime").JSX.Element>;
+export declare const DataGrid: <R extends RowDefinition = {
+    id: string;
+}>({ theme, loading, rows, columns, sortColumns, onSortColumnsChange, defaultSortColumns, selectedRows, onSelectedRowsChange, ...rest }: DataGridProps<R>) => import("react/jsx-runtime").JSX.Element;

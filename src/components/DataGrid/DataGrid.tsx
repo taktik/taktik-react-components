@@ -61,84 +61,80 @@ const RenderCheckbox = React.memo(({ checked, onChange }: RenderCheckboxProps) =
     return <DataGridCheckbox checked={checked} onChange={onChangeFn} />
 })
 
-export const DataGrid = React.memo(
-    ({
-        theme,
-        loading,
-        rows,
+export const DataGrid = <R extends RowDefinition = RowDefinition>({
+    theme,
+    loading,
+    rows,
+    columns,
+    sortColumns,
+    onSortColumnsChange,
+    defaultSortColumns,
+    selectedRows,
+    onSelectedRowsChange,
+    ...rest
+}: DataGridProps<R>) => {
+    const finalColumns = useComputeFinalColumns({
         columns,
-        sortColumns,
-        onSortColumnsChange,
-        defaultSortColumns,
-        selectedRows,
-        onSelectedRowsChange,
-        ...rest
-    }: DataGridProps<RowDefinition>) => {
-        const finalColumns = useComputeFinalColumns({
-            columns,
-            selectionEnabled: !!onSelectedRowsChange
-        })
+        selectionEnabled: !!onSelectedRowsChange
+    })
 
-        const {
-            sortedRows: localSortedRows,
-            sortColumns: localSortColumns,
-            setSortedColumns: localSetSortedColumns
-        } = useLocalSorting(finalColumns, rows, defaultSortColumns)
+    const {
+        sortedRows: localSortedRows,
+        sortColumns: localSortColumns,
+        setSortedColumns: localSetSortedColumns
+    } = useLocalSorting(finalColumns, rows, defaultSortColumns)
 
-        const isLocalSorting = useMemo(() => !onSortColumnsChange, [onSortColumnsChange])
-        const computeRawClass = useCallback(
-            (_: RowDefinition, index: number) => {
-                if (index === 0) {
-                    return 'first-row'
-                } else if (index === rows.length - 1) {
-                    return 'last-row'
-                }
-                return ''
-            },
-            [rows]
-        )
-
-        /**
-         * Be sure only rows displayed are selected
-         */
-        useEffect(() => {
-            const selectedRowsAvailable = selectedRows?.filter((rowId) =>
-                rows.some((row) => row.id === rowId)
-            )
-            if (selectedRowsAvailable?.length != selectedRows?.length) {
-                onSelectedRowsChange?.(selectedRowsAvailable ?? [])
+    const isLocalSorting = useMemo(() => !onSortColumnsChange, [onSortColumnsChange])
+    const computeRawClass = useCallback(
+        (_: RowDefinition, index: number) => {
+            if (index === 0) {
+                return 'first-row'
+            } else if (index === rows.length - 1) {
+                return 'last-row'
             }
-        }, [rows, selectedRows])
+            return ''
+        },
+        [rows]
+    )
 
-        return (
-            <Container>
-                <Grid
-                    {...rest}
-                    selectedRows={selectedRows ? new Set(selectedRows) : undefined}
-                    onSelectedRowsChange={(value: ReadonlySet<unknown>) => {
-                        onSelectedRowsChange?.(Array.from(value) as string[])
-                    }}
-                    rowKeyGetter={(row: RowDefinition) => row.id}
-                    rows={isLocalSorting ? localSortedRows : rows}
-                    onSortColumnsChange={
-                        isLocalSorting ? localSetSortedColumns : onSortColumnsChange
-                    }
-                    sortColumns={isLocalSorting ? localSortColumns : sortColumns}
-                    columns={finalColumns}
-                    rowClass={computeRawClass}
-                    rowHeight={50}
-                    renderers={{
-                        renderCheckbox: (props) => <RenderCheckbox {...props} />
-                    }}
-                    style={{ ...defaultTheme, ...(theme ?? {}) } as React.CSSProperties}
-                />
-                {loading ? (
-                    <ContainerLoading>
-                        <div></div>
-                        <PulseLoader color={taktikTheme.primary500} />
-                    </ContainerLoading>
-                ) : null}
-            </Container>
+    /**
+     * Be sure only rows displayed are selected
+     */
+    useEffect(() => {
+        const selectedRowsAvailable = selectedRows?.filter((rowId) =>
+            rows.some((row) => row.id === rowId)
         )
-    }
-)
+        if (selectedRowsAvailable?.length != selectedRows?.length) {
+            onSelectedRowsChange?.(selectedRowsAvailable ?? [])
+        }
+    }, [rows, selectedRows])
+
+    return (
+        <Container>
+            <Grid
+                {...rest}
+                selectedRows={selectedRows ? new Set(selectedRows) : undefined}
+                onSelectedRowsChange={(value: ReadonlySet<unknown>) => {
+                    onSelectedRowsChange?.(Array.from(value) as string[])
+                }}
+                rowKeyGetter={(row: RowDefinition) => row.id}
+                rows={isLocalSorting ? localSortedRows : rows}
+                onSortColumnsChange={isLocalSorting ? localSetSortedColumns : onSortColumnsChange}
+                sortColumns={isLocalSorting ? localSortColumns : sortColumns}
+                columns={finalColumns}
+                rowClass={computeRawClass}
+                rowHeight={50}
+                renderers={{
+                    renderCheckbox: (props) => <RenderCheckbox {...props} />
+                }}
+                style={{ ...defaultTheme, ...(theme ?? {}) } as React.CSSProperties}
+            />
+            {loading ? (
+                <ContainerLoading>
+                    <div></div>
+                    <PulseLoader color={taktikTheme.primary500} />
+                </ContainerLoading>
+            ) : null}
+        </Container>
+    )
+}
