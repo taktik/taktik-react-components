@@ -41,7 +41,7 @@ const ContainerLoading = styled.div`
     justify-content: center;
 
     > div:first-child {
-        background-color: ${({ theme }) => theme.primary500};
+        background-color: ${taktikTheme.primary500};
         opacity: 0.1;
 
         position: absolute;
