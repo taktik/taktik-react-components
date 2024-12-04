@@ -1,28 +1,30 @@
-import { ColumnDefinition, ColumnType, RowDefinition } from '../types'
+import { ColumnDefinition, FilterType, RowDefinition } from '../types'
 import { useContext, useMemo } from 'react'
 import { FilterContext } from '../FilterProvider'
 import { getStringToCompare } from '../../../utils'
 
 const matchFn = ({
     comparator,
-    type,
+    filterType,
     value,
     valueToMatch
 }: {
     value?: unknown
     valueToMatch?: unknown
-    type?: ColumnType
+    filterType?: FilterType
     comparator?: (value: unknown, valueToMatch: unknown) => boolean
 }) => {
     if (comparator) {
         return comparator(value, valueToMatch)
     }
     if (
-        type === ColumnType.STRING &&
+        filterType === FilterType.TEXT &&
         typeof value === 'string' &&
         typeof valueToMatch === 'string'
     ) {
         return getStringToCompare(value).includes(getStringToCompare(valueToMatch))
+    } else if (filterType === FilterType.AUTOCOMPLETE) {
+        return value === valueToMatch
     }
     return false
 }
@@ -54,7 +56,7 @@ export const useLocalFiltering = <R extends RowDefinition = RowDefinition>({
                 }
                 return matchFn({
                     comparator: col.filterComparator,
-                    type: col.type ?? ColumnType.STRING,
+                    filterType: col.filterType ?? FilterType.TEXT,
                     value: row[key as keyof R],
                     valueToMatch: value
                 })

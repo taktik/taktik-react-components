@@ -1,10 +1,11 @@
 import React, { useCallback, useContext, useMemo } from 'react'
 import { renderHeaderCell, RenderHeaderCellProps } from 'react-data-grid'
-import { ColumnDefinition, RowDefinition } from './types'
+import { ColumnDefinition, FilterType, RowDefinition } from './types'
 import Box from '@mui/material/Box'
 import styled from '@emotion/styled'
 import { Input } from './Input'
 import { FilterContext } from './FilterProvider'
+import { Autocomplete } from './Autocomplete'
 
 const Container = styled(Box)`
     height: 100%;
@@ -31,8 +32,8 @@ export const getHeaderFilter =
         const { filters, setFilters } = useContext(FilterContext)
         const value = useMemo(() => filters[col.key], [filters, col])
         const onChange = useCallback(
-            (event: React.ChangeEvent<HTMLInputElement>) => {
-                setFilters({ ...filters, [col.key]: event.target.value })
+            (value: unknown) => {
+                setFilters({ ...filters, [col.key]: value })
             },
             [col]
         )
@@ -40,13 +41,28 @@ export const getHeaderFilter =
         if (!col.filterEnabled) {
             return <Base<R> {...props} />
         }
+        if (
+            col.filterType === FilterType.AUTOCOMPLETE &&
+            (value === undefined || typeof value === 'string')
+        ) {
+            return (
+                <Base<R> {...props}>
+                    <Autocomplete
+                        options={col.filterOptions ?? []}
+                        onChange={onChange}
+                        value={value}
+                    />
+                </Base>
+            )
+        }
         return (
             <Base<R> {...props}>
                 <Input
+                    autoComplete={'off'}
                     onClick={stopPropagation}
                     onKeyDown={stopPropagation}
                     value={value ?? ''}
-                    onChange={onChange}
+                    onChange={(e) => onChange(e.target.value)}
                 />
             </Base>
         )
