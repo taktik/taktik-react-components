@@ -18,3 +18,5 @@ export const convertDate = (value: unknown, format: string = DATE_FORMAT.UTC_FOR
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
     return formatInTimeZone(value as string | number | Date, timeZone, format)
 }
+
+export const getStringToCompare = (value: string) => value.trim().toLowerCase()

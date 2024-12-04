@@ -1,7 +1,8 @@
 import { ColumnDefinition, ColumnType, RowDefinition } from '../types'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { RenderCellProps, SelectColumn } from 'react-data-grid'
-import { convertDate, DATE_FORMAT } from '../../../utils/date'
+import { getHeaderFilter } from '../HeaderFilter'
+import { convertDate, DATE_FORMAT } from '../../../utils'
 
 export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>({
     columns,
@@ -9,8 +10,28 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
 }: {
     columns: ColumnDefinition<R>[]
     selectionEnabled?: boolean
-}): ColumnDefinition<R>[] =>
-    useMemo(() => {
+}): ColumnDefinition<R>[] => {
+    const adaptColumn = useCallback((col: ColumnDefinition<R>) => {
+        const getRenderCell = () => {
+            if (col.renderCell) {
+                return col.renderCell
+            }
+            if (col.type === ColumnType.DATE) {
+                return ({ row }: RenderCellProps<R>) =>
+                    convertDate(row[col.key as keyof R], DATE_FORMAT.TEXT)
+            }
+        }
+        const getRenderHeaderCell = () => {
+            if (col.renderHeaderCell) {
+                return col.renderHeaderCell
+            }
+            return getHeaderFilter<R>(col)
+        }
+
+        return { ...col, renderCell: getRenderCell(), renderHeaderCell: getRenderHeaderCell() }
+    }, [])
+
+    return useMemo(() => {
         const finalColumns: ColumnDefinition<R>[] = []
 
         if (selectionEnabled) {
@@ -20,18 +41,7 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
                 maxWidth: 50
             })
         }
-        finalColumns.push(
-            ...columns.map((col) => {
-                if (col.type === ColumnType.DATE && !col.renderCell) {
-                    return {
-                        ...col,
-                        renderCell: ({ row }: RenderCellProps<R>) => {
-                            return convertDate(row[col.key as keyof R], DATE_FORMAT.TEXT)
-                        }
-                    }
-                }
-                return col
-            })
-        )
+        finalColumns.push(...columns.map((col) => adaptColumn(col)))
         return finalColumns
-    }, [columns])
+    }, [columns, adaptColumn])
+}

@@ -4,3 +4,4 @@ export declare enum DATE_FORMAT {
     TEXT_WITHOUT_TIME = "dd-MM-yyyy"
 }
 export declare const convertDate: (value: unknown, format?: string) => string;
+export declare const getStringToCompare: (value: string) => string;

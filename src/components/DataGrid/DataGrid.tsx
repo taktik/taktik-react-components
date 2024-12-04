@@ -14,6 +14,8 @@ import { DataGridCheckbox } from './DataGridCheckbox'
 import 'react-data-grid/lib/styles.css'
 import { taktikTheme } from '../theme'
 import { PulseLoader } from 'react-spinners'
+import { FilterProvider, Filters } from './FilterProvider'
+import { useLocalFiltering } from './hooks/useLocalFiltering'
 
 export * from 'react-data-grid'
 
@@ -30,6 +32,8 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
     selectedRows?: string[]
     onSelectedRowsChange?: (rows: string[]) => void
     noDataMessage?: string
+    filters?: Filters
+    setFilters?: (filters: Filters) => void
 }
 
 const ContainerLoading = styled.div`
@@ -62,7 +66,7 @@ const RenderCheckbox = React.memo(({ checked, onChange }: RenderCheckboxProps) =
     return <DataGridCheckbox checked={checked} onChange={onChangeFn} />
 })
 
-export const DataGrid = <R extends RowDefinition = RowDefinition>({
+const DataGridBase = <R extends RowDefinition = RowDefinition>({
     theme,
     loading,
     rows,
@@ -73,6 +77,8 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
     selectedRows,
     onSelectedRowsChange,
     noDataMessage,
+    filters,
+    setFilters,
     ...rest
 }: DataGridProps<R>) => {
     const finalColumns = useComputeFinalColumns({
@@ -80,13 +86,31 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
         selectionEnabled: !!onSelectedRowsChange
     })
 
-    const {
-        sortedRows: localSortedRows,
-        sortColumns: localSortColumns,
-        setSortedColumns: localSetSortedColumns
-    } = useLocalSorting(finalColumns, rows, defaultSortColumns)
+    const filtersEnabled = useMemo(
+        () => finalColumns.some((col) => col.filterEnabled),
+        [finalColumns]
+    )
+
+    const isLocalFiltering = useMemo(() => !setFilters, [setFilters])
+
+    const rowsFiltered = useLocalFiltering({
+        columns: finalColumns,
+        rows,
+        enabled: isLocalFiltering
+    })
 
     const isLocalSorting = useMemo(() => !onSortColumnsChange, [onSortColumnsChange])
+
+    const {
+        sortedRows: sortedRows,
+        sortColumns: localSortColumns,
+        setSortedColumns: localSetSortedColumns
+    } = useLocalSorting({
+        columns: finalColumns,
+        rows: rowsFiltered,
+        defaultSortColumns
+    })
+
     const computeRawClass = useCallback(
         (_: RowDefinition, index: number) => {
             if (index === 0) {
@@ -120,17 +144,15 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
                     onSelectedRowsChange?.(Array.from(value) as string[])
                 }}
                 rowKeyGetter={(row: RowDefinition) => row.id}
-                rows={isLocalSorting ? localSortedRows : rows}
+                rows={sortedRows}
                 onSortColumnsChange={isLocalSorting ? localSetSortedColumns : onSortColumnsChange}
                 sortColumns={isLocalSorting ? localSortColumns : sortColumns}
                 columns={finalColumns}
                 rowClass={computeRawClass}
                 rowHeight={50}
+                headerRowHeight={filtersEnabled ? 70 : undefined}
                 renderers={{
                     renderCheckbox: (props) => <RenderCheckbox {...props} />,
-                    noRowsFallback: (
-                        <div className={'rdg-no-data'}>{noDataMessage ?? 'No data'}</div>
-                    ),
                     ...rest.renderers
                 }}
                 style={{ ...defaultTheme, ...(theme ?? {}) } as React.CSSProperties}
@@ -144,3 +166,13 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
         </Container>
     )
 }
+
+export const DataGrid = <R extends RowDefinition = RowDefinition>({
+    filters,
+    setFilters,
+    ...rest
+}: DataGridProps<R>) => (
+    <FilterProvider filters={filters} setFilters={setFilters}>
+        <DataGridBase {...rest} filters={filters} setFilters={setFilters} />
+    </FilterProvider>
+)

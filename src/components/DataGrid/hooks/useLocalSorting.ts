@@ -44,11 +44,15 @@ function getComparator<R = RowDefinition>(
     }
 }
 
-export const useLocalSorting = <R extends RowDefinition = RowDefinition>(
-    columns: ColumnDefinition<R>[],
-    rows: R[],
+export const useLocalSorting = <R extends RowDefinition = RowDefinition>({
+    columns,
+    rows,
+    defaultSortColumns
+}: {
+    columns: ColumnDefinition<R>[]
+    rows: R[]
     defaultSortColumns?: SortColumn[]
-) => {
+}) => {
     const [sortColumns, setSortedColumns] = useState<SortColumn[]>(defaultSortColumns ?? [])
 
     const sortedRows = useMemo(() => {

@@ -4,4 +4,6 @@ import { ColumnType } from './ColumnType';
 export type ColumnDefinition<Row extends RowDefinition = RowDefinition> = Column<Row> & {
     type?: ColumnType;
     sortComparator?: (a: unknown, b: unknown) => number;
+    filterComparator?: (value: unknown, valueToMatch: unknown) => boolean;
+    filterEnabled?: boolean;
 };
