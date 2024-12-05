@@ -3,8 +3,9 @@ import { isDate, isValid } from 'date-fns'
 
 export enum DATE_FORMAT {
     UTC_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'",
-    TEXT = 'dd-MM-yyyy HH:mm',
-    TEXT_WITHOUT_TIME = 'dd-MM-yyyy'
+    DATE_WITH_TIME = 'dd-MM-yyyy HH:mm',
+    DATE = 'dd-MM-yyyy',
+    TIME = 'HH:mm'
 }
 
 export const convertDate = (value: unknown, format: string = DATE_FORMAT.UTC_FORMAT) => {

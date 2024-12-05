@@ -22449,7 +22449,7 @@ function XC(e, t, n, r) {
     originalDate: e
   }, GC(KC(e, t, { timeZone: r.timeZone }), n, r);
 }
-var Vd = /* @__PURE__ */ ((e) => (e.UTC_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'", e.TEXT = "dd-MM-yyyy HH:mm", e.TEXT_WITHOUT_TIME = "dd-MM-yyyy", e))(Vd || {});
+var Vd = /* @__PURE__ */ ((e) => (e.UTC_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'", e.DATE_WITH_TIME = "dd-MM-yyyy HH:mm", e.DATE = "dd-MM-yyyy", e.TIME = "HH:mm", e))(Vd || {});
 const ZC = (e, t = "yyyy-MM-dd'T'HH:mm:ss'Z'") => {
   if (!e)
     return "";
@@ -22467,7 +22467,10 @@ const ZC = (e, t = "yyyy-MM-dd'T'HH:mm:ss'Z'") => {
       if (r.renderCell)
         return r.renderCell;
       if (r.type === eo.DATE)
-        return ({ row: s }) => ZC(s[r.key], Vd.TEXT);
+        return ({ row: s }) => ZC(
+          s[r.key],
+          r.formatDate ?? Vd.DATE_WITH_TIME
+        );
     }, a = () => r.renderHeaderCell ? r.renderHeaderCell : hw(r);
     return { ...r, renderCell: i(), renderHeaderCell: a() };
   }, []);

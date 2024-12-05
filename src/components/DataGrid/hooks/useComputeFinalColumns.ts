@@ -18,7 +18,10 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
             }
             if (col.type === ColumnType.DATE) {
                 return ({ row }: RenderCellProps<R>) =>
-                    convertDate(row[col.key as keyof R], DATE_FORMAT.TEXT)
+                    convertDate(
+                        row[col.key as keyof R],
+                        col.formatDate ?? DATE_FORMAT.DATE_WITH_TIME
+                    )
             }
         }
         const getRenderHeaderCell = () => {
