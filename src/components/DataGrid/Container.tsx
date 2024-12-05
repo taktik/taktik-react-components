@@ -1,10 +1,13 @@
 import styled from '@emotion/styled'
 import { taktikTheme } from '../theme'
 
-export const Container = styled.div`
+export const Container = styled.div<{ $pagination?: boolean }>`
   width: 100%;
   position: relative;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 
   *::-webkit-scrollbar {
     width: 8px;
@@ -30,16 +33,20 @@ export const Container = styled.div`
     background-color: ${taktikTheme.gray200};
   }
 
+  > div:first-child {
+    flex-grow: 1;
+    overflow: hidden;
+  }
+
   .rdg {
     border: none;
     block-size: 100%;
   }
 
   * {
-    font-weight: var(--rdg-font-weight);
-    line-height: var(--rdg-line-height);
-    font-family: var(--rdg-font-family);
-
+    font-weight: var(--rdg-font-weight) !important;
+    line-height: var(--rdg-line-height) !important;
+    font-family: var(--rdg-font-family) !important;
     border: none;
   }
 

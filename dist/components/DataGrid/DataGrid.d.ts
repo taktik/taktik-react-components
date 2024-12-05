@@ -3,6 +3,7 @@ import { DataGridTheme } from './dataGridTheme';
 import { ColumnDefinition, RowDefinition } from './types';
 import 'react-data-grid/lib/styles.css';
 import { Filters } from './FilterProvider';
+import { Props as PaginationProps } from './Pagination';
 export * from 'react-data-grid';
 export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib<Row>, 'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange'> & {
     selectable?: boolean;
@@ -16,6 +17,11 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
     noDataMessage?: string;
     filters?: Filters;
     setFilters?: (filters: Filters) => void;
+    pagination?: {
+        enabled?: boolean;
+        defaultPageSize?: number;
+        remotePagination?: PaginationProps;
+    };
 };
 export declare const DataGrid: <R extends RowDefinition = {
     id: string;

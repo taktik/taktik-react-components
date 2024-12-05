@@ -16,6 +16,8 @@ import { taktikTheme } from '../theme'
 import { PulseLoader } from 'react-spinners'
 import { FilterProvider, Filters } from './FilterProvider'
 import { useLocalFiltering } from './hooks/useLocalFiltering'
+import { Pagination, Props as PaginationProps } from './Pagination'
+import { usePagination } from './hooks/usePagination'
 
 export * from 'react-data-grid'
 
@@ -34,6 +36,11 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
     noDataMessage?: string
     filters?: Filters
     setFilters?: (filters: Filters) => void
+    pagination?: {
+        enabled?: boolean
+        defaultPageSize?: number
+        remotePagination?: PaginationProps
+    }
 }
 
 const ContainerLoading = styled.div`
@@ -79,8 +86,12 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     noDataMessage,
     filters,
     setFilters,
+    pagination,
     ...rest
 }: DataGridProps<R>) => {
+    const { pageSize, currentPage, setCurrentPage, setPageSize } = usePagination(
+        pagination?.defaultPageSize
+    )
     const finalColumns = useComputeFinalColumns({
         columns,
         selectionEnabled: !!onSelectedRowsChange
@@ -89,6 +100,10 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     const filtersEnabled = useMemo(
         () => finalColumns.some((col) => col.filterEnabled),
         [finalColumns]
+    )
+    const isLocalPagination = useMemo(
+        () => pagination?.enabled && !pagination.remotePagination,
+        [pagination]
     )
 
     const isLocalFiltering = useMemo(() => !setFilters, [setFilters])
@@ -110,6 +125,13 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         rows: rowsFiltered,
         defaultSortColumns
     })
+
+    const rowsToDisplay = useMemo(() => {
+        if (isLocalPagination) {
+            return sortedRows.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
+        }
+        return sortedRows
+    }, [sortedRows, isLocalPagination, currentPage, pageSize])
 
     const computeRawClass = useCallback(
         (_: RowDefinition, index: number) => {
@@ -136,27 +158,42 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     }, [rows, selectedRows])
 
     return (
-        <Container>
-            <Grid
-                {...rest}
-                selectedRows={selectedRows ? new Set(selectedRows) : undefined}
-                onSelectedRowsChange={(value: ReadonlySet<unknown>) => {
-                    onSelectedRowsChange?.(Array.from(value) as string[])
-                }}
-                rowKeyGetter={(row: RowDefinition) => row.id}
-                rows={sortedRows}
-                onSortColumnsChange={isLocalSorting ? localSetSortedColumns : onSortColumnsChange}
-                sortColumns={isLocalSorting ? localSortColumns : sortColumns}
-                columns={finalColumns}
-                rowClass={computeRawClass}
-                rowHeight={50}
-                headerRowHeight={filtersEnabled ? 70 : undefined}
-                renderers={{
-                    renderCheckbox: (props) => <RenderCheckbox {...props} />,
-                    ...rest.renderers
-                }}
-                style={{ ...defaultTheme, ...(theme ?? {}) } as React.CSSProperties}
-            />
+        <Container $pagination={!!pagination?.enabled}>
+            <div>
+                <Grid
+                    {...rest}
+                    selectedRows={selectedRows ? new Set(selectedRows) : undefined}
+                    onSelectedRowsChange={(value: ReadonlySet<unknown>) => {
+                        onSelectedRowsChange?.(Array.from(value) as string[])
+                    }}
+                    rowKeyGetter={(row: RowDefinition) => row.id}
+                    rows={rowsToDisplay}
+                    onSortColumnsChange={
+                        isLocalSorting ? localSetSortedColumns : onSortColumnsChange
+                    }
+                    sortColumns={isLocalSorting ? localSortColumns : sortColumns}
+                    columns={finalColumns}
+                    rowClass={computeRawClass}
+                    rowHeight={50}
+                    headerRowHeight={filtersEnabled ? 70 : undefined}
+                    renderers={{
+                        renderCheckbox: (props) => <RenderCheckbox {...props} />,
+                        ...rest.renderers
+                    }}
+                    style={{ ...defaultTheme, ...(theme ?? {}) } as React.CSSProperties}
+                />
+            </div>
+            {pagination?.enabled ? (
+                <Pagination
+                    {...(pagination?.remotePagination ?? {
+                        currentPage,
+                        setCurrentPage,
+                        pageSize,
+                        setPageSize,
+                        totalCount: rowsFiltered.length
+                    })}
+                />
+            ) : null}
             {loading ? (
                 <ContainerLoading>
                     <div></div>
