@@ -22450,14 +22450,11 @@ function XC(e, t, n, r) {
   }, GC(KC(e, t, { timeZone: r.timeZone }), n, r);
 }
 var Vd = /* @__PURE__ */ ((e) => (e.UTC_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'", e.DATE_WITH_TIME = "dd-MM-yyyy HH:mm", e.DATE = "dd-MM-yyyy", e.TIME = "HH:mm", e))(Vd || {});
-const ZC = (e, t = "yyyy-MM-dd'T'HH:mm:ss'Z'") => {
+const ZC = (e, t = "yyyy-MM-dd'T'HH:mm:ss'Z'", n = Intl.DateTimeFormat().resolvedOptions().timeZone) => {
   if (!e)
     return "";
-  const n = !_d(e) && typeof e == "string" ? new Date(e) : e;
-  if (!Ld(n))
-    return "--";
-  const r = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  return XC(e, r, t);
+  const r = !_d(e) && typeof e == "string" ? new Date(e) : e;
+  return Ld(r) ? XC(e, n, t) : "--";
 }, $c = (e) => e.trim().toLowerCase(), QC = ({
   columns: e,
   selectionEnabled: t
@@ -22467,10 +22464,14 @@ const ZC = (e, t = "yyyy-MM-dd'T'HH:mm:ss'Z'") => {
       if (r.renderCell)
         return r.renderCell;
       if (r.type === eo.DATE)
-        return ({ row: s }) => ZC(
-          s[r.key],
-          r.formatDate ?? Vd.DATE_WITH_TIME
-        );
+        return ({ row: s }) => {
+          var l, c;
+          return ZC(
+            s[r.key],
+            ((l = r.dateOptions) == null ? void 0 : l.formatDate) ?? Vd.DATE_WITH_TIME,
+            (c = r.dateOptions) == null ? void 0 : c.timeZone
+          );
+        };
     }, a = () => r.renderHeaderCell ? r.renderHeaderCell : hw(r);
     return { ...r, renderCell: i(), renderHeaderCell: a() };
   }, []);

@@ -4,5 +4,5 @@ export declare enum DATE_FORMAT {
     DATE = "dd-MM-yyyy",
     TIME = "HH:mm"
 }
-export declare const convertDate: (value: unknown, format?: string) => string;
+export declare const convertDate: (value: unknown, format?: string, timeZone?: string) => string;
 export declare const getStringToCompare: (value: string) => string;

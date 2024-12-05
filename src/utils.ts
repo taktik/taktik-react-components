@@ -8,7 +8,11 @@ export enum DATE_FORMAT {
     TIME = 'HH:mm'
 }
 
-export const convertDate = (value: unknown, format: string = DATE_FORMAT.UTC_FORMAT) => {
+export const convertDate = (
+    value: unknown,
+    format: string = DATE_FORMAT.UTC_FORMAT,
+    timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+) => {
     if (!value) {
         return ''
     }
@@ -16,7 +20,6 @@ export const convertDate = (value: unknown, format: string = DATE_FORMAT.UTC_FOR
     if (!isValid(date)) {
         return '--'
     }
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
     return formatInTimeZone(value as string | number | Date, timeZone, format)
 }
 

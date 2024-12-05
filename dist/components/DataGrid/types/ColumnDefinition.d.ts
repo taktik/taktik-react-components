@@ -12,5 +12,8 @@ export type ColumnDefinition<Row extends RowDefinition = RowDefinition> = Column
     sortComparator?: (a: unknown, b: unknown) => number;
     filterComparator?: (value: unknown, valueToMatch: unknown) => boolean;
     filterEnabled?: boolean;
-    formatDate?: string;
+    dateOptions?: {
+        formatDate?: string;
+        timeZone?: string;
+    };
 };

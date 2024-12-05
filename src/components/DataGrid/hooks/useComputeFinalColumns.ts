@@ -20,7 +20,8 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
                 return ({ row }: RenderCellProps<R>) =>
                     convertDate(
                         row[col.key as keyof R],
-                        col.formatDate ?? DATE_FORMAT.DATE_WITH_TIME
+                        col.dateOptions?.formatDate ?? DATE_FORMAT.DATE_WITH_TIME,
+                        col.dateOptions?.timeZone
                     )
             }
         }
