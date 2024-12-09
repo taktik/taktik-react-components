@@ -3390,7 +3390,13 @@ const Tt = {
   "--rdg-cell-padding": "8px 12px",
   "--rdg-border-radius-container": "8px",
   "--rdg-row-selected-background-color": Tt.primary400,
-  "--rdg-row-selected-color": Tt.forcewhite
+  "--rdg-row-selected-color": Tt.forcewhite,
+  "--rdg-scrollbar-width": "8px",
+  "--rdg-scrollbar-height": "8px",
+  "--rdg-scrollbar-thumb-background": Tt.primary500,
+  "--rdg-scrollbar-track-background": Tt.gray100,
+  "--rdg--scrollbar-thumb-hover-background": Tt.primary500,
+  "--rdg--scrollbar-track-hover-background": Tt.gray200
 };
 function ui() {
   return ui = Object.assign ? Object.assign.bind() : function(e) {
@@ -4637,129 +4643,128 @@ Hh.forEach(function(e) {
   zn[e] = zn(e);
 });
 const Uh = zn.div`
-  width: 100%;
-  position: relative;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+    width: 100%;
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 
-  *::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  *::-webkit-scrollbar-thumb {
-    background-color: ${Tt.primary500};
-    border-radius: 8px;
-    border: none;
-  }
-
-  *::-webkit-scrollbar-track {
-    background-color: ${Tt.gray100};
-    border-radius: 8px;
-  }
-
-  *::-webkit-scrollbar-thumb:hover {
-    background-color ${Tt.primary500};
-  }
-
-  *::-webkit-scrollbar-track:hover {
-    background-color: ${Tt.gray200};
-  }
-
-  > div:first-child {
-    flex-grow: 1;
-    overflow: hidden;
-  }
-
-  .rdg {
-    border: none;
-    block-size: 100%;
-  }
-
-  * {
-    font-weight: var(--rdg-font-weight) !important;
-    line-height: var(--rdg-line-height) !important;
-    font-family: var(--rdg-font-family) !important;
-    border: none;
-  }
-
-  .rdg-header-row {
-    color: var(--rdg-header-color);
-  }
-
-  .rdg-cell {
-    padding: var(--rdg-cell-padding) !important;
-  }
-
-  .rdg-no-data {
-    text-align: center;
-    grid-column: 1/-1;
-  }
-
-  .rdg-cell-resizable {
-    > div {
-      width: 5px;
-      cursor: col-resize;
-      background-color: var(--rdg-border-color);
-      opacity: 0;
-      transition: opacity 0.2s ease;
-      position: absolute;
-      top: 0;
-      right: -2.5px;
-      bottom: 0;
-
-      &:hover {
-        opacity: 0.5;
-      }
-    }
-  }
-
-  .rdg-row {
-    &[aria-selected='true'] {
-
-      .rdg-cell {
-        color: var(--rdg-row-selected-color);
-      }
+    *::-webkit-scrollbar {
+        width: var(--rdg-scrollbar-width) !important;
+        height: var(--rdg-scrollbar-height) !important;
     }
 
-    &.first-row {
-      .rdg-cell {
-        border-top: solid var(--rdg-border-size) var(--rdg-border-color);
-      }
-
-      .rdg-cell:first-child {
-        border-top-left-radius: var(--rdg-border-radius-container);
-      }
-
-      .rdg-cell:last-child {
-        border-top-right-radius: var(--rdg-border-radius-container);
-      }
+    *::-webkit-scrollbar-thumb {
+        background-color: var(--rdg-scrollbar-thumb-background) !important;
+        border-radius: 8px;
+        border: none;
     }
 
-    &.last-row {
-      .rdg-cell:first-child {
-        border-bottom-left-radius: var(--rdg-border-radius-container);
-      }
+    *::-webkit-scrollbar-track {
+        background-color: var(--rdg-scrollbar-track-background) !important;
+        border-radius: 8px;
+    }
 
-      .rdg-cell:last-child {
-        border-bottom-right-radius: var(--rdg-border-radius-container);
-      }
+    *::-webkit-scrollbar-thumb:hover {
+        background-color: var(--rdg--scrollbar-thumb-hover-background) !important;
+    }
+
+    *::-webkit-scrollbar-track:hover {
+        background-color: var(--rdg--scrollbar-track-hover-background) !important;
+    }
+
+    > div:first-child {
+        flex-grow: 1;
+        overflow: hidden;
+    }
+
+    .rdg {
+        border: none;
+        block-size: 100%;
+    }
+
+    * {
+        font-weight: var(--rdg-font-weight) !important;
+        line-height: var(--rdg-line-height) !important;
+        font-family: var(--rdg-font-family) !important;
+        border: none;
+    }
+
+    .rdg-header-row {
+        color: var(--rdg-header-color);
     }
 
     .rdg-cell {
-      border-bottom: solid var(--rdg-border-size) var(--rdg-border-color);
-
-      &:first-child {
-        border-left: solid var(--rdg-border-size) var(--rdg-border-color);
-      }
-
-      &:last-child {
-        border-right: solid var(--rdg-border-size) var(--rdg-border-color);
-      }
+        padding: var(--rdg-cell-padding) !important;
     }
-  }
+
+    .rdg-no-data {
+        text-align: center;
+        grid-column: 1/-1;
+    }
+
+    .rdg-cell-resizable {
+        > div {
+            width: 5px;
+            cursor: col-resize;
+            background-color: var(--rdg-border-color);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            position: absolute;
+            top: 0;
+            right: -2.5px;
+            bottom: 0;
+
+            &:hover {
+                opacity: 0.5;
+            }
+        }
+    }
+
+    .rdg-row {
+        &[aria-selected='true'] {
+            .rdg-cell {
+                color: var(--rdg-row-selected-color);
+            }
+        }
+
+        &.first-row {
+            .rdg-cell {
+                border-top: solid var(--rdg-border-size) var(--rdg-border-color);
+            }
+
+            .rdg-cell:first-child {
+                border-top-left-radius: var(--rdg-border-radius-container);
+            }
+
+            .rdg-cell:last-child {
+                border-top-right-radius: var(--rdg-border-radius-container);
+            }
+        }
+
+        &.last-row {
+            .rdg-cell:first-child {
+                border-bottom-left-radius: var(--rdg-border-radius-container);
+            }
+
+            .rdg-cell:last-child {
+                border-bottom-right-radius: var(--rdg-border-radius-container);
+            }
+        }
+
+        .rdg-cell {
+            border-bottom: solid var(--rdg-border-size) var(--rdg-border-color);
+
+            &:first-child {
+                border-left: solid var(--rdg-border-size) var(--rdg-border-color);
+            }
+
+            &:last-child {
+                border-right: solid var(--rdg-border-size) var(--rdg-border-color);
+            }
+        }
+    }
 `;
 var oo = /* @__PURE__ */ ((e) => (e.STRING = "string", e.NUMBER = "number", e.DATE = "date", e))(oo || {}), go = /* @__PURE__ */ ((e) => (e.TEXT = "text", e.AUTOCOMPLETE = "autocomplete", e))(go || {});
 function Yh(e, t, n) {

@@ -22,6 +22,12 @@ export type DataGridTheme = {
     '--rdg-cell-padding'?: string
     '--rdg-border-radius-container'?: string
     '--rdg-row-selected-color'?: string
+    '--rdg-scrollbar-width'?: string
+    '--rdg-scrollbar-height'?: string
+    '--rdg-scrollbar-thumb-background'?: string
+    '--rdg-scrollbar-track-background'?: string
+    '--rdg--scrollbar-thumb-hover-background'?: string
+    '--rdg--scrollbar-track-hover-background'?: string
 }
 
 export const defaultTheme: DataGridTheme = {
@@ -41,5 +47,11 @@ export const defaultTheme: DataGridTheme = {
     '--rdg-cell-padding': '8px 12px',
     '--rdg-border-radius-container': '8px',
     '--rdg-row-selected-background-color': taktikTheme.primary400,
-    '--rdg-row-selected-color': taktikTheme.forcewhite
+    '--rdg-row-selected-color': taktikTheme.forcewhite,
+    '--rdg-scrollbar-width': '8px',
+    '--rdg-scrollbar-height': '8px',
+    '--rdg-scrollbar-thumb-background': taktikTheme.primary500,
+    '--rdg-scrollbar-track-background': taktikTheme.gray100,
+    '--rdg--scrollbar-thumb-hover-background': taktikTheme.primary500,
+    '--rdg--scrollbar-track-hover-background': taktikTheme.gray200
 }

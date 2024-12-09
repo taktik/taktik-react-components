@@ -20,5 +20,11 @@ export type DataGridTheme = {
     '--rdg-cell-padding'?: string;
     '--rdg-border-radius-container'?: string;
     '--rdg-row-selected-color'?: string;
+    '--rdg-scrollbar-width'?: string;
+    '--rdg-scrollbar-height'?: string;
+    '--rdg-scrollbar-thumb-background'?: string;
+    '--rdg-scrollbar-track-background'?: string;
+    '--rdg--scrollbar-thumb-hover-background'?: string;
+    '--rdg--scrollbar-track-hover-background'?: string;
 };
 export declare const defaultTheme: DataGridTheme;
