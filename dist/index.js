@@ -24375,7 +24375,7 @@ const sS = zn.div`
     /* @__PURE__ */ R.jsx("div", { children: /* @__PURE__ */ R.jsx(
       iu,
       {
-        ...g,
+        rowHeight: 50,
         selectedRows: l ? new Set(l) : void 0,
         onSelectedRowsChange: (N) => {
           c == null || c(Array.from(N));
@@ -24386,12 +24386,12 @@ const sS = zn.div`
         sortColumns: O ? M : i,
         columns: S,
         rowClass: k,
-        rowHeight: 50,
         headerRowHeight: v ? 70 : void 0,
         renderers: {
           renderCheckbox: (N) => /* @__PURE__ */ R.jsx(dS, { ...N }),
           ...g.renderers
         },
+        ...g,
         style: { ...Vm, ...e ?? {} }
       }
     ) }),

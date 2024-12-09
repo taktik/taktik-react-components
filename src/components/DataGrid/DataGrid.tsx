@@ -161,7 +161,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         <Container $pagination={!!pagination?.enabled}>
             <div>
                 <Grid
-                    {...rest}
+                    rowHeight={50}
                     selectedRows={selectedRows ? new Set(selectedRows) : undefined}
                     onSelectedRowsChange={(value: ReadonlySet<unknown>) => {
                         onSelectedRowsChange?.(Array.from(value) as string[])
@@ -174,12 +174,12 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                     sortColumns={isLocalSorting ? localSortColumns : sortColumns}
                     columns={finalColumns}
                     rowClass={computeRawClass}
-                    rowHeight={50}
                     headerRowHeight={filtersEnabled ? 70 : undefined}
                     renderers={{
                         renderCheckbox: (props) => <RenderCheckbox {...props} />,
                         ...rest.renderers
                     }}
+                    {...rest}
                     style={{ ...defaultTheme, ...(theme ?? {}) } as React.CSSProperties}
                 />
             </div>
