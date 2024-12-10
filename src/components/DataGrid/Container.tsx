@@ -50,6 +50,7 @@ export const Container = styled.div<{ $pagination?: boolean }>`
     }
 
     .rdg-header-row {
+        font-size: var(--rdg-header-font-size) !important;
         color: var(--rdg-header-color);
     }
 

@@ -16,6 +16,7 @@ export type DataGridTheme = {
     '--rdg-line-height'?: string;
     '--rdg-font-weight'?: string;
     '--rdg-font-family'?: string;
+    '--rdg-header-font-size'?: string;
     '--rdg-border-size'?: string;
     '--rdg-cell-padding'?: string;
     '--rdg-border-radius-container'?: string;

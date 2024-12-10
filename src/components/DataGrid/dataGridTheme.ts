@@ -18,6 +18,7 @@ export type DataGridTheme = {
     '--rdg-line-height'?: string
     '--rdg-font-weight'?: string
     '--rdg-font-family'?: string
+    '--rdg-header-font-size'?: string
     '--rdg-border-size'?: string
     '--rdg-cell-padding'?: string
     '--rdg-border-radius-container'?: string
@@ -41,6 +42,7 @@ export const defaultTheme: DataGridTheme = {
     '--rdg-selection-color': 'transparent',
     '--rdg-border-size': '1px',
     '--rdg-font-size': '14px',
+    '--rdg-header-font-size': '14px',
     '--rdg-line-height': '16.94px',
     '--rdg-font-weight': '400',
     '--rdg-font-family': 'Inter, Helvetica, sans-serif',

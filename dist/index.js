@@ -3384,6 +3384,7 @@ const Tt = {
   "--rdg-selection-color": "transparent",
   "--rdg-border-size": "1px",
   "--rdg-font-size": "14px",
+  "--rdg-header-font-size": "14px",
   "--rdg-line-height": "16.94px",
   "--rdg-font-weight": "400",
   "--rdg-font-family": "Inter, Helvetica, sans-serif",
@@ -4692,6 +4693,7 @@ const Uh = zn.div`
     }
 
     .rdg-header-row {
+        font-size: var(--rdg-header-font-size) !important;
         color: var(--rdg-header-color);
     }
 
