@@ -24,25 +24,32 @@ export const VisibilityProvider = ({
     columns,
     children,
     visibilityFeatureDisabledFor,
-    enabled
+    hiddenByDefault,
+    enabled,
+    localStorageKey = LOCAL_STORAGE_HIDDEN_COLUMN_KEY
 }: {
     children: ReactNode
     columns: ColumnDefinition[]
     visibilityFeatureDisabledFor?: string[]
     enabled?: boolean
+    hiddenByDefault?: string[]
+    localStorageKey?: string
 }) => {
     const [gridKey, setGridKey] = React.useState(0)
     const [hiddenColumn, setHiddenColumn] = React.useState<string[]>([])
     useEffect(() => {
-        const storedHiddenColumns = localStorage.getItem(LOCAL_STORAGE_HIDDEN_COLUMN_KEY)
+        const storedHiddenColumns = localStorage.getItem(localStorageKey)
         if (storedHiddenColumns) {
             const parsed = JSON.parse(storedHiddenColumns)
             setHiddenColumnAndPersist(Array.isArray(parsed) ? parsed : []) // clean if not good format
+        } else {
+            // first time
+            setHiddenColumnAndPersist(hiddenByDefault || [])
         }
-    }, [])
+    }, [hiddenByDefault])
 
     const setHiddenColumnAndPersist = useCallback((columns: string[]) => {
-        localStorage.setItem(LOCAL_STORAGE_HIDDEN_COLUMN_KEY, JSON.stringify(columns))
+        localStorage.setItem(localStorageKey, JSON.stringify(columns))
         setGridKey((prev) => prev + 1)
         setHiddenColumn(columns)
     }, [])

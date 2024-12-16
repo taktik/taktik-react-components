@@ -45,6 +45,8 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
     visibilityColumnFeature?: {
         enabled?: boolean
         visibilityFeatureDisabledFor?: string[]
+        hiddenByDefault?: string[]
+        localStorageKey?: string
     }
 }
 
@@ -217,7 +219,9 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
     columns,
     visibilityColumnFeature: {
         enabled: visibilityFeatureEnabled,
-        visibilityFeatureDisabledFor
+        visibilityFeatureDisabledFor,
+        hiddenByDefault,
+        localStorageKey
     } = {},
     ...rest
 }: DataGridProps<R>) => (
@@ -225,6 +229,8 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
         <VisibilityProvider
             columns={columns as ColumnDefinition[]}
             enabled={visibilityFeatureEnabled}
+            hiddenByDefault={hiddenByDefault}
+            localStorageKey={localStorageKey}
             visibilityFeatureDisabledFor={visibilityFeatureDisabledFor}>
             <DataGridBase {...rest} columns={columns} filters={filters} setFilters={setFilters} />
         </VisibilityProvider>

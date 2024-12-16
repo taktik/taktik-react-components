@@ -25,8 +25,10 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
     visibilityColumnFeature?: {
         enabled?: boolean;
         visibilityFeatureDisabledFor?: string[];
+        hiddenByDefault?: string[];
+        localStorageKey?: string;
     };
 };
 export declare const DataGrid: <R extends RowDefinition = {
     id: string;
-}>({ filters, setFilters, columns, visibilityColumnFeature: { enabled: visibilityFeatureEnabled, visibilityFeatureDisabledFor }, ...rest }: DataGridProps<R>) => import("react/jsx-runtime").JSX.Element;
+}>({ filters, setFilters, columns, visibilityColumnFeature: { enabled: visibilityFeatureEnabled, visibilityFeatureDisabledFor, hiddenByDefault, localStorageKey }, ...rest }: DataGridProps<R>) => import("react/jsx-runtime").JSX.Element;
