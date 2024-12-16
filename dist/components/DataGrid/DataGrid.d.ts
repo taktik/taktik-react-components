@@ -22,7 +22,11 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
         defaultPageSize?: number;
         remotePagination?: PaginationProps;
     };
+    visibilityColumnFeature?: {
+        enabled?: boolean;
+        visibilityFeatureDisabledFor?: string[];
+    };
 };
 export declare const DataGrid: <R extends RowDefinition = {
     id: string;
-}>({ filters, setFilters, ...rest }: DataGridProps<R>) => import("react/jsx-runtime").JSX.Element;
+}>({ filters, setFilters, columns, visibilityColumnFeature: { enabled: visibilityFeatureEnabled, visibilityFeatureDisabledFor }, ...rest }: DataGridProps<R>) => import("react/jsx-runtime").JSX.Element;

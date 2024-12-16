@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo } from 'react'
 import Grid, {
     DataGridProps as DataGridPropsFromLib,
     RenderCheckboxProps,
@@ -18,6 +18,7 @@ import { FilterProvider, Filters } from './FilterProvider'
 import { useLocalFiltering } from './hooks/useLocalFiltering'
 import { Pagination, Props as PaginationProps } from './Pagination'
 import { usePagination } from './hooks/usePagination'
+import { VisibilityContext, VisibilityProvider } from './VisibilityProvider'
 
 export * from 'react-data-grid'
 
@@ -40,6 +41,10 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
         enabled?: boolean
         defaultPageSize?: number
         remotePagination?: PaginationProps
+    }
+    visibilityColumnFeature?: {
+        enabled?: boolean
+        visibilityFeatureDisabledFor?: string[]
     }
 }
 
@@ -89,6 +94,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     pagination,
     ...rest
 }: DataGridProps<R>) => {
+    const { gridKey } = useContext(VisibilityContext)
     const { pageSize, currentPage, setCurrentPage, setPageSize } = usePagination(
         pagination?.defaultPageSize
     )
@@ -161,6 +167,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         <Container $pagination={!!pagination?.enabled}>
             <div>
                 <Grid
+                    key={gridKey}
                     rowHeight={50}
                     selectedRows={selectedRows ? new Set(selectedRows) : undefined}
                     onSelectedRowsChange={(value: ReadonlySet<unknown>) => {
@@ -207,9 +214,19 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
 export const DataGrid = <R extends RowDefinition = RowDefinition>({
     filters,
     setFilters,
+    columns,
+    visibilityColumnFeature: {
+        enabled: visibilityFeatureEnabled,
+        visibilityFeatureDisabledFor
+    } = {},
     ...rest
 }: DataGridProps<R>) => (
     <FilterProvider filters={filters} setFilters={setFilters}>
-        <DataGridBase {...rest} filters={filters} setFilters={setFilters} />
+        <VisibilityProvider
+            columns={columns as ColumnDefinition[]}
+            enabled={visibilityFeatureEnabled}
+            visibilityFeatureDisabledFor={visibilityFeatureDisabledFor}>
+            <DataGridBase {...rest} columns={columns} filters={filters} setFilters={setFilters} />
+        </VisibilityProvider>
     </FilterProvider>
 )

@@ -1,8 +1,9 @@
 import { ColumnDefinition, ColumnType, RowDefinition } from '../types'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useContext, useMemo } from 'react'
 import { RenderCellProps, SelectColumn } from 'react-data-grid'
 import { getHeaderFilter } from '../HeaderFilter'
 import { convertDate, DATE_FORMAT } from '../../../utils'
+import { VisibilityContext } from '../VisibilityProvider'
 
 export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>({
     columns,
@@ -11,6 +12,7 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
     columns: ColumnDefinition<R>[]
     selectionEnabled?: boolean
 }): ColumnDefinition<R>[] => {
+    const { enabled: visibilityFeatureEnabled, hiddenColumn } = useContext(VisibilityContext)
     const adaptColumn = useCallback((col: ColumnDefinition<R>) => {
         const getRenderCell = () => {
             if (col.renderCell) {
@@ -46,6 +48,9 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
             })
         }
         finalColumns.push(...columns.map((col) => adaptColumn(col)))
+        if (visibilityFeatureEnabled && hiddenColumn) {
+            return finalColumns.filter((col) => !hiddenColumn.includes(col.key))
+        }
         return finalColumns
-    }, [columns, adaptColumn])
+    }, [columns, adaptColumn, visibilityFeatureEnabled, hiddenColumn])
 }
