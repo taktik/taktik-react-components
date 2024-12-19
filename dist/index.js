@@ -16124,6 +16124,8 @@ const Pd = Dn(Rd)`
 
   & input {
     padding: 0.5rem !important;
+    border: solid 1px ${Et.gray400};
+    border-radius: 4px;
   }
 
   & label,
@@ -16131,13 +16133,10 @@ const Pd = Dn(Rd)`
     color: ${Et.gray800};
   }
 
-  & .MuiOutlinedInput-root {
-    &:hover fieldset,
-    fieldset,
-    &.Mui-focused fieldset {
-      border-color: ${Et.gray400};
-    }
+  fieldset {
+    display: none;
   }
+
 }
 `, Is = Ct.createContext({
   filters: {},

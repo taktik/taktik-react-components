@@ -15,6 +15,8 @@ export const Input = styled(TextField)`
 
   & input {
     padding: 0.5rem !important;
+    border: solid 1px ${taktikTheme.gray400};
+    border-radius: 4px;
   }
 
   & label,
@@ -22,12 +24,9 @@ export const Input = styled(TextField)`
     color: ${taktikTheme.gray800};
   }
 
-  & .MuiOutlinedInput-root {
-    &:hover fieldset,
-    fieldset,
-    &.Mui-focused fieldset {
-      border-color: ${taktikTheme.gray400};
-    }
+  fieldset {
+    display: none;
   }
+
 }
 `
