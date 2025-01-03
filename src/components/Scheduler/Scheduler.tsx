@@ -23,9 +23,9 @@ import {
 	subMonths,
 	subWeeks
 } from 'date-fns'
-import format from 'date-fns/format'
-import getDay from 'date-fns/getDay'
-import parse from 'date-fns/parse'
+import {format} from 'date-fns/format'
+import {getDay} from 'date-fns/getDay'
+import {parse} from 'date-fns/parse'
 import {startOfWeek} from 'date-fns/startOfWeek'
 
 const localeByLang: { [key: string]: Locale } = {
