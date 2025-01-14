@@ -3,19 +3,21 @@ import { useContext, useMemo } from 'react'
 import { FilterContext } from '../FilterProvider'
 import { getStringToCompare } from '../../../utils'
 
-const matchFn = ({
+const matchFn = <R extends RowDefinition = RowDefinition>({
     comparator,
     filterType,
     value,
-    valueToMatch
+    valueToMatch,
+    row
 }: {
     value?: unknown
     valueToMatch?: unknown
     filterType?: FilterType
-    comparator?: (value: unknown, valueToMatch: unknown) => boolean
+    comparator?: (value: unknown, valueToMatch: unknown, row: R) => boolean
+    row: R
 }) => {
     if (comparator) {
-        return comparator(value, valueToMatch)
+        return comparator(value, valueToMatch, row)
     }
     if (
         filterType === FilterType.TEXT &&
@@ -58,7 +60,8 @@ export const useLocalFiltering = <R extends RowDefinition = RowDefinition>({
                     comparator: col.filterComparator,
                     filterType: col.filterType ?? FilterType.TEXT,
                     value: row[key as keyof R],
-                    valueToMatch: value
+                    valueToMatch: value,
+                    row
                 })
             })
         )
