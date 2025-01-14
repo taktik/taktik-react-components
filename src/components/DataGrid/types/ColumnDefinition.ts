@@ -8,7 +8,7 @@ export type ColumnDefinition<Row extends RowDefinition = RowDefinition> = Column
     filterType?: FilterType
     filterOptions?: { label: string; value: string }[]
     sortComparator?: (a: unknown, b: unknown) => number
-    filterComparator?: (value: unknown, valueToMatch: unknown) => boolean
+    filterComparator?: (value: unknown, valueToMatch: unknown, row: Row) => boolean
     filterEnabled?: boolean
     dateOptions?: {
         formatDate?: string
