@@ -51,19 +51,30 @@ export const getHeaderFilter =
                         options={col.filterOptions ?? []}
                         onChange={onChange}
                         value={value}
+                        renderInput={col.renderFilterInput}
                     />
                 </Base>
             )
         }
         return (
             <Base<R> {...props}>
-                <Input
-                    autoComplete={'off'}
-                    onClick={stopPropagation}
-                    onKeyDown={stopPropagation}
-                    value={value ?? ''}
-                    onChange={(e) => onChange(e.target.value)}
-                />
+                {col.renderFilterInput ? (
+                    col.renderFilterInput({
+                        onChange: (e) => onChange(e.target.value),
+                        value: value ?? '',
+                        autoComplete: 'off',
+                        onClick: stopPropagation,
+                        onKeyDown: stopPropagation
+                    })
+                ) : (
+                    <Input
+                        autoComplete={'off'}
+                        onClick={stopPropagation}
+                        onKeyDown={stopPropagation}
+                        value={value ?? ''}
+                        onChange={(e) => onChange(e.target.value)}
+                    />
+                )}
             </Base>
         )
     }

@@ -9,8 +9,9 @@ type Props = Omit<TextFieldProps, 'onChange' | 'value'> & {
     options: { label: string; value: string }[]
     onChange?: (value?: string) => void
     value?: string
+    renderInput?: (props: TextFieldProps) => React.ReactNode
 }
-export const Autocomplete = ({ options, ...props }: Props) => {
+export const Autocomplete = ({ options, renderInput, ...props }: Props) => {
     const selected = useMemo(
         () => options.find((option) => option.value === props.value),
         [options, props.value]
@@ -24,15 +25,19 @@ export const Autocomplete = ({ options, ...props }: Props) => {
             onClick={stopPropagation}
             onKeyDown={stopPropagation}
             getOptionLabel={(option) => option.label}
-            renderInput={(params) => (
-                <Input
-                    {...params}
-                    onClick={stopPropagation}
-                    label={props.label}
-                    error={props.error}
-                    helperText={props.helperText}
-                />
-            )}
+            renderInput={
+                renderInput
+                    ? renderInput
+                    : (params) => (
+                          <Input
+                              {...params}
+                              onClick={stopPropagation}
+                              label={props.label}
+                              error={props.error}
+                              helperText={props.helperText}
+                          />
+                      )
+            }
         />
     )
 }
