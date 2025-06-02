@@ -10,5 +10,5 @@ export declare const useLocalSorting: <R extends RowDefinition = {
 }) => {
     sortedRows: R[];
     sortColumns: SortColumn[];
-    setSortedColumns: import("react").Dispatch<import("react").SetStateAction<SortColumn[]>>;
+    setSortedColumns: (sort: SortColumn[]) => void;
 };

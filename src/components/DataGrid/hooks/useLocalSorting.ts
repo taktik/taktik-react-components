@@ -1,5 +1,5 @@
 import { ColumnDefinition, ColumnType, RowDefinition } from '../types'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { SortColumn } from 'react-data-grid'
 
 export type Comparator<R = RowDefinition> = (a: R, b: R) => number
@@ -74,9 +74,27 @@ export const useLocalSorting = <R extends RowDefinition = RowDefinition>({
         })
     }, [rows, sortColumns])
 
+    const setSortedColumnsFn = useCallback((sort: SortColumn[]) => {
+        if (sort.length !== 0) {
+            setSortedColumns(sort)
+        } else {
+            setSortedColumns((prev) => {
+                if (prev.length === 1) {
+                    return [
+                        {
+                            columnKey: prev[0].columnKey,
+                            direction: prev[0].direction === 'ASC' ? 'DESC' : 'ASC'
+                        }
+                    ]
+                }
+                return prev
+            })
+        }
+    }, [])
+
     return {
         sortedRows,
         sortColumns,
-        setSortedColumns
+        setSortedColumns: setSortedColumnsFn
     }
 }
