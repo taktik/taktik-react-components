@@ -8,11 +8,12 @@ export type ColumnDefinition<Row extends RowDefinition = RowDefinition> = Column
     type?: ColumnType;
     renderFilterInput?: (props: TextFieldProps) => React.ReactNode;
     filterType?: FilterType;
+    getColumnValue?: (item?: unknown) => unknown;
     filterOptions?: {
         label: string;
         value: string;
     }[];
-    sortComparator?: (a: unknown, b: unknown) => number;
+    sortComparator?: (a: unknown, b: unknown, objectA: unknown, objectB: unknown) => number;
     filterComparator?: (value: unknown, valueToMatch: unknown, row: Row) => boolean;
     filterEnabled?: boolean;
     dateOptions?: {

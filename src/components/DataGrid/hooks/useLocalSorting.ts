@@ -7,14 +7,15 @@ export type Comparator<R = RowDefinition> = (a: R, b: R) => number
 function getComparator<R = RowDefinition>(
     sortColumn: keyof R,
     type?: ColumnType,
-    sortComparator?: (a: unknown, b: unknown) => number
+    sortComparator?: (a: unknown, b: unknown, objectA: unknown, objectB: unknown) => number,
+    getColumnValue?: (item: unknown) => unknown
 ): Comparator<R> {
     return (a, b) => {
-        const valueA = a[sortColumn]
-        const valueB = b[sortColumn]
+        const valueA = getColumnValue ? getColumnValue(a) : a[sortColumn]
+        const valueB = getColumnValue ? getColumnValue(b) : b[sortColumn]
         try {
             if (sortComparator) {
-                return sortComparator(valueA, valueB)
+                return sortComparator(valueA, valueB, a, b)
             }
             if (type === ColumnType.NUMBER) {
                 const numA = Number(valueA)
@@ -35,6 +36,9 @@ function getComparator<R = RowDefinition>(
             }
             if (type === ColumnType.STRING || !type) {
                 return String(valueA).localeCompare(String(valueB))
+            }
+            if (type === ColumnType.BOOLEAN) {
+                return Number(!!valueA) - Number(!!valueB)
             }
             return 0 // Default for unsupported types
         } catch (err) {
@@ -63,7 +67,8 @@ export const useLocalSorting = <R extends RowDefinition = RowDefinition>({
                 const comparator = getComparator(
                     sort.columnKey as keyof R,
                     column?.type,
-                    column?.sortComparator
+                    column?.sortComparator,
+                    column?.getColumnValue
                 )
                 const compResult = comparator(a, b)
                 if (compResult !== 0) {
