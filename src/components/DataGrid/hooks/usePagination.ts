@@ -17,7 +17,9 @@ interface IUsePagination {
     resetPagination: () => void
 }
 
-export const usePagination = (defaultPageSize = DEFAULT_PAGE_SIZES.SMALL): IUsePagination => {
+export const usePagination = (
+    defaultPageSize: number = DEFAULT_PAGE_SIZES.SMALL
+): IUsePagination => {
     const [currentPage, setCurrentPage] = useState(0)
     const [pageSize, setPageSize] = useState(defaultPageSize)
 

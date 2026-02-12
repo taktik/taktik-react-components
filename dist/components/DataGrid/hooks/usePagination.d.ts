@@ -13,5 +13,5 @@ interface IUsePagination {
     setPageSize: (pageSize: number) => void;
     resetPagination: () => void;
 }
-export declare const usePagination: (defaultPageSize?: DEFAULT_PAGE_SIZES) => IUsePagination;
+export declare const usePagination: (defaultPageSize?: number) => IUsePagination;
 export {};
