@@ -28,11 +28,16 @@ export default defineConfig({
             formats: ['es', 'umd']
         },
         rollupOptions: {
-            external: ['react', 'react-dom'],
+            // react/jsx-runtime must stay external too: bundling it embeds one
+            // React version's internals and breaks consumers on another (React 19
+            // renamed the internals the bundled copy reaches for).
+            external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
             output: {
                 globals: {
                     react: 'React',
-                    'react-dom': 'ReactDOM'
+                    'react-dom': 'ReactDOM',
+                    'react/jsx-runtime': 'ReactJsxRuntime',
+                    'react/jsx-dev-runtime': 'ReactJsxDevRuntime'
                 }
             }
         }
