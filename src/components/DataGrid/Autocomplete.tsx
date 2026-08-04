@@ -1,5 +1,5 @@
 import MUIAutocomplete from '@mui/material/Autocomplete'
-import { TextFieldProps } from '@mui/material/TextField/TextField'
+import { TextFieldProps } from '@mui/material/TextField'
 import React, { useMemo } from 'react'
 import { Input } from './Input'
 

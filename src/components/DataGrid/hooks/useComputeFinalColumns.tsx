@@ -1,0 +1,148 @@
+import { ColumnDefinition, ColumnType, RowDefinition } from '../types'
+import { useCallback, useContext, useMemo } from 'react'
+import { RenderCellProps, SelectColumn } from 'react-data-grid'
+import {
+    DataGridExpandable,
+    expanderColumn,
+    EXPANDER_WIDTH,
+    ExpanderToggle,
+    LeadingCell,
+    LeadingHeaderSpacer
+} from '../Expandable'
+import { getHeaderFilter } from '../HeaderFilter'
+import { convertDate, DATE_FORMAT } from '../../../utils'
+import { VisibilityContext } from '../VisibilityProvider'
+import { DataGridCheckbox } from '../DataGridCheckbox'
+
+/** Cells of a `frozenRight` column — pinned to the right edge by Container.tsx's styles. */
+export const FROZEN_RIGHT_CLASS = 'rdg-cell-frozen-right'
+
+const joinClasses = (...classes: (string | null | undefined)[]): string =>
+    classes.filter(Boolean).join(' ')
+
+export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>({
+    columns,
+    expandable,
+    selectionEnabled,
+    selectableRows,
+    selectedRows,
+    onSelectedRowsChange
+}: {
+    columns: ColumnDefinition<R>[]
+    /** When set, the row's expand toggle rides in the selection cell, ahead of the checkbox. */
+    expandable?: DataGridExpandable<R>
+    selectionEnabled?: boolean
+    /** Every row the header checkbox acts on — all the grid holds, not just the rendered page. */
+    selectableRows?: R[]
+    selectedRows?: string[]
+    onSelectedRowsChange?: (rows: string[]) => void
+}): ColumnDefinition<R>[] => {
+    const { enabled: visibilityFeatureEnabled, hiddenColumn } = useContext(VisibilityContext)
+    const adaptColumn = useCallback((col: ColumnDefinition<R>) => {
+        const getRenderCell = () => {
+            if (col.renderCell) {
+                return col.renderCell
+            }
+            if (col.type === ColumnType.DATE) {
+                return ({ row }: RenderCellProps<R>) =>
+                    convertDate(
+                        row[col.key as keyof R],
+                        col.dateOptions?.formatDate ?? DATE_FORMAT.DATE_WITH_TIME,
+                        col.dateOptions?.timeZone
+                    )
+            }
+        }
+        const getRenderHeaderCell = () => {
+            if (col.renderHeaderCell) {
+                return col.renderHeaderCell
+            }
+            return getHeaderFilter<R>(col)
+        }
+
+        const adapted = {
+            ...col,
+            renderCell: getRenderCell(),
+            renderHeaderCell: getRenderHeaderCell()
+        }
+        if (col.frozenRight) {
+            // Sticky classes carry the pinning (Container.tsx styles them); `frozen` must stay off,
+            // or rdg would sort the column to the LEFT — the very thing frozenRight exists to avoid.
+            adapted.frozen = false
+            adapted.cellClass =
+                typeof col.cellClass === 'function'
+                    ? (row: R) =>
+                          joinClasses(
+                              FROZEN_RIGHT_CLASS,
+                              (col.cellClass as (row: R) => string | null | undefined)(row)
+                          )
+                    : joinClasses(FROZEN_RIGHT_CLASS, col.cellClass)
+            adapted.headerCellClass = joinClasses(FROZEN_RIGHT_CLASS, col.headerCellClass)
+        }
+        return adapted
+    }, [])
+
+    return useMemo(() => {
+        const finalColumns: ColumnDefinition<R>[] = []
+
+        // No selection column for the toggle to share, so it takes one of its own — which is still
+        // first, because there is no select column to outrank it.
+        if (expandable && !selectionEnabled) {
+            finalColumns.push(expanderColumn(expandable))
+        }
+        if (selectionEnabled) {
+            const allIds = (selectableRows ?? []).map((row) => row.id)
+            const allSelected =
+                allIds.length > 0 && allIds.every((id) => selectedRows?.includes(id))
+            // Only the rows in hand — one page's worth under server pagination, where a plain `[]`
+            // on unchecking would throw away picks made on every other page.
+            const toggleAll = (checked: boolean): string[] => {
+                const others = (selectedRows ?? []).filter((id) => !allIds.includes(id))
+                return checked ? [...others, ...allIds] : others
+            }
+            // The toggle shares this cell rather than taking one of its own, because rdg pins its
+            // select column to index 0 — see ExpanderToggle.
+            const width = expandable ? 50 + EXPANDER_WIDTH : 50
+            finalColumns.push({
+                ...SelectColumn,
+                width,
+                minWidth: width,
+                maxWidth: width,
+                // rdg's own header checkbox sees only the rows it RENDERS, so under local pagination
+                // "select all" would mean "select this page". Driven from `selectableRows` instead —
+                // every row the grid holds, which under server pagination is still one page.
+                renderHeaderCell: () => (
+                    <LeadingCell>
+                        {expandable && <LeadingHeaderSpacer aria-hidden />}
+                        <DataGridCheckbox
+                            checked={allSelected}
+                            onChange={(_, checked) => onSelectedRowsChange?.(toggleAll(checked))}
+                        />
+                    </LeadingCell>
+                ),
+                renderCell: expandable
+                    ? (props: RenderCellProps<R>) => (
+                          <LeadingCell>
+                              <ExpanderToggle row={props.row} expandable={expandable} />
+                              {SelectColumn.renderCell?.(props)}
+                          </LeadingCell>
+                      )
+                    : SelectColumn.renderCell
+            })
+        }
+        finalColumns.push(...columns.map((col) => adaptColumn(col)))
+        if (visibilityFeatureEnabled && hiddenColumn) {
+            return finalColumns.filter((col) => !hiddenColumn.includes(col.key))
+        }
+        return finalColumns
+    }, [
+        columns,
+        expandable,
+        adaptColumn,
+        visibilityFeatureEnabled,
+        hiddenColumn,
+        selectionEnabled,
+        selectableRows,
+        selectedRows,
+        onSelectedRowsChange
+    ])
+}

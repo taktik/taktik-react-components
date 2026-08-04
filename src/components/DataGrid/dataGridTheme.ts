@@ -10,6 +10,8 @@ export type DataGridTheme = {
     '--rdg-header-draggable-background-color'?: string
     '--rdg-row-hover-background-color'?: string
     '--rdg-row-selected-background-color'?: string
+    /** The bar down an open row and its detail. */
+    '--rdg-expanded-accent-color'?: string
     '--rdg-row-selected-hover-background-color'?: string
     '--rdg-checkbox-focus-color'?: string
     '--rdg-selection-color'?: string
@@ -49,6 +51,7 @@ export const defaultTheme: DataGridTheme = {
     '--rdg-cell-padding': '8px 12px',
     '--rdg-border-radius-container': '8px',
     '--rdg-row-selected-background-color': taktikTheme.primary400,
+    '--rdg-expanded-accent-color': taktikTheme.primary400,
     '--rdg-row-selected-color': taktikTheme.forcewhite,
     '--rdg-scrollbar-width': '8px',
     '--rdg-scrollbar-height': '8px',

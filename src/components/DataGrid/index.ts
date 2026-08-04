@@ -1,4 +1,5 @@
 export * from './DataGrid'
+export * from './DataGridCheckbox'
 export * from './types'
 export * from './dataGridTheme'
 export * from './VisibilityColumnChooser'
