@@ -58,13 +58,47 @@ export const Container = styled.div<{ $pagination?: boolean }>`
         padding: var(--rdg-cell-padding) !important;
     }
 
+    /* A frozenRight column's cells: pinned at the right edge while the grid scrolls sideways —
+       the same sticky mechanism rdg uses for frozen-left, which it only implements leftward
+       (it SORTS frozen columns to the front). Cells are already background-color: inherit, so
+       the pinned cell stays opaque with the row's own state (hover, selected) beneath it.
+       z-indexes mirror rdg's layering: body frozen cells sit at 1, frozen header cells at 3. */
+    .rdg-cell-frozen-right {
+        position: sticky;
+        inset-inline-end: 0;
+        z-index: 1;
+        /* the seam: columns slide underneath this cell, and without an edge the pin reads as
+           "the column just happens to be there" rather than as pinned */
+        box-shadow: inset 1px 0 0 var(--rdg-border-color);
+    }
+
+    .rdg-header-row .rdg-cell-frozen-right {
+        z-index: 3;
+    }
+
+    /* react-data-grid renders the noRowsFallback as a bare grid child; center it in the body
+       (below the header, whose height rdg exposes as --rdg-header-row-height) so every empty
+       grid shows its message/icon in the same place. .rdg establishes a containing block via
+       contain:content, so this absolute box resolves against the grid, not the page. */
     .rdg-no-data {
+        position: absolute;
+        inset-block: var(--rdg-header-row-height) 0;
+        inset-inline: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        box-sizing: border-box;
         text-align: center;
-        grid-column: 1/-1;
+        pointer-events: none;
     }
 
     .rdg-cell-resizable {
-        > div {
+        /* Only style react-data-grid's resize handle, which it always renders as the
+           cell's last child. A bare "> div" also matches the header-content wrapper
+           (getHeaderFilter's Box) — collapsing the label/filter to a 5px absolute strip. */
+        > div:last-child {
             width: 5px;
             cursor: col-resize;
             background-color: var(--rdg-border-color);
@@ -79,6 +113,22 @@ export const Container = styled.div<{ $pagination?: boolean }>`
                 opacity: 0.5;
             }
         }
+    }
+
+    /* A detail row holds a panel, not a line of text: it needs to wrap, to start at the top, and to
+       scroll inside itself rather than spill over the row below. */
+    .rdg-detail-row .rdg-cell {
+        align-items: flex-start;
+        white-space: normal;
+        overflow: auto;
+    }
+
+    /* One bar down the open row AND its detail, so a reader can tell which pair belongs together
+       when several are open at once. On the first cell only — it is frozen, so the bar stays put
+       while the grid scrolls sideways. */
+    .rdg-row-expanded .rdg-cell:first-of-type,
+    .rdg-detail-row .rdg-cell:first-of-type {
+        box-shadow: inset 3px 0 0 0 var(--rdg-expanded-accent-color);
     }
 
     .rdg-row {

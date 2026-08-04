@@ -8,6 +8,8 @@ export type DataGridTheme = {
     '--rdg-header-draggable-background-color'?: string;
     '--rdg-row-hover-background-color'?: string;
     '--rdg-row-selected-background-color'?: string;
+    /** The bar down an open row and its detail. */
+    '--rdg-expanded-accent-color'?: string;
     '--rdg-row-selected-hover-background-color'?: string;
     '--rdg-checkbox-focus-color'?: string;
     '--rdg-selection-color'?: string;

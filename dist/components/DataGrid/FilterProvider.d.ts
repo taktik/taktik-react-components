@@ -15,4 +15,4 @@ export declare const FilterProvider: ({ children, filters: filtersProp, setFilte
     children: ReactNode;
     filters?: Filters;
     setFilters?: (filters: Filters) => void;
-}) => import("react/jsx-runtime").JSX.Element;
+}) => React.JSX.Element;

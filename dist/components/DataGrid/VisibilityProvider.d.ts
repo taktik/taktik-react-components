@@ -14,4 +14,4 @@ export declare const VisibilityProvider: ({ columns, children, visibilityFeature
     enabled?: boolean;
     hiddenByDefault?: string[];
     localStorageKey?: string;
-}) => import("react/jsx-runtime").JSX.Element;
+}) => React.JSX.Element;

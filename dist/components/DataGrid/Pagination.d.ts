@@ -10,4 +10,4 @@ export type Props = {
         ofLabel?: string;
     };
 };
-export declare const Pagination: React.MemoExoticComponent<({ currentPage, setCurrentPage, setPageSize, pageSize, totalCount, labels }: Props) => import("react/jsx-runtime").JSX.Element>;
+export declare const Pagination: React.MemoExoticComponent<({ currentPage, setCurrentPage, setPageSize, pageSize, totalCount, labels }: Props) => React.JSX.Element>;

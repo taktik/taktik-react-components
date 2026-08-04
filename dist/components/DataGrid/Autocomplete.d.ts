@@ -1,4 +1,4 @@
-import { TextFieldProps } from '@mui/material/TextField/TextField';
+import { TextFieldProps } from '@mui/material/TextField';
 import React from 'react';
 type Props = Omit<TextFieldProps, 'onChange' | 'value'> & {
     options: {
@@ -9,5 +9,5 @@ type Props = Omit<TextFieldProps, 'onChange' | 'value'> & {
     value?: string;
     renderInput?: (props: TextFieldProps) => React.ReactNode;
 };
-export declare const Autocomplete: ({ options, renderInput, ...props }: Props) => import("react/jsx-runtime").JSX.Element;
+export declare const Autocomplete: ({ options, renderInput, ...props }: Props) => React.JSX.Element;
 export {};
