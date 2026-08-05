@@ -6,8 +6,8 @@ import De from "@emotion/styled";
 import Uo from "@mui/material/Box";
 import jo from "@mui/material/TextField";
 import Ko from "@mui/material/Autocomplete";
-import Xo from "@mui/material/Checkbox";
-import qo from "@mui/material/TablePagination";
+import qo from "@mui/material/Checkbox";
+import Xo from "@mui/material/TablePagination";
 import Vo from "@mui/material/Menu";
 import Zo from "@mui/material/MenuItem";
 function vr(e) {
@@ -1034,13 +1034,13 @@ function Lr({
   sortDirection: t,
   priority: n
 }) {
-  return e.sortable ? /* @__PURE__ */ b(Xa, {
+  return e.sortable ? /* @__PURE__ */ b(qa, {
     sortDirection: t,
     priority: n,
     children: e.name
   }) : e.name;
 }
-function Xa({
+function qa({
   sortDirection: e,
   priority: t,
   children: n
@@ -1059,7 +1059,7 @@ function Xa({
     })]
   });
 }
-const qa = "c6l2wv17-0-0-beta-47", Va = "c1kqdw7y7-0-0-beta-47", Za = `rdg-cell-resizable ${Va}`, Qa = "r1y6ywlx7-0-0-beta-47", Ja = "rdg-cell-draggable", ei = "c1bezg5o7-0-0-beta-47", ti = `rdg-cell-dragging ${ei}`, ni = "c1vc96037-0-0-beta-47", ri = `rdg-cell-drag-over ${ni}`;
+const Xa = "c6l2wv17-0-0-beta-47", Va = "c1kqdw7y7-0-0-beta-47", Za = `rdg-cell-resizable ${Va}`, Qa = "r1y6ywlx7-0-0-beta-47", Ja = "rdg-cell-draggable", ei = "c1bezg5o7-0-0-beta-47", ti = `rdg-cell-dragging ${ei}`, ni = "c1vc96037-0-0-beta-47", ri = `rdg-cell-drag-over ${ni}`;
 function oi({
   column: e,
   colSpan: t,
@@ -1082,7 +1082,7 @@ function oi({
     sortable: T,
     resizable: z,
     draggable: Y
-  } = e, L = Ct(e, e.headerCellClass, T && qa, z && Za, Y && Ja, d && ti, g && ri), V = e.renderHeaderCell ?? Lr;
+  } = e, L = Ct(e, e.headerCellClass, T && Xa, z && Za, Y && Ja, d && ti, g && ri), V = e.renderHeaderCell ?? Lr;
   function A(p) {
     if (p.pointerType === "mouse" && p.buttons !== 1)
       return;
@@ -1662,11 +1662,11 @@ function Ai(e, t) {
     scrollLeft: Re,
     viewportWidth: En,
     enableVirtualization: we
-  }), at = (o == null ? void 0 : o.length) ?? 0, Ke = (a == null ? void 0 : a.length) ?? 0, Nn = at + Ke, Xe = $e + at, Bt = $e - 1, ue = -Xe, kt = ue + Bt, Ye = r.length + Ke - 1, [I, qe] = Q(() => ({
+  }), at = (o == null ? void 0 : o.length) ?? 0, Ke = (a == null ? void 0 : a.length) ?? 0, Nn = at + Ke, qe = $e + at, Bt = $e - 1, ue = -qe, kt = ue + Bt, Ye = r.length + Ke - 1, [I, Xe] = Q(() => ({
     idx: -1,
     rowIdx: ue - 1,
     mode: "SELECT"
-  })), Ut = ve(I), Fn = ve(ot), Hn = ve(-1), Dt = ve(null), St = ve(!1), jt = C === "treegrid", Kt = $e * p, Ln = Nn * W, Rt = Mn - Kt - Ln, Xt = h != null && u != null, Wn = ie === "rtl", lo = Wn ? "ArrowRight" : "ArrowLeft", zn = Wn ? "ArrowLeft" : "ArrowRight", $n = Oe ?? $e + r.length + Nn, uo = B(() => ({
+  })), Ut = ve(I), Fn = ve(ot), Hn = ve(-1), Dt = ve(null), St = ve(!1), jt = C === "treegrid", Kt = $e * p, Ln = Nn * W, Rt = Mn - Kt - Ln, qt = h != null && u != null, Wn = ie === "rtl", lo = Wn ? "ArrowRight" : "ArrowLeft", zn = Wn ? "ArrowLeft" : "ArrowRight", $n = Oe ?? $e + r.length + Nn, uo = B(() => ({
     renderCheckbox: te,
     renderSortStatus: j
   }), [te, j]), fo = B(() => {
@@ -1682,7 +1682,7 @@ function Ai(e, t) {
   }, [r, h, i]), {
     rowOverscanStartIdx: it,
     rowOverscanEndIdx: st,
-    totalRowHeight: qt,
+    totalRowHeight: Xt,
     gridTemplateRows: ho,
     getRowTop: Yn,
     getRowHeight: go,
@@ -1707,7 +1707,7 @@ function Ai(e, t) {
   }), {
     gridTemplateColumns: mo,
     handleColumnResize: wo
-  } = Fa(ee, Fe, io, je, En, de, ze, rt, Be, x), yo = jt ? -1 : 0, Ve = ee.length - 1, Vt = Jt(I), It = jn(I), po = p + qt + Ln + oo, bo = ce(wo), Co = ce(S), xo = ce(y), vo = ce(P), ko = ce(E), Do = ce(k), So = ce(To), Ro = ce(_n), Io = ce(Tt), Zt = ce(ct), Gn = ce(({
+  } = Fa(ee, Fe, io, je, En, de, ze, rt, Be, x), yo = jt ? -1 : 0, Ve = ee.length - 1, Vt = Jt(I), It = jn(I), po = p + Xt + Ln + oo, bo = ce(wo), Co = ce(S), xo = ce(y), vo = ce(P), ko = ce(E), Do = ce(k), So = ce(To), Ro = ce(_n), Io = ce(Tt), Zt = ce(ct), Gn = ce(({
     idx: f,
     rowIdx: m
   }) => {
@@ -1725,7 +1725,7 @@ function Ai(e, t) {
       preventScroll: !0
     }), Nt(Dt.current));
   }), tt(() => {
-    St.current && (St.current = !1, Xn());
+    St.current && (St.current = !1, qn());
   }), Go(t, () => ({
     element: je.current,
     scrollToCell({
@@ -1763,10 +1763,10 @@ function Ai(e, t) {
       isShiftClick: F
     } = f;
     if ((d == null ? void 0 : d(m)) === !0) return;
-    const G = new Set(h), K = i(m), X = Hn.current, q = r.indexOf(m);
-    if (Hn.current = q, O ? G.add(K) : G.delete(K), F && X !== -1 && X !== q && X < r.length) {
-      const fe = ua(q - X);
-      for (let se = X + fe; se !== q; se += fe) {
+    const G = new Set(h), K = i(m), q = Hn.current, X = r.indexOf(m);
+    if (Hn.current = X, O ? G.add(K) : G.delete(K), F && q !== -1 && q !== X && q < r.length) {
+      const fe = ua(X - q);
+      for (let se = q + fe; se !== X; se += fe) {
         const xe = r[se];
         (d == null ? void 0 : d(xe)) !== !0 && (O ? G.add(i(xe)) : G.delete(i(xe)));
       }
@@ -1774,7 +1774,7 @@ function Ai(e, t) {
     u(G);
   }
   function Eo(f) {
-    var q;
+    var X;
     const {
       idx: m,
       rowIdx: O,
@@ -1795,15 +1795,15 @@ function Ai(e, t) {
     const G = f.target.closest(".rdg-cell") !== null, K = jt && f.target === Dt.current;
     if (!G && !K) return;
     const {
-      keyCode: X
+      keyCode: q
     } = f;
     if (It && (z != null || T != null) && Ht(f)) {
-      if (X === 67) {
-        if (((q = window.getSelection()) == null ? void 0 : q.isCollapsed) === !1) return;
+      if (q === 67) {
+        if (((X = window.getSelection()) == null ? void 0 : X.isCollapsed) === !1) return;
         Po();
         return;
       }
-      if (X === 86) {
+      if (q === 86) {
         Oo();
         return;
       }
@@ -1881,7 +1881,7 @@ function Ai(e, t) {
       key: O,
       shiftKey: F
     } = f;
-    if (Xt && F && O === " ") {
+    if (qt && F && O === " ") {
       gt(i);
       const G = i(m);
       _n({
@@ -1891,7 +1891,7 @@ function Ai(e, t) {
       }), f.preventDefault();
       return;
     }
-    Et(I) && ea(f) && qe(({
+    Et(I) && ea(f) && Xe(({
       idx: G,
       rowIdx: K
     }) => ({
@@ -1937,12 +1937,12 @@ function Ai(e, t) {
     if (!Jt(f)) return;
     Bn();
     const O = r[f.rowIdx], F = nn(I, f);
-    m && Et(f) ? qe({
+    m && Et(f) ? Xe({
       ...f,
       mode: "EDIT",
       row: O,
       originalRow: O
-    }) : F ? Nt(er(je.current)) : (St.current = !0, qe({
+    }) : F ? Nt(er(je.current)) : (St.current = !0, Xe({
       ...f,
       mode: "SELECT"
     })), M && !F && M({
@@ -2000,18 +2000,18 @@ function Ai(e, t) {
         };
       case "PageUp": {
         if (I.rowIdx === ue) return I;
-        const X = Yn(G) + go(G) - Rt;
+        const q = Yn(G) + go(G) - Rt;
         return {
           idx: F,
-          rowIdx: X > 0 ? An(X) : 0
+          rowIdx: q > 0 ? An(q) : 0
         };
       }
       case "PageDown": {
         if (I.rowIdx >= r.length) return I;
-        const X = Yn(G) + Rt;
+        const q = Yn(G) + Rt;
         return {
           idx: F,
-          rowIdx: X < qt ? An(X) : r.length - 1
+          rowIdx: q < Xt ? An(q) : r.length - 1
         };
       }
       default:
@@ -2040,7 +2040,7 @@ function Ai(e, t) {
     f.preventDefault();
     const G = Ht(f), K = Ho(m, G, O);
     if (nn(I, K)) return;
-    const X = ia({
+    const q = ia({
       moveUp: m === "ArrowUp",
       moveNext: m === zn || m === "Tab" && !O,
       columns: ee,
@@ -2057,7 +2057,7 @@ function Ai(e, t) {
       nextPosition: K,
       isCellWithinBounds: Jt
     });
-    ct(X);
+    ct(q);
   }
   function Lo(f) {
     if (ot === void 0) return;
@@ -2066,7 +2066,7 @@ function Ai(e, t) {
     } = I;
     return (m < ot ? m < f && f <= ot : m > f && f >= ot) ? I.idx : void 0;
   }
-  function Xn() {
+  function qn() {
     const f = er(je.current);
     if (f === null) return;
     Nt(f), (f.querySelector('[tabindex="0"]') ?? f).focus({
@@ -2084,7 +2084,7 @@ function Ai(e, t) {
       return;
     const F = Tn(O);
     return /* @__PURE__ */ b(Aa, {
-      gridRowStart: Xe + m + 1,
+      gridRowStart: qe + m + 1,
       rows: r,
       column: O,
       columnWidth: F,
@@ -2094,7 +2094,7 @@ function Ai(e, t) {
       isCellEditable: Et,
       latestDraggedOverRowIdx: Fn,
       onRowsChange: s,
-      onClick: Xn,
+      onClick: qn,
       onFill: N,
       setDragging: no,
       setDraggedOverRowIdx: Qt
@@ -2108,8 +2108,8 @@ function Ai(e, t) {
     } = I, F = ee[m], G = ge(F, he, {
       type: "ROW",
       row: O
-    }), K = (q) => {
-      St.current = q, qe(({
+    }), K = (X) => {
+      St.current = X, Xe(({
         idx: fe,
         rowIdx: se
       }) => ({
@@ -2117,12 +2117,12 @@ function Ai(e, t) {
         rowIdx: se,
         mode: "SELECT"
       }));
-    }, X = (q, fe, se) => {
+    }, q = (X, fe, se) => {
       fe ? Ft(() => {
-        Tt(F, I.rowIdx, q), K(se);
-      }) : qe((xe) => ({
+        Tt(F, I.rowIdx, X), K(se);
+      }) : Xe((xe) => ({
         ...xe,
-        row: q
+        row: X
       }));
     };
     return r[I.rowIdx] !== I.originalRow && K(!1), /* @__PURE__ */ b(_a, {
@@ -2130,7 +2130,7 @@ function Ai(e, t) {
       colSpan: G,
       row: O,
       rowIdx: f,
-      onRowChange: X,
+      onRowChange: q,
       closeEditor: K,
       onKeyDown: D,
       navigate: Kn
@@ -2146,16 +2146,16 @@ function Ai(e, t) {
       rowIdx: O
     } = I, F = It && O < it ? it - 1 : it, G = It && O > st ? st + 1 : st;
     for (let K = F; K <= G; K++) {
-      const X = K === it - 1 || K === st + 1, q = X ? O : K;
+      const q = K === it - 1 || K === st + 1, X = q ? O : K;
       let fe = Fe;
       const se = m === -1 ? void 0 : ee[m];
-      se !== void 0 && (X ? fe = [se] : fe = lt(q));
-      const xe = r[q], Yo = Xe + q + 1;
-      let en = q, tn = !1;
+      se !== void 0 && (q ? fe = [se] : fe = lt(X));
+      const xe = r[X], Yo = qe + X + 1;
+      let en = X, tn = !1;
       typeof i == "function" && (en = i(xe), tn = (h == null ? void 0 : h.has(en)) ?? !1), f.push(_(en, {
-        "aria-rowindex": Xe + q + 1,
-        "aria-selected": Xt ? tn : void 0,
-        rowIdx: q,
+        "aria-rowindex": qe + X + 1,
+        "aria-selected": qt ? tn : void 0,
+        rowIdx: X,
         row: xe,
         viewportColumns: fe,
         isRowSelectionDisabled: (d == null ? void 0 : d(xe)) ?? !1,
@@ -2166,31 +2166,31 @@ function Ai(e, t) {
         rowClass: re,
         gridRowStart: Yo,
         copiedCellIdx: Ue !== null && Ue.row === xe ? ee.findIndex((Ao) => Ao.key === Ue.columnKey) : void 0,
-        selectedCellIdx: O === q ? m : void 0,
-        draggedOverCellIdx: Lo(q),
+        selectedCellIdx: O === X ? m : void 0,
+        draggedOverCellIdx: Lo(X),
         setDraggedOverRowIdx: Rn ? Qt : void 0,
         lastFrozenColumnIndex: he,
         onRowChange: Io,
         selectCell: Zt,
-        selectedCellEditor: zo(q)
+        selectedCellEditor: zo(X)
       }));
     }
     return f;
   }
-  (I.idx > Ve || I.rowIdx > Ye) && (qe({
+  (I.idx > Ve || I.rowIdx > Ye) && (Xe({
     idx: -1,
     rowIdx: ue - 1,
     mode: "SELECT"
   }), Qt(void 0));
   let Mt = `repeat(${$e}, ${p}px)`;
   at > 0 && (Mt += ` repeat(${at}, ${W}px)`), r.length > 0 && (Mt += ho), Ke > 0 && (Mt += ` repeat(${Ke}, ${W}px)`);
-  const qn = I.idx === -1 && I.rowIdx !== ue - 1;
+  const Xn = I.idx === -1 && I.rowIdx !== ue - 1;
   return /* @__PURE__ */ ne("div", {
     role: C,
     "aria-label": Ee,
     "aria-labelledby": Me,
     "aria-describedby": Pe,
-    "aria-multiselectable": Xt ? !0 : void 0,
+    "aria-multiselectable": qt ? !0 : void 0,
     "aria-colcount": ee.length,
     "aria-rowcount": $n,
     className: Te(Ei, V, Rn && Pi),
@@ -2257,14 +2257,14 @@ function Ai(e, t) {
           value: Ro,
           children: $o()
         }), a == null ? void 0 : a.map((f, m) => {
-          const O = Xe + r.length + m + 1, F = r.length + m, G = I.rowIdx === F, K = Rt > qt ? Mn - W * (a.length - m) : void 0, X = K === void 0 ? W * (a.length - 1 - m) : void 0;
+          const O = qe + r.length + m + 1, F = r.length + m, G = I.rowIdx === F, K = Rt > Xt ? Mn - W * (a.length - m) : void 0, q = K === void 0 ? W * (a.length - 1 - m) : void 0;
           return /* @__PURE__ */ b(Jn, {
             "aria-rowindex": $n - Ke + m + 1,
             rowIdx: F,
             gridRowStart: O,
             row: f,
             top: K,
-            bottom: X,
+            bottom: q,
             viewportColumns: lt(F),
             lastFrozenColumnIndex: he,
             selectedCellIdx: G ? I.idx : void 0,
@@ -2275,10 +2275,10 @@ function Ai(e, t) {
       })]
     }), Wo(), ra(Fe), jt && /* @__PURE__ */ b("div", {
       ref: Dt,
-      tabIndex: qn ? 0 : -1,
-      className: Te(Oi, qn && [ii, he !== -1 && si], !Ze(I.rowIdx) && Ni),
+      tabIndex: Xn ? 0 : -1,
+      className: Te(Oi, Xn && [ii, he !== -1 && si], !Ze(I.rowIdx) && Ni),
       style: {
-        gridRowStart: I.rowIdx + Xe + 1
+        gridRowStart: I.rowIdx + qe + 1
       }
     }), Ne !== null && /* @__PURE__ */ b(vi, {
       scrollToPosition: Ne,
@@ -2393,7 +2393,7 @@ function ji({
   });
 }
 const Ki = /* @__PURE__ */ We(ji);
-function Xi({
+function qi({
   columns: e,
   rows: t,
   rowHeight: n,
@@ -2451,7 +2451,7 @@ function Xi({
     const R = /* @__PURE__ */ new Set();
     if (!S) return [t, p];
     const C = [], H = (W, _, j) => {
-      if (qi(W)) {
+      if (Xi(W)) {
         C.push(...W);
         return;
       }
@@ -2641,10 +2641,10 @@ function Xi({
     }
   });
 }
-function qi(e) {
+function Xi(e) {
   return Array.isArray(e);
 }
-const Hl = /* @__PURE__ */ yn(Xi), Vi = "t7vyx3i7-0-0-beta-47", Zi = `rdg-text-editor ${Vi}`;
+const Hl = /* @__PURE__ */ yn(qi), Vi = "t7vyx3i7-0-0-beta-47", Zi = `rdg-text-editor ${Vi}`;
 function Qi(e) {
   e == null || e.focus(), e == null || e.select();
 }
@@ -2833,13 +2833,12 @@ const Z = {
        (it SORTS frozen columns to the front). Cells are already background-color: inherit, so
        the pinned cell stays opaque with the row's own state (hover, selected) beneath it.
        z-indexes mirror rdg's layering: body frozen cells sit at 1, frozen header cells at 3. */
+    /* No seam on purpose (Olivier, 2026-08-04): a permanent left edge read as clutter; the cell's
+       opaque background over the scrolling columns is signal enough. */
     .rdg-cell-frozen-right {
         position: sticky;
         inset-inline-end: 0;
         z-index: 1;
-        /* the seam: columns slide underneath this cell, and without an edge the pin reads as
-           "the column just happens to be there" rather than as pinned */
-        box-shadow: inset 1px 0 0 var(--rdg-border-color);
     }
 
     .rdg-header-row .rdg-cell-frozen-right {
@@ -3533,7 +3532,7 @@ const As = /^(\d+)(th|st|nd|rd)?/i, Gs = /\d+/i, _s = {
   narrow: /^[jfmasond]/i,
   abbreviated: /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i,
   wide: /^(january|february|march|april|may|june|july|august|september|october|november|december)/i
-}, Xs = {
+}, qs = {
   narrow: [
     /^j/i,
     /^f/i,
@@ -3562,7 +3561,7 @@ const As = /^(\d+)(th|st|nd|rd)?/i, Gs = /\d+/i, _s = {
     /^n/i,
     /^d/i
   ]
-}, qs = {
+}, Xs = {
   narrow: /^[smtwf]/i,
   short: /^(su|mo|tu|we|th|fr|sa)/i,
   abbreviated: /^(sun|mon|tue|wed|thu|fri|sat)/i,
@@ -3606,11 +3605,11 @@ const As = /^(\d+)(th|st|nd|rd)?/i, Gs = /\d+/i, _s = {
   month: ft({
     matchPatterns: Ks,
     defaultMatchWidth: "wide",
-    parsePatterns: Xs,
+    parsePatterns: qs,
     defaultParseWidth: "any"
   }),
   day: ft({
-    matchPatterns: qs,
+    matchPatterns: Xs,
     defaultMatchWidth: "wide",
     parsePatterns: Vs,
     defaultParseWidth: "any"
@@ -3709,7 +3708,7 @@ function cc(e, t) {
   const n = pe(e, t == null ? void 0 : t.in), r = +zt(n) - +sc(n);
   return Math.round(r / jr) + 1;
 }
-function Xr(e, t) {
+function qr(e, t) {
   var w, h, d, u;
   const n = pe(e, t == null ? void 0 : t.in), r = n.getFullYear(), o = vt(), a = (t == null ? void 0 : t.firstWeekContainsDate) ?? ((h = (w = t == null ? void 0 : t.locale) == null ? void 0 : w.options) == null ? void 0 : h.firstWeekContainsDate) ?? o.firstWeekContainsDate ?? ((u = (d = o.locale) == null ? void 0 : d.options) == null ? void 0 : u.firstWeekContainsDate) ?? 1, i = Le((t == null ? void 0 : t.in) || e, 0);
   i.setFullYear(r + 1, 0, a), i.setHours(0, 0, 0, 0);
@@ -3720,7 +3719,7 @@ function Xr(e, t) {
 }
 function lc(e, t) {
   var s, c, l, w;
-  const n = vt(), r = (t == null ? void 0 : t.firstWeekContainsDate) ?? ((c = (s = t == null ? void 0 : t.locale) == null ? void 0 : s.options) == null ? void 0 : c.firstWeekContainsDate) ?? n.firstWeekContainsDate ?? ((w = (l = n.locale) == null ? void 0 : l.options) == null ? void 0 : w.firstWeekContainsDate) ?? 1, o = Xr(e, t), a = Le((t == null ? void 0 : t.in) || e, 0);
+  const n = vt(), r = (t == null ? void 0 : t.firstWeekContainsDate) ?? ((c = (s = t == null ? void 0 : t.locale) == null ? void 0 : s.options) == null ? void 0 : c.firstWeekContainsDate) ?? n.firstWeekContainsDate ?? ((w = (l = n.locale) == null ? void 0 : l.options) == null ? void 0 : w.firstWeekContainsDate) ?? 1, o = qr(e, t), a = Le((t == null ? void 0 : t.in) || e, 0);
   return a.setFullYear(o, 0, r), a.setHours(0, 0, 0, 0), pt(a, t);
 }
 function dc(e, t) {
@@ -3818,7 +3817,7 @@ const He = {
   },
   // Local week-numbering year
   Y: function(e, t, n, r) {
-    const o = Xr(e, r), a = o > 0 ? o : 1 - o;
+    const o = qr(e, r), a = o > 0 ? o : 1 - o;
     if (t === "YY") {
       const i = a % 100;
       return U(i, 2);
@@ -4302,7 +4301,7 @@ const cr = (e, t) => {
     default:
       return t.date({ width: "full" });
   }
-}, qr = (e, t) => {
+}, Xr = (e, t) => {
   switch (e) {
     case "p":
       return t.time({ width: "short" });
@@ -4334,9 +4333,9 @@ const cr = (e, t) => {
       a = t.dateTime({ width: "full" });
       break;
   }
-  return a.replace("{{date}}", cr(r, t)).replace("{{time}}", qr(o, t));
+  return a.replace("{{date}}", cr(r, t)).replace("{{time}}", Xr(o, t));
 }, fc = {
-  p: qr,
+  p: Xr,
   P: uc
 }, hc = /^D+$/, gc = /^Y+$/, mc = ["D", "DD", "YY", "YYYY"];
 function wc(e) {
@@ -4691,13 +4690,13 @@ function Jr(e, t = {}) {
     return new Date(e);
   if (Object.prototype.toString.call(e) !== "[object String]")
     return /* @__PURE__ */ new Date(NaN);
-  const r = jc(e), { year: o, restDateString: a } = Kc(r.date, n), i = Xc(a, o);
+  const r = jc(e), { year: o, restDateString: a } = Kc(r.date, n), i = qc(a, o);
   if (i === null || isNaN(i.getTime()))
     return /* @__PURE__ */ new Date(NaN);
   if (i) {
     const s = i.getTime();
     let c = 0, l;
-    if (r.time && (c = qc(r.time), c === null || isNaN(c)))
+    if (r.time && (c = Xc(r.time), c === null || isNaN(c)))
       return /* @__PURE__ */ new Date(NaN);
     if (r.timeZone || t.timeZone) {
       if (l = kn(r.timeZone || t.timeZone, new Date(s + c)), isNaN(l))
@@ -4740,7 +4739,7 @@ function Kc(e, t) {
     year: null
   };
 }
-function Xc(e, t) {
+function qc(e, t) {
   if (t === null)
     return null;
   let n, r, o;
@@ -4768,7 +4767,7 @@ function Xc(e, t) {
   }
   return null;
 }
-function qc(e) {
+function Xc(e) {
   let t, n, r = ae.HH.exec(e);
   if (r)
     return t = parseFloat(r[1].replace(",", ".")), un(t) ? t % 24 * dn : NaN;
@@ -4891,7 +4890,7 @@ const rl = (e, t = "yyyy-MM-dd'T'HH:mm:ss'Z'", n = Intl.DateTimeFormat().resolve
       children: t
     }
   );
-}, Dn = De(Xo)`
+}, Dn = De(qo)`
     width: 20px;
     height: 20px;
 
@@ -5106,7 +5105,7 @@ const hl = ({
       []
     );
     return /* @__PURE__ */ b(ml, { children: /* @__PURE__ */ b(
-      qo,
+      Xo,
       {
         labelRowsPerPage: a != null && a.rowsPerPageLabel ? /* @__PURE__ */ b("span", { children: a == null ? void 0 : a.rowsPerPageLabel }) : void 0,
         labelDisplayedRows: ({ from: c, to: l, count: w }) => `${c}-${l} ${a != null && a.ofLabel ? a.ofLabel : "of"} ${w}`,
