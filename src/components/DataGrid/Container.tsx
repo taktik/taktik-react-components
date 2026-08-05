@@ -63,13 +63,12 @@ export const Container = styled.div<{ $pagination?: boolean }>`
        (it SORTS frozen columns to the front). Cells are already background-color: inherit, so
        the pinned cell stays opaque with the row's own state (hover, selected) beneath it.
        z-indexes mirror rdg's layering: body frozen cells sit at 1, frozen header cells at 3. */
+    /* No seam on purpose (Olivier, 2026-08-04): a permanent left edge read as clutter; the cell's
+       opaque background over the scrolling columns is signal enough. */
     .rdg-cell-frozen-right {
         position: sticky;
         inset-inline-end: 0;
         z-index: 1;
-        /* the seam: columns slide underneath this cell, and without an edge the pin reads as
-           "the column just happens to be there" rather than as pinned */
-        box-shadow: inset 1px 0 0 var(--rdg-border-color);
     }
 
     .rdg-header-row .rdg-cell-frozen-right {
