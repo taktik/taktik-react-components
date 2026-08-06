@@ -26,7 +26,8 @@ export const VisibilityProvider = ({
     visibilityFeatureDisabledFor,
     hiddenByDefault,
     enabled,
-    localStorageKey = LOCAL_STORAGE_HIDDEN_COLUMN_KEY
+    localStorageKey = LOCAL_STORAGE_HIDDEN_COLUMN_KEY,
+    onHiddenColumnsChange
 }: {
     children: ReactNode
     columns: ColumnDefinition[]
@@ -34,6 +35,7 @@ export const VisibilityProvider = ({
     enabled?: boolean
     hiddenByDefault?: string[]
     localStorageKey?: string
+    onHiddenColumnsChange?: (hiddenColumns: string[]) => void
 }) => {
     const [gridKey, setGridKey] = React.useState(0)
     const [hiddenColumn, setHiddenColumn] = React.useState<string[]>([])
@@ -53,6 +55,21 @@ export const VisibilityProvider = ({
         setGridKey((prev) => prev + 1)
         setHiddenColumn(columns)
     }, [])
+
+    /**
+     * What the CHOOSER calls — the stored set, plus a word to whoever is listening.
+     *
+     * The notification is deliberately not on `setHiddenColumnAndPersist`: that one also runs when a
+     * grid reads the stored set on mount, and a listener that fed the answer back as `hiddenByDefault`
+     * would re-trigger the read for as long as it kept doing so.
+     */
+    const chooseHiddenColumns = useCallback(
+        (columns: string[]) => {
+            setHiddenColumnAndPersist(columns)
+            onHiddenColumnsChange?.(columns)
+        },
+        [setHiddenColumnAndPersist, onHiddenColumnsChange]
+    )
     const filteredColumns = useMemo(
         () => columns.filter((column) => !visibilityFeatureDisabledFor?.includes(column.key)),
         [columns, visibilityFeatureDisabledFor]
@@ -63,7 +80,7 @@ export const VisibilityProvider = ({
                 gridKey: `data-grid-${gridKey}`,
                 columns: filteredColumns,
                 hiddenColumn,
-                setHiddenColumn: setHiddenColumnAndPersist,
+                setHiddenColumn: chooseHiddenColumns,
                 enabled
             }}>
             {children}
