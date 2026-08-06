@@ -7,11 +7,12 @@ export declare const VisibilityContext: React.Context<{
     enabled?: boolean;
     gridKey?: string;
 }>;
-export declare const VisibilityProvider: ({ columns, children, visibilityFeatureDisabledFor, hiddenByDefault, enabled, localStorageKey }: {
+export declare const VisibilityProvider: ({ columns, children, visibilityFeatureDisabledFor, hiddenByDefault, enabled, localStorageKey, onHiddenColumnsChange }: {
     children: ReactNode;
     columns: ColumnDefinition[];
     visibilityFeatureDisabledFor?: string[];
     enabled?: boolean;
     hiddenByDefault?: string[];
     localStorageKey?: string;
+    onHiddenColumnsChange?: (hiddenColumns: string[]) => void;
 }) => React.JSX.Element;

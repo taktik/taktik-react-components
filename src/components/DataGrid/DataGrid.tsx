@@ -69,6 +69,12 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
         visibilityFeatureDisabledFor?: string[]
         hiddenByDefault?: string[]
         localStorageKey?: string
+        /**
+         * Runs when the USER hides or shows a column, never when a grid reads the stored set on
+         * mount — for a page holding several tables over one schema, which want one answer between
+         * them. Feeding the reported set back as `hiddenByDefault` re-reads it in every sibling.
+         */
+        onHiddenColumnsChange?: (hiddenColumns: string[]) => void
     }
     /**
      * Master-detail rows: an open row is followed by one of its own, spanning the grid's width.
@@ -354,7 +360,8 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
         enabled: visibilityFeatureEnabled,
         visibilityFeatureDisabledFor,
         hiddenByDefault,
-        localStorageKey
+        localStorageKey,
+        onHiddenColumnsChange
     } = {},
     ...rest
 }: DataGridProps<R>) => (
@@ -364,6 +371,7 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
             enabled={visibilityFeatureEnabled}
             hiddenByDefault={hiddenByDefault}
             localStorageKey={localStorageKey}
+            onHiddenColumnsChange={onHiddenColumnsChange}
             visibilityFeatureDisabledFor={visibilityFeatureDisabledFor}>
             <DataGridBase {...rest} columns={columns} filters={filters} setFilters={setFilters} />
         </VisibilityProvider>
