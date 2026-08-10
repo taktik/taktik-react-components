@@ -11,11 +11,23 @@ export const VisibilityContext = React.createContext<{
     setHiddenColumn: (hiddenColumns: string[]) => void
     enabled?: boolean
     gridKey?: string
+    /**
+     * Whether the column chooser's menu is open.
+     *
+     * ⚠ It lives HERE, above the grid, and not in the chooser itself. Toggling a column changes the
+     * column set, which remounts react-data-grid — and the chooser is rendered inside a header cell,
+     * so it went with it and the menu shut after every single toggle. Held above the remount, the
+     * menu survives and several columns can be toggled in one visit.
+     */
+    chooserOpen: boolean
+    setChooserOpen: (open: boolean) => void
 }>({
     columns: [],
     hiddenColumn: [],
     setHiddenColumn: () => {},
-    enabled: false
+    enabled: false,
+    chooserOpen: false,
+    setChooserOpen: () => {}
 })
 
 const LOCAL_STORAGE_HIDDEN_COLUMN_KEY = 'data-grid-hidden-column-visibility'
@@ -38,6 +50,7 @@ export const VisibilityProvider = ({
     onHiddenColumnsChange?: (hiddenColumns: string[]) => void
 }) => {
     const [gridKey, setGridKey] = React.useState(0)
+    const [chooserOpen, setChooserOpen] = React.useState(false)
     const [hiddenColumn, setHiddenColumn] = React.useState<string[]>([])
     useEffect(() => {
         const storedHiddenColumns = localStorage.getItem(localStorageKey)
@@ -78,6 +91,8 @@ export const VisibilityProvider = ({
         <VisibilityContext.Provider
             value={{
                 gridKey: `data-grid-${gridKey}`,
+                chooserOpen,
+                setChooserOpen,
                 columns: filteredColumns,
                 hiddenColumn,
                 setHiddenColumn: chooseHiddenColumns,

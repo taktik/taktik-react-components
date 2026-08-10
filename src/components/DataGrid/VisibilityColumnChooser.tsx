@@ -17,18 +17,30 @@ const Container = styled(MenuItem)`
     gap: 12px;
 `
 export const VisibilityColumnChooser = ({ IconComponent }: Props) => {
-    const { columns, hiddenColumn, setHiddenColumn } = useContext(VisibilityContext)
+    const { columns, hiddenColumn, setHiddenColumn, chooserOpen, setChooserOpen } =
+        useContext(VisibilityContext)
     const containerRef = React.useRef<HTMLDivElement>(null)
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
-    const open = Boolean(anchorEl)
+
+    /**
+     * Re-anchor whenever the menu is open.
+     *
+     * Openness is held above the grid (see VisibilityProvider) so a toggle does not shut the menu —
+     * but the toggle DOES remount react-data-grid, which replaces this component and the node the
+     * menu was anchored to. On each mount the fresh node becomes the anchor, so the menu reopens in
+     * exactly the same place instead of pointing at a detached element.
+     */
+    React.useEffect(() => {
+        setAnchorEl(chooserOpen ? containerRef.current : null)
+    }, [chooserOpen])
 
     const handleClick = useCallback(() => {
-        setAnchorEl(containerRef.current)
-    }, [])
+        setChooserOpen(true)
+    }, [setChooserOpen])
 
     const handleClose = useCallback(() => {
-        setAnchorEl(null)
-    }, [])
+        setChooserOpen(false)
+    }, [setChooserOpen])
 
     const toggle = useCallback(
         (columnName: string) => () => {
@@ -45,7 +57,11 @@ export const VisibilityColumnChooser = ({ IconComponent }: Props) => {
     return (
         <div ref={containerRef}>
             {<IconComponent onClick={handleClick} />}
-            <Menu id='column-visibility-menu' anchorEl={anchorEl} open={open} onClose={handleClose}>
+            <Menu
+                id='column-visibility-menu'
+                anchorEl={anchorEl}
+                open={chooserOpen && Boolean(anchorEl)}
+                onClose={handleClose}>
                 {columns.map((column) => (
                     <Container key={column.key} onClick={toggle(column.key)}>
                         <DataGridCheckbox checked={!hiddenColumn.includes(column.key)} />
