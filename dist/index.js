@@ -4866,7 +4866,12 @@ const rl = (e, t = "yyyy-MM-dd'T'HH:mm:ss'Z'", n = Intl.DateTimeFormat().resolve
   localStorageKey: a = ol,
   onHiddenColumnsChange: i
 }) => {
-  const [s, c] = pe.useState(0), [l, w] = pe.useState(!1), [y, d] = pe.useState([]);
+  const [s, c] = pe.useState(0), [l, w] = pe.useState(!1), [y, d] = pe.useState([]), u = Q(
+    (C) => {
+      localStorage.setItem(a, JSON.stringify(C)), c((R) => R + 1), d(C);
+    },
+    [a]
+  );
   Ge(() => {
     const C = localStorage.getItem(a);
     if (C) {
@@ -4874,10 +4879,8 @@ const rl = (e, t = "yyyy-MM-dd'T'HH:mm:ss'Z'", n = Intl.DateTimeFormat().resolve
       u(Array.isArray(R) ? R : []);
     } else
       u(r || []);
-  }, [r]);
-  const u = Q((C) => {
-    localStorage.setItem(a, JSON.stringify(C)), c((R) => R + 1), d(C);
-  }, []), h = Q(
+  }, [a, r, u]);
+  const h = Q(
     (C) => {
       u(C), i == null || i(C);
     },
