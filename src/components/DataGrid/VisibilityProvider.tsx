@@ -45,6 +45,7 @@ export const VisibilityProvider = ({
     columns: ColumnDefinition[]
     visibilityFeatureDisabledFor?: string[]
     enabled?: boolean
+    /** Read once per storage key, and compared by value — an inline array is safe to pass. */
     hiddenByDefault?: string[]
     localStorageKey?: string
     onHiddenColumnsChange?: (hiddenColumns: string[]) => void
@@ -67,6 +68,18 @@ export const VisibilityProvider = ({
         [localStorageKey]
     )
 
+    /**
+     * The defaults are depended on by VALUE, not by array identity. Reading the stored set bumps
+     * `gridKey`, which re-renders — and a consumer passing an inline array (or one recomputed from
+     * what `onHiddenColumnsChange` just reported, which is the pattern we recommend) hands over a
+     * new identity on every render. On identity that pair is a remount loop with no end to it.
+     */
+    const hiddenByDefaultKey = JSON.stringify(hiddenByDefault ?? [])
+    const defaultHiddenColumns = useMemo(
+        () => JSON.parse(hiddenByDefaultKey) as string[],
+        [hiddenByDefaultKey]
+    )
+
     useEffect(() => {
         const storedHiddenColumns = localStorage.getItem(localStorageKey)
         if (storedHiddenColumns) {
@@ -74,9 +87,9 @@ export const VisibilityProvider = ({
             setHiddenColumnAndPersist(Array.isArray(parsed) ? parsed : []) // clean if not good format
         } else {
             // first time
-            setHiddenColumnAndPersist(hiddenByDefault || [])
+            setHiddenColumnAndPersist(defaultHiddenColumns)
         }
-    }, [localStorageKey, hiddenByDefault, setHiddenColumnAndPersist])
+    }, [localStorageKey, defaultHiddenColumns, setHiddenColumnAndPersist])
 
     /**
      * What the CHOOSER calls — the stored set, plus a word to whoever is listening.

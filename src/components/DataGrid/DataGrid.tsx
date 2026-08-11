@@ -58,6 +58,11 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
     'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange'
 > & {
     selectable?: boolean
+    /**
+     * Accessible name of the header's select-all checkbox — override it to match the consumer's
+     * language, or to say what is being selected ("Select all devices").
+     */
+    selectAllLabel?: string
     defaultSortColumns?: SortColumn[]
     columns: ColumnDefinition<Row>[]
     rows: Row[]
@@ -82,6 +87,10 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
     visibilityColumnFeature?: {
         enabled?: boolean
         visibilityFeatureDisabledFor?: string[]
+        /**
+         * Columns hidden until the user says otherwise, read once per storage key. Compared by
+         * value, so an inline array is safe — the identity of the one passed does not matter.
+         */
         hiddenByDefault?: string[]
         localStorageKey?: string
         /**
@@ -119,15 +128,28 @@ const ContainerLoading = styled.div`
     }
 `
 
-const RenderCheckbox = React.memo(({ checked, onChange }: RenderCheckboxProps) => {
-    const onChangeFn = useCallback(
-        (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
-            onChange(checked, (event.nativeEvent as MouseEvent).shiftKey)
-        },
-        [onChange]
-    )
-    return <DataGridCheckbox checked={checked} onChange={onChangeFn} />
-})
+const RenderCheckbox = React.memo(
+    ({ checked, onChange, 'aria-label': ariaLabel }: RenderCheckboxProps) => {
+        const onChangeFn = useCallback(
+            (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+                onChange(checked, (event.nativeEvent as MouseEvent).shiftKey)
+            },
+            [onChange]
+        )
+        return (
+            <DataGridCheckbox
+                checked={checked}
+                slotProps={{ input: { 'aria-label': ariaLabel } }}
+                onChange={onChangeFn}
+            />
+        )
+    }
+)
+
+const renderDefaultCheckbox = (props: RenderCheckboxProps) => <RenderCheckbox {...props} />
+
+/** What a select-all checkbox says when the consumer does not name it. */
+const DEFAULT_SELECT_ALL_LABEL = 'Select all rows'
 
 const DataGridBase = <R extends RowDefinition = RowDefinition>({
     theme,
@@ -139,6 +161,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     defaultSortColumns,
     selectedRows,
     onSelectedRowsChange,
+    selectAllLabel = DEFAULT_SELECT_ALL_LABEL,
     noDataMessage,
     filters,
     setFilters,
@@ -146,6 +169,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     renderers,
     expandable,
     rowHeight,
+    rowClass,
     onCellClick,
     ...rest
 }: DataGridProps<R>) => {
@@ -154,6 +178,8 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         pagination?.defaultPageSize
     )
 
+    const renderCheckbox = renderers?.renderCheckbox ?? renderDefaultCheckbox
+
     const finalColumns = useComputeFinalColumns({
         columns,
         // The expand toggle rides in the selection cell, ahead of the checkbox
@@ -161,7 +187,9 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         selectionEnabled: !!onSelectedRowsChange,
         selectableRows: rows,
         selectedRows,
-        onSelectedRowsChange
+        onSelectedRowsChange,
+        renderCheckbox,
+        selectAllLabel
     })
 
     // react-data-grid caches each measured flexible-column width by column key and only
@@ -238,20 +266,28 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         [expandable, finalColumns]
     )
 
+    /**
+     * The grid's own row classes, composed with the consumer's `rowClass` rather than replaced by it:
+     * the detail rows `expandable` draws are styled through this class, so a consumer passing a
+     * `rowClass` of its own would otherwise switch the feature's appearance off without a word.
+     */
     const computeRawClass = useCallback(
-        (row: RowDefinition, index: number) => {
-            const detail = detailRowClass(row, expandable?.expandedIds)
-            if (detail) {
-                return detail
+        (row: R, index: number) => {
+            const own = () => {
+                const detail = detailRowClass(row, expandable?.expandedIds)
+                if (detail) {
+                    return detail
+                }
+                if (index === 0) {
+                    return 'first-row'
+                } else if (index === rows.length - 1) {
+                    return 'last-row'
+                }
+                return ''
             }
-            if (index === 0) {
-                return 'first-row'
-            } else if (index === rows.length - 1) {
-                return 'last-row'
-            }
-            return ''
+            return [rowClass?.(row, index), own()].filter(Boolean).join(' ')
         },
-        [rows, expandable?.expandedIds]
+        [rows, expandable?.expandedIds, rowClass]
     )
 
     /**
@@ -332,7 +368,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                             : (rowHeight ?? DEFAULT_ROW_HEIGHT)
                     }
                     renderers={{
-                        renderCheckbox: (props) => <RenderCheckbox {...props} />,
+                        renderCheckbox,
                         // react-data-grid renders this only when there are no rows; suppress it
                         // while loading so the empty message never flashes under the loader.
                         ...(noDataMessage != null && !loading

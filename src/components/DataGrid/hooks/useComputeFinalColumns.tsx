@@ -1,6 +1,6 @@
 import { ColumnDefinition, ColumnType, RowDefinition } from '../types'
-import { useCallback, useContext, useMemo } from 'react'
-import { RenderCellProps, SelectColumn } from 'react-data-grid'
+import { ReactNode, useCallback, useContext, useMemo } from 'react'
+import { RenderCellProps, RenderCheckboxProps, SelectColumn } from 'react-data-grid'
 import {
     DataGridExpandable,
     expanderColumn,
@@ -26,7 +26,9 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
     selectionEnabled,
     selectableRows,
     selectedRows,
-    onSelectedRowsChange
+    onSelectedRowsChange,
+    renderCheckbox,
+    selectAllLabel
 }: {
     columns: ColumnDefinition<R>[]
     /** When set, the row's expand toggle rides in the selection cell, ahead of the checkbox. */
@@ -36,6 +38,10 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
     selectableRows?: R[]
     selectedRows?: string[]
     onSelectedRowsChange?: (rows: string[]) => void
+    /** The same renderer react-data-grid uses for the row checkboxes, so the header matches them. */
+    renderCheckbox?: (props: RenderCheckboxProps) => ReactNode
+    /** Accessible name of the select-all checkbox. */
+    selectAllLabel?: string
 }): ColumnDefinition<R>[] => {
     const { enabled: visibilityFeatureEnabled, hiddenColumn } = useContext(VisibilityContext)
     const adaptColumn = useCallback((col: ColumnDefinition<R>) => {
@@ -110,13 +116,27 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
                 // rdg's own header checkbox sees only the rows it RENDERS, so under local pagination
                 // "select all" would mean "select this page". Driven from `selectableRows` instead —
                 // every row the grid holds, which under server pagination is still one page.
+                //
+                // Rendered through the same checkbox renderer as the body cells: a consumer that
+                // supplies one gets it in the header too, rather than in every place but this one.
                 renderHeaderCell: () => (
                     <LeadingCell>
                         {expandable && <LeadingHeaderSpacer aria-hidden />}
-                        <DataGridCheckbox
-                            checked={allSelected}
-                            onChange={(_, checked) => onSelectedRowsChange?.(toggleAll(checked))}
-                        />
+                        {renderCheckbox ? (
+                            renderCheckbox({
+                                checked: allSelected,
+                                'aria-label': selectAllLabel,
+                                onChange: (checked) => onSelectedRowsChange?.(toggleAll(checked))
+                            })
+                        ) : (
+                            <DataGridCheckbox
+                                checked={allSelected}
+                                slotProps={{ input: { 'aria-label': selectAllLabel } }}
+                                onChange={(_, checked) =>
+                                    onSelectedRowsChange?.(toggleAll(checked))
+                                }
+                            />
+                        )}
                     </LeadingCell>
                 ),
                 renderCell: expandable
@@ -143,6 +163,8 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
         selectionEnabled,
         selectableRows,
         selectedRows,
-        onSelectedRowsChange
+        onSelectedRowsChange,
+        renderCheckbox,
+        selectAllLabel
     ])
 }

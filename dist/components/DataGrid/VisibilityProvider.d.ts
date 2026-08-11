@@ -22,6 +22,7 @@ export declare const VisibilityProvider: ({ columns, children, visibilityFeature
     columns: ColumnDefinition[];
     visibilityFeatureDisabledFor?: string[];
     enabled?: boolean;
+    /** Read once per storage key, and compared by value — an inline array is safe to pass. */
     hiddenByDefault?: string[];
     localStorageKey?: string;
     onHiddenColumnsChange?: (hiddenColumns: string[]) => void;

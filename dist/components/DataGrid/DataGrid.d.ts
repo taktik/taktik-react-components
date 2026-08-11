@@ -11,6 +11,11 @@ export { withDetailRows, withDetailRendering, isDetailRow, detailRowClass, detai
 export type { DataGridExpandable } from './Expandable';
 export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib<Row>, 'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange'> & {
     selectable?: boolean;
+    /**
+     * Accessible name of the header's select-all checkbox — override it to match the consumer's
+     * language, or to say what is being selected ("Select all devices").
+     */
+    selectAllLabel?: string;
     defaultSortColumns?: SortColumn[];
     columns: ColumnDefinition<Row>[];
     rows: Row[];
@@ -35,6 +40,10 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
     visibilityColumnFeature?: {
         enabled?: boolean;
         visibilityFeatureDisabledFor?: string[];
+        /**
+         * Columns hidden until the user says otherwise, read once per storage key. Compared by
+         * value, so an inline array is safe — the identity of the one passed does not matter.
+         */
         hiddenByDefault?: string[];
         localStorageKey?: string;
         /**
