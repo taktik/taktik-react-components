@@ -7,7 +7,8 @@ import { Filters } from './FilterProvider';
 import { Props as PaginationProps } from './Pagination';
 import { DataGridExpandable } from './Expandable';
 export * from 'react-data-grid';
-export * from './Expandable';
+export { withDetailRows, withDetailRendering, isDetailRow, detailRowClass, detailAwareRowHeight, clickExpandsRow, ExpanderToggle, SELECTION_COLUMN_KEY, EXPANDER_COLUMN_KEY } from './Expandable';
+export type { DataGridExpandable } from './Expandable';
 export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib<Row>, 'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange'> & {
     selectable?: boolean;
     defaultSortColumns?: SortColumn[];

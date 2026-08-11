@@ -33,7 +33,22 @@ import {
 } from './Expandable'
 
 export * from 'react-data-grid'
-export * from './Expandable'
+/* The expandable-rows PUBLIC surface: the composition entry points, the behaviour helpers a
+   consumer's tests may pin (row classing, heights, click handling), and the two column
+   identifiers. The styled fragments and remaining internals are implementation — a barrel
+   `export *` would freeze them as API. */
+export {
+    withDetailRows,
+    withDetailRendering,
+    isDetailRow,
+    detailRowClass,
+    detailAwareRowHeight,
+    clickExpandsRow,
+    ExpanderToggle,
+    SELECTION_COLUMN_KEY,
+    EXPANDER_COLUMN_KEY
+} from './Expandable'
+export type { DataGridExpandable } from './Expandable'
 
 /** The row rhythm every grid shares unless a consumer overrides it. */
 const DEFAULT_ROW_HEIGHT = 50
