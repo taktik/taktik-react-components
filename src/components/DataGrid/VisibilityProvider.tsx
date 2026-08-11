@@ -52,6 +52,21 @@ export const VisibilityProvider = ({
     const [gridKey, setGridKey] = React.useState(0)
     const [chooserOpen, setChooserOpen] = React.useState(false)
     const [hiddenColumn, setHiddenColumn] = React.useState<string[]>([])
+    /**
+     * `localStorageKey` is a dependency on purpose: a provider instance can be RETARGETED to another
+     * key while it lives — two route tabs rendered by one component instance each bring their own
+     * key — and a provider that only read its first key showed tab A's hidden set on tab B and
+     * wrote B's choices under A's key.
+     */
+    const setHiddenColumnAndPersist = useCallback(
+        (columns: string[]) => {
+            localStorage.setItem(localStorageKey, JSON.stringify(columns))
+            setGridKey((prev) => prev + 1)
+            setHiddenColumn(columns)
+        },
+        [localStorageKey]
+    )
+
     useEffect(() => {
         const storedHiddenColumns = localStorage.getItem(localStorageKey)
         if (storedHiddenColumns) {
@@ -61,13 +76,7 @@ export const VisibilityProvider = ({
             // first time
             setHiddenColumnAndPersist(hiddenByDefault || [])
         }
-    }, [hiddenByDefault])
-
-    const setHiddenColumnAndPersist = useCallback((columns: string[]) => {
-        localStorage.setItem(localStorageKey, JSON.stringify(columns))
-        setGridKey((prev) => prev + 1)
-        setHiddenColumn(columns)
-    }, [])
+    }, [localStorageKey, hiddenByDefault, setHiddenColumnAndPersist])
 
     /**
      * What the CHOOSER calls — the stored set, plus a word to whoever is listening.
