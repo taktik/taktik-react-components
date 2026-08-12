@@ -133,16 +133,19 @@ const INTERACTIVE =
     'button, a, input, select, textarea, [role="switch"], [role="checkbox"], [role="button"], [role="menuitem"]'
 
 /**
- * Whether clicking here should expand or collapse the row — the whole row is the target, not just a
+ * Whether a click here is the ROW's — the whole row is the target of a row-wide gesture, not just a
  * 40px chevron on a row a thousand pixels wide.
  *
  * Three clicks are not the row's: one on a detail row (the result, not a handle), one in the leading
- * cell (the chevron is already there, and would toggle twice), one on a control of its own.
+ * cell (the checkbox and the chevron are already there, and would act twice), one on a control of its
+ * own. `excludedColumns` adds the columns only the consumer can name — a row-actions column whose
+ * kebab does not fill its cell, where a click beside the button is still that column's, not the row's.
  */
-export const clickExpandsRow = <Row extends RowDefinition>(
+export const clickBelongsToRow = <Row extends RowDefinition>(
     row: Row,
     columnKey: string,
-    target: EventTarget | null
+    target: EventTarget | null,
+    excludedColumns: string[] = []
 ): boolean => {
     if (isDetailRow(row)) {
         return false
@@ -150,8 +153,22 @@ export const clickExpandsRow = <Row extends RowDefinition>(
     if (columnKey === SELECTION_COLUMN_KEY || columnKey === EXPANDER_COLUMN_KEY) {
         return false
     }
+    if (excludedColumns.includes(columnKey)) {
+        return false
+    }
     return !(target instanceof Element && target.closest(INTERACTIVE))
 }
+
+/**
+ * The expandable feature's spelling of {@link clickBelongsToRow}: a click that is the row's expands or
+ * collapses it. One rule serves both row-wide gestures, so a control that must not expand a row cannot
+ * accidentally still fire its double-click action.
+ */
+export const clickExpandsRow = <Row extends RowDefinition>(
+    row: Row,
+    columnKey: string,
+    target: EventTarget | null
+): boolean => clickBelongsToRow(row, columnKey, target)
 
 /** The leading cell's layout: toggle, then whatever the selection column renders. */
 export const LeadingCell = styled.div`

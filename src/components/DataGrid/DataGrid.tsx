@@ -22,6 +22,7 @@ import { Pagination, Props as PaginationProps } from './Pagination'
 import { usePagination } from './hooks/usePagination'
 import { VisibilityContext, VisibilityProvider } from './VisibilityProvider'
 import {
+    clickBelongsToRow,
     clickExpandsRow,
     DataGridExpandable,
     DEFAULT_DETAIL_HEIGHT,
@@ -43,6 +44,7 @@ export {
     isDetailRow,
     detailRowClass,
     detailAwareRowHeight,
+    clickBelongsToRow,
     clickExpandsRow,
     ExpanderToggle,
     SELECTION_COLUMN_KEY,
@@ -52,6 +54,22 @@ export type { DataGridExpandable } from './Expandable'
 
 /** The row rhythm every grid shares unless a consumer overrides it. */
 const DEFAULT_ROW_HEIGHT = 50
+
+/**
+ * A double-click anywhere on a row runs one action of the consumer's choosing — toggling the row's
+ * selection, opening its record. The grid decides WHERE that counts, not the consumer: the same rule
+ * that says a click expands a row (see `clickBelongsToRow`), so a checkbox, an expander chevron, a
+ * link or a button inside a cell keeps answering for itself and a detail row is never a handle.
+ */
+export interface DataGridRowDoubleClick<Row extends RowDefinition> {
+    onDoubleClick: (row: Row) => void
+    /**
+     * Columns whose cells belong to themselves rather than to the row, on top of the selection and
+     * expander cells the grid already knows. A row-actions column is the case: its kebab does not
+     * fill the cell, so a double-click in the padding beside it would otherwise act on the row.
+     */
+    excludedColumns?: string[]
+}
 
 export type DataGridProps<Row extends RowDefinition> = Omit<
     DataGridPropsFromLib<Row>,
@@ -106,6 +124,16 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
      * driven from outside it (a url, a "expand all").
      */
     expandable?: DataGridExpandable<Row>
+    /**
+     * What a double-click on a row does.
+     *
+     * ⚠ On a grid that ALSO expands on click, a double-click delivers two clicks before the
+     * double-click: the row expands, collapses again, and then this runs — expansion ends where it
+     * started, which is the outcome that reads as "the double-click did its own thing". Suppressing
+     * the second click instead would leave the row expanded on top of the action, which is worse; a
+     * click cannot be known to be the first half of a double-click without delaying every single one.
+     */
+    rowDoubleClick?: DataGridRowDoubleClick<Row>
 }
 
 const ContainerLoading = styled.div`
@@ -168,9 +196,11 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     pagination,
     renderers,
     expandable,
+    rowDoubleClick,
     rowHeight,
     rowClass,
     onCellClick,
+    onCellDoubleClick,
     ...rest
 }: DataGridProps<R>) => {
     const { gridKey } = useContext(VisibilityContext)
@@ -308,6 +338,31 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     )
 
     /**
+     * A double-click anywhere on a row runs the consumer's row action. Same shape as the click above:
+     * the consumer's own `onCellDoubleClick` runs first and can claim the event with
+     * `preventGridDefault()`.
+     */
+    const handleCellDoubleClick = useCallback(
+        (args: CellClickArgs<R, unknown>, event: CellMouseEvent) => {
+            onCellDoubleClick?.(args, event)
+            if (!rowDoubleClick || event.isGridDefaultPrevented()) {
+                return
+            }
+            if (
+                clickBelongsToRow(
+                    args.row,
+                    args.column.key,
+                    event.target,
+                    rowDoubleClick.excludedColumns
+                )
+            ) {
+                rowDoubleClick.onDoubleClick(args.row)
+            }
+        },
+        [onCellDoubleClick, rowDoubleClick]
+    )
+
+    /**
      * Drop selected ids that no longer name a row — one filtered out, or deleted under the selection.
      *
      * ⚠ Only when the grid holds EVERY row. Under server pagination `rows` is one page, so "not among
@@ -346,6 +401,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                     rowClass={computeRawClass}
                     headerRowHeight={filtersEnabled ? 70 : undefined}
                     onCellClick={handleCellClick}
+                    onCellDoubleClick={handleCellDoubleClick}
                     // Column virtualization only renders the columns in view, and only `frozen`
                     // columns are exempt — a frozenRight column at the far end would not RENDER
                     // until scrolled near, let alone pin. ⚠ rdg's flag is all-or-nothing: turning
