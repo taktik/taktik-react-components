@@ -10,17 +10,36 @@ export * from 'react-data-grid';
 export { withDetailRows, withDetailRendering, isDetailRow, detailRowClass, detailAwareRowHeight, clickBelongsToRow, clickExpandsRow, ExpanderToggle, SELECTION_COLUMN_KEY, EXPANDER_COLUMN_KEY } from './Expandable';
 export type { DataGridExpandable } from './Expandable';
 /**
- * A double-click anywhere on a row runs one action of the consumer's choosing — toggling the row's
- * selection, opening its record. The grid decides WHERE that counts, not the consumer: the same rule
- * that says a click expands a row (see `clickBelongsToRow`), so a checkbox, an expander chevron, a
- * link or a button inside a cell keeps answering for itself and a detail row is never a handle.
+ * How long a row-wide click waits before it runs, on a grid that also answers a double-click.
+ *
+ * A double-click delivers two plain clicks before it, and nothing in the event tells the first one
+ * apart from a click that will stay alone — only time does. A grid with no double-click action has
+ * nothing to arbitrate and runs the click immediately.
  */
-export interface DataGridRowDoubleClick<Row extends RowDefinition> {
-    onDoubleClick: (row: Row) => void;
+export declare const ROW_CLICK_DELAY_MS = 250;
+/**
+ * What the row answers to a mouse, for the whole row rather than one cell — a click opening the
+ * record it stands for, a double-click picking it. The grid decides WHERE a gesture counts, not the
+ * consumer (see `clickBelongsToRow`): a checkbox, an expander chevron, a link or a button inside a
+ * cell keeps answering for itself, and a detail row is never a handle.
+ */
+export interface DataGridRowGestures<Row extends RowDefinition> {
+    /**
+     * A single click on the row. On an `expandable` grid, expanding the row is what a click does
+     * unless this replaces it — a consumer that sets it owns the gesture, and the chevron stays as
+     * the way to open a detail.
+     */
+    onClick?: (row: Row) => void;
+    /**
+     * A double-click on the row. Its presence is what makes a single click wait
+     * {@link ROW_CLICK_DELAY_MS}: the pending click is dropped when the pair completes, so the two
+     * gestures cannot both run on one interaction.
+     */
+    onDoubleClick?: (row: Row) => void;
     /**
      * Columns whose cells belong to themselves rather than to the row, on top of the selection and
      * expander cells the grid already knows. A row-actions column is the case: its kebab does not
-     * fill the cell, so a double-click in the padding beside it would otherwise act on the row.
+     * fill the cell, so a click in the padding beside it would otherwise act on the row.
      */
     excludedColumns?: string[];
 }
@@ -74,16 +93,8 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
      * driven from outside it (a url, a "expand all").
      */
     expandable?: DataGridExpandable<Row>;
-    /**
-     * What a double-click on a row does.
-     *
-     * ⚠ On a grid that ALSO expands on click, a double-click delivers two clicks before the
-     * double-click: the row expands, collapses again, and then this runs — expansion ends where it
-     * started, which is the outcome that reads as "the double-click did its own thing". Suppressing
-     * the second click instead would leave the row expanded on top of the action, which is worse; a
-     * click cannot be known to be the first half of a double-click without delaying every single one.
-     */
-    rowDoubleClick?: DataGridRowDoubleClick<Row>;
+    /** What the whole row answers to a click and to a double-click. */
+    rowGestures?: DataGridRowGestures<Row>;
 };
 export declare const DataGrid: <R extends RowDefinition = {
     id: string;
