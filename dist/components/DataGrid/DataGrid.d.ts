@@ -10,18 +10,10 @@ export * from 'react-data-grid';
 export { withDetailRows, withDetailRendering, isDetailRow, detailRowClass, detailAwareRowHeight, clickBelongsToRow, clickExpandsRow, ExpanderToggle, SELECTION_COLUMN_KEY, EXPANDER_COLUMN_KEY } from './Expandable';
 export type { DataGridExpandable } from './Expandable';
 /**
- * How long a row-wide click waits before it runs, on a grid that also answers a double-click.
- *
- * A double-click delivers two plain clicks before it, and nothing in the event tells the first one
- * apart from a click that will stay alone — only time does. A grid with no double-click action has
- * nothing to arbitrate and runs the click immediately.
- */
-export declare const ROW_CLICK_DELAY_MS = 150;
-/**
  * What the row answers to a mouse, for the whole row rather than one cell — a click opening the
- * record it stands for, a double-click picking it. The grid decides WHERE a gesture counts, not the
- * consumer (see `clickBelongsToRow`): a checkbox, an expander chevron, a link or a button inside a
- * cell keeps answering for itself, and a detail row is never a handle.
+ * record it stands for. The grid decides WHERE a gesture counts, not the consumer (see
+ * `clickBelongsToRow`): a checkbox, an expander chevron, a link or a button inside a cell keeps
+ * answering for itself, and a detail row is never a handle.
  */
 export interface DataGridRowGestures<Row extends RowDefinition> {
     /**
@@ -30,12 +22,6 @@ export interface DataGridRowGestures<Row extends RowDefinition> {
      * the way to open a detail.
      */
     onClick?: (row: Row) => void;
-    /**
-     * A double-click on the row. Its presence is what makes a single click wait
-     * {@link ROW_CLICK_DELAY_MS}: the pending click is dropped when the pair completes, so the two
-     * gestures cannot both run on one interaction.
-     */
-    onDoubleClick?: (row: Row) => void;
     /**
      * Columns whose cells belong to themselves rather than to the row, on top of the selection and
      * expander cells the grid already knows. A row-actions column is the case: its kebab does not
@@ -93,7 +79,7 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
      * driven from outside it (a url, a "expand all").
      */
     expandable?: DataGridExpandable<Row>;
-    /** What the whole row answers to a click and to a double-click. */
+    /** What the whole row answers to a click. */
     rowGestures?: DataGridRowGestures<Row>;
 };
 export declare const DataGrid: <R extends RowDefinition = {
