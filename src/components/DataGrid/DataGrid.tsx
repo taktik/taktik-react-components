@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import Grid, {
     CellClickArgs,
     CellMouseEvent,
@@ -23,7 +23,6 @@ import { usePagination } from './hooks/usePagination'
 import { VisibilityContext, VisibilityProvider } from './VisibilityProvider'
 import {
     clickBelongsToRow,
-    clickExpandsRow,
     DataGridExpandable,
     DEFAULT_DETAIL_HEIGHT,
     detailAwareRowHeight,
@@ -56,17 +55,37 @@ export type { DataGridExpandable } from './Expandable'
 const DEFAULT_ROW_HEIGHT = 50
 
 /**
- * A double-click anywhere on a row runs one action of the consumer's choosing — toggling the row's
- * selection, opening its record. The grid decides WHERE that counts, not the consumer: the same rule
- * that says a click expands a row (see `clickBelongsToRow`), so a checkbox, an expander chevron, a
- * link or a button inside a cell keeps answering for itself and a detail row is never a handle.
+ * How long a row-wide click waits before it runs, on a grid that also answers a double-click.
+ *
+ * A double-click delivers two plain clicks before it, and nothing in the event tells the first one
+ * apart from a click that will stay alone — only time does. A grid with no double-click action has
+ * nothing to arbitrate and runs the click immediately.
  */
-export interface DataGridRowDoubleClick<Row extends RowDefinition> {
-    onDoubleClick: (row: Row) => void
+export const ROW_CLICK_DELAY_MS = 250
+
+/**
+ * What the row answers to a mouse, for the whole row rather than one cell — a click opening the
+ * record it stands for, a double-click picking it. The grid decides WHERE a gesture counts, not the
+ * consumer (see `clickBelongsToRow`): a checkbox, an expander chevron, a link or a button inside a
+ * cell keeps answering for itself, and a detail row is never a handle.
+ */
+export interface DataGridRowGestures<Row extends RowDefinition> {
+    /**
+     * A single click on the row. On an `expandable` grid, expanding the row is what a click does
+     * unless this replaces it — a consumer that sets it owns the gesture, and the chevron stays as
+     * the way to open a detail.
+     */
+    onClick?: (row: Row) => void
+    /**
+     * A double-click on the row. Its presence is what makes a single click wait
+     * {@link ROW_CLICK_DELAY_MS}: the pending click is dropped when the pair completes, so the two
+     * gestures cannot both run on one interaction.
+     */
+    onDoubleClick?: (row: Row) => void
     /**
      * Columns whose cells belong to themselves rather than to the row, on top of the selection and
      * expander cells the grid already knows. A row-actions column is the case: its kebab does not
-     * fill the cell, so a double-click in the padding beside it would otherwise act on the row.
+     * fill the cell, so a click in the padding beside it would otherwise act on the row.
      */
     excludedColumns?: string[]
 }
@@ -124,16 +143,8 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
      * driven from outside it (a url, a "expand all").
      */
     expandable?: DataGridExpandable<Row>
-    /**
-     * What a double-click on a row does.
-     *
-     * ⚠ On a grid that ALSO expands on click, a double-click delivers two clicks before the
-     * double-click: the row expands, collapses again, and then this runs — expansion ends where it
-     * started, which is the outcome that reads as "the double-click did its own thing". Suppressing
-     * the second click instead would leave the row expanded on top of the action, which is worse; a
-     * click cannot be known to be the first half of a double-click without delaying every single one.
-     */
-    rowDoubleClick?: DataGridRowDoubleClick<Row>
+    /** What the whole row answers to a click and to a double-click. */
+    rowGestures?: DataGridRowGestures<Row>
 }
 
 const ContainerLoading = styled.div`
@@ -196,7 +207,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     pagination,
     renderers,
     expandable,
-    rowDoubleClick,
+    rowGestures,
     rowHeight,
     rowClass,
     onCellClick,
@@ -320,32 +331,82 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         [rows, expandable?.expandedIds, rowClass]
     )
 
+    /** A click waiting out the double-click window, so that only one of the two gestures runs. */
+    const pendingRowClick = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+    const cancelPendingRowClick = useCallback(() => {
+        if (pendingRowClick.current !== undefined) {
+            clearTimeout(pendingRowClick.current)
+            pendingRowClick.current = undefined
+        }
+    }, [])
+    useEffect(() => cancelPendingRowClick, [cancelPendingRowClick])
+
+    /** What a click on the row means: the consumer's action, or opening the row where it expands. */
+    const runRowClick = useCallback(
+        (row: R) => {
+            if (rowGestures?.onClick) {
+                rowGestures.onClick(row)
+            } else if (expandable) {
+                toggleExpanded(expandable, row.id)
+            }
+        },
+        [rowGestures, expandable]
+    )
+
     /**
-     * A click anywhere on an expandable row opens it. The consumer's handler runs first and can claim
-     * the click with `preventGridDefault()`, as for any other grid default.
+     * A click anywhere on a row runs its action — the consumer's, or the expansion an `expandable`
+     * grid does by itself. The consumer's own `onCellClick` runs first and can claim the click with
+     * `preventGridDefault()`, as for any other grid default.
      */
     const handleCellClick = useCallback(
         (args: CellClickArgs<R, unknown>, event: CellMouseEvent) => {
             onCellClick?.(args, event)
-            if (!expandable || event.isGridDefaultPrevented()) {
+            if (event.isGridDefaultPrevented()) {
                 return
             }
-            if (clickExpandsRow(args.row, args.column.key, event.target)) {
-                toggleExpanded(expandable, args.row.id)
+            if (!expandable && !rowGestures?.onClick) {
+                return
             }
+            cancelPendingRowClick()
+            if (
+                !clickBelongsToRow(
+                    args.row,
+                    args.column.key,
+                    event.target,
+                    rowGestures?.excludedColumns
+                )
+            ) {
+                return
+            }
+            // With nothing to collide with, a click has no reason to wait.
+            if (!rowGestures?.onDoubleClick) {
+                runRowClick(args.row)
+                return
+            }
+            // The second click of a double-click is not a click of its own: the first one is still
+            // pending, and the double-click that follows is what answers for the pair.
+            if (event.detail > 1) {
+                return
+            }
+            const { row } = args
+            pendingRowClick.current = setTimeout(() => {
+                pendingRowClick.current = undefined
+                runRowClick(row)
+            }, ROW_CLICK_DELAY_MS)
         },
-        [onCellClick, expandable]
+        [onCellClick, expandable, rowGestures, cancelPendingRowClick, runRowClick]
     )
 
     /**
-     * A double-click anywhere on a row runs the consumer's row action. Same shape as the click above:
-     * the consumer's own `onCellDoubleClick` runs first and can claim the event with
-     * `preventGridDefault()`.
+     * A double-click anywhere on a row runs the consumer's row action, and drops the click that
+     * started it. Same shape as the click above: the consumer's own `onCellDoubleClick` runs first
+     * and can claim the event with `preventGridDefault()`.
      */
     const handleCellDoubleClick = useCallback(
         (args: CellClickArgs<R, unknown>, event: CellMouseEvent) => {
             onCellDoubleClick?.(args, event)
-            if (!rowDoubleClick || event.isGridDefaultPrevented()) {
+            cancelPendingRowClick()
+            if (!rowGestures?.onDoubleClick || event.isGridDefaultPrevented()) {
                 return
             }
             if (
@@ -353,13 +414,13 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                     args.row,
                     args.column.key,
                     event.target,
-                    rowDoubleClick.excludedColumns
+                    rowGestures.excludedColumns
                 )
             ) {
-                rowDoubleClick.onDoubleClick(args.row)
+                rowGestures.onDoubleClick(args.row)
             }
         },
-        [onCellDoubleClick, rowDoubleClick]
+        [onCellDoubleClick, rowGestures, cancelPendingRowClick]
     )
 
     /**
