@@ -61,7 +61,7 @@ const DEFAULT_ROW_HEIGHT = 50
  * apart from a click that will stay alone — only time does. A grid with no double-click action has
  * nothing to arbitrate and runs the click immediately.
  */
-export const ROW_CLICK_DELAY_MS = 250
+export const ROW_CLICK_DELAY_MS = 150
 
 /**
  * What the row answers to a mouse, for the whole row rather than one cell — a click opening the

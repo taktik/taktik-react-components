@@ -5163,7 +5163,7 @@ const pl = (e = 10) => {
     setPageSize: o,
     resetPagination: i
   };
-}, vr = 50, bl = 250, Cl = Ee.div`
+}, vr = 50, bl = 150, Cl = Ee.div`
     position: absolute;
     top: 0;
     height: 100%;
