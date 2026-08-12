@@ -49,11 +49,19 @@ export declare const ExpanderToggle: <Row extends RowDefinition>({ row, expandab
 /** Open the row if it is closed, close it if it is open. */
 export declare const toggleExpanded: <Row extends RowDefinition>(expandable: DataGridExpandable<Row>, id: string) => void;
 /**
- * Whether clicking here should expand or collapse the row — the whole row is the target, not just a
+ * Whether a click here is the ROW's — the whole row is the target of a row-wide gesture, not just a
  * 40px chevron on a row a thousand pixels wide.
  *
  * Three clicks are not the row's: one on a detail row (the result, not a handle), one in the leading
- * cell (the chevron is already there, and would toggle twice), one on a control of its own.
+ * cell (the checkbox and the chevron are already there, and would act twice), one on a control of its
+ * own. `excludedColumns` adds the columns only the consumer can name — a row-actions column whose
+ * kebab does not fill its cell, where a click beside the button is still that column's, not the row's.
+ */
+export declare const clickBelongsToRow: <Row extends RowDefinition>(row: Row, columnKey: string, target: EventTarget | null, excludedColumns?: string[]) => boolean;
+/**
+ * The expandable feature's spelling of {@link clickBelongsToRow}: a click that is the row's expands or
+ * collapses it. One rule serves both row-wide gestures, so a control that must not expand a row cannot
+ * accidentally still fire its double-click action.
  */
 export declare const clickExpandsRow: <Row extends RowDefinition>(row: Row, columnKey: string, target: EventTarget | null) => boolean;
 /** The leading cell's layout: toggle, then whatever the selection column renders. */

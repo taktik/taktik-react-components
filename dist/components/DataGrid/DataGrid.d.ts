@@ -7,8 +7,23 @@ import { Filters } from './FilterProvider';
 import { Props as PaginationProps } from './Pagination';
 import { DataGridExpandable } from './Expandable';
 export * from 'react-data-grid';
-export { withDetailRows, withDetailRendering, isDetailRow, detailRowClass, detailAwareRowHeight, clickExpandsRow, ExpanderToggle, SELECTION_COLUMN_KEY, EXPANDER_COLUMN_KEY } from './Expandable';
+export { withDetailRows, withDetailRendering, isDetailRow, detailRowClass, detailAwareRowHeight, clickBelongsToRow, clickExpandsRow, ExpanderToggle, SELECTION_COLUMN_KEY, EXPANDER_COLUMN_KEY } from './Expandable';
 export type { DataGridExpandable } from './Expandable';
+/**
+ * A double-click anywhere on a row runs one action of the consumer's choosing — toggling the row's
+ * selection, opening its record. The grid decides WHERE that counts, not the consumer: the same rule
+ * that says a click expands a row (see `clickBelongsToRow`), so a checkbox, an expander chevron, a
+ * link or a button inside a cell keeps answering for itself and a detail row is never a handle.
+ */
+export interface DataGridRowDoubleClick<Row extends RowDefinition> {
+    onDoubleClick: (row: Row) => void;
+    /**
+     * Columns whose cells belong to themselves rather than to the row, on top of the selection and
+     * expander cells the grid already knows. A row-actions column is the case: its kebab does not
+     * fill the cell, so a double-click in the padding beside it would otherwise act on the row.
+     */
+    excludedColumns?: string[];
+}
 export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib<Row>, 'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange'> & {
     selectable?: boolean;
     /**
@@ -59,6 +74,16 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
      * driven from outside it (a url, a "expand all").
      */
     expandable?: DataGridExpandable<Row>;
+    /**
+     * What a double-click on a row does.
+     *
+     * ⚠ On a grid that ALSO expands on click, a double-click delivers two clicks before the
+     * double-click: the row expands, collapses again, and then this runs — expansion ends where it
+     * started, which is the outcome that reads as "the double-click did its own thing". Suppressing
+     * the second click instead would leave the row expanded on top of the action, which is worse; a
+     * click cannot be known to be the first half of a double-click without delaying every single one.
+     */
+    rowDoubleClick?: DataGridRowDoubleClick<Row>;
 };
 export declare const DataGrid: <R extends RowDefinition = {
     id: string;
