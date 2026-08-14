@@ -8,6 +8,7 @@ import Grid, {
 } from 'react-data-grid'
 import { DataGridTheme, defaultTheme } from './dataGridTheme'
 import { Container } from './Container'
+import { VisibilityMenu } from './VisibilityColumnChooser'
 import styled from '@emotion/styled'
 import { ColumnDefinition, RowDefinition } from './types'
 import { useLocalSorting } from './hooks/useLocalSorting'
@@ -341,6 +342,18 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
             if (!expandable && !rowGestures?.onClick) {
                 return
             }
+            // The click that ENDS a text-selection drag still fires on the cell. Running the row
+            // action would rebuild the row and destroy the selection the user just made — before
+            // they could right-click it for the browser's Copy.
+            const selection = window.getSelection()
+            if (
+                selection &&
+                !selection.isCollapsed &&
+                event.target instanceof Node &&
+                selection.containsNode(event.target, true)
+            ) {
+                return
+            }
             if (
                 clickBelongsToRow(
                     args.row,
@@ -447,6 +460,9 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                     <PulseLoader color={taktikTheme.primary500} />
                 </ContainerLoading>
             ) : null}
+            {/* Outside the keyed Grid on purpose: a column toggle remounts the grid, and a menu
+                rendered inside it would close (or flicker closed and open) on every toggle. */}
+            <VisibilityMenu />
         </Container>
     )
 }
