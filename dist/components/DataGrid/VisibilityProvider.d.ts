@@ -7,15 +7,23 @@ export declare const VisibilityContext: React.Context<{
     enabled?: boolean;
     gridKey?: string;
     /**
-     * Whether the column chooser's menu is open.
+     * Where the column chooser's menu is anchored — `null` while it is closed.
      *
      * ⚠ It lives HERE, above the grid, and not in the chooser itself. Toggling a column changes the
-     * column set, which remounts react-data-grid — and the chooser is rendered inside a header cell,
-     * so it went with it and the menu shut after every single toggle. Held above the remount, the
-     * menu survives and several columns can be toggled in one visit.
+     * column set, which remounts react-data-grid — and the chooser's trigger is rendered inside a
+     * header cell, so anything kept in it dies on every toggle. It is a POSITION and not the
+     * trigger element for the same reason: the element is replaced by the remount, and a menu
+     * re-anchored to the fresh node visibly closed and reopened on each toggle. The menu itself
+     * (`VisibilityMenu`) renders outside the grid and holds still on this point.
      */
-    chooserOpen: boolean;
-    setChooserOpen: (open: boolean) => void;
+    chooserAnchor: {
+        top: number;
+        left: number;
+    } | null;
+    setChooserAnchor: (anchor: {
+        top: number;
+        left: number;
+    } | null) => void;
 }>;
 export declare const VisibilityProvider: ({ columns, children, visibilityFeatureDisabledFor, hiddenByDefault, enabled, localStorageKey, onHiddenColumnsChange }: {
     children: ReactNode;
