@@ -23,13 +23,18 @@ export const VisibilityContext = React.createContext<{
      */
     chooserAnchor: { top: number; left: number } | null
     setChooserAnchor: (anchor: { top: number; left: number } | null) => void
+    /** Back to the columns the page opens with — the stored set AND the live one. */
+    resetHiddenColumns: () => void
+    /** Already translated by the consumer; the library has no i18n. Absent = no reset item. */
+    resetLabel?: string
 }>({
     columns: [],
     hiddenColumn: [],
     setHiddenColumn: () => {},
     enabled: false,
     chooserAnchor: null,
-    setChooserAnchor: () => {}
+    setChooserAnchor: () => {},
+    resetHiddenColumns: () => {}
 })
 
 const LOCAL_STORAGE_HIDDEN_COLUMN_KEY = 'data-grid-hidden-column-visibility'
@@ -41,7 +46,8 @@ export const VisibilityProvider = ({
     hiddenByDefault,
     enabled,
     localStorageKey = LOCAL_STORAGE_HIDDEN_COLUMN_KEY,
-    onHiddenColumnsChange
+    onHiddenColumnsChange,
+    resetLabel
 }: {
     children: ReactNode
     columns: ColumnDefinition[]
@@ -51,6 +57,8 @@ export const VisibilityProvider = ({
     hiddenByDefault?: string[]
     localStorageKey?: string
     onHiddenColumnsChange?: (hiddenColumns: string[]) => void
+    /** Already translated; passing it is what puts the reset item in the chooser's menu. */
+    resetLabel?: string
 }) => {
     const [gridKey, setGridKey] = React.useState(0)
     const [chooserAnchor, setChooserAnchor] = React.useState<{ top: number; left: number } | null>(
@@ -109,6 +117,19 @@ export const VisibilityProvider = ({
         },
         [setHiddenColumnAndPersist, onHiddenColumnsChange]
     )
+    /**
+     * Back to `hiddenByDefault`, LIVE.
+     *
+     * It goes through the same setter the chooser uses rather than removing the storage key: the
+     * provider reads that key once, in an effect whose deps are stable after mount, so a bare
+     * `localStorage.removeItem` left the in-memory set — and therefore the grid — exactly as it was
+     * until a full reload, and the next visit to the chooser wrote the unchanged set straight back.
+     */
+    const resetHiddenColumns = useCallback(
+        () => chooseHiddenColumns(defaultHiddenColumns),
+        [chooseHiddenColumns, defaultHiddenColumns]
+    )
+
     const filteredColumns = useMemo(
         () => columns.filter((column) => !visibilityFeatureDisabledFor?.includes(column.key)),
         [columns, visibilityFeatureDisabledFor]
@@ -122,6 +143,8 @@ export const VisibilityProvider = ({
                 columns: filteredColumns,
                 hiddenColumn,
                 setHiddenColumn: chooseHiddenColumns,
+                resetHiddenColumns,
+                resetLabel,
                 enabled
             }}>
             {children}
