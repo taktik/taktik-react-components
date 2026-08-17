@@ -68,6 +68,11 @@ export const usePagination = (
         [pageSizeIsControlled, onPageSizeChange]
     )
 
+    /**
+     * ⚠ Its identity changes with the caller's callbacks, where it used to be stable for the life of
+     * the grid. A consumer holding it in an effect's dependency array will see that effect re-run
+     * whenever it hands over a fresh handler — memoise the handlers, or depend on something narrower.
+     */
     const resetPagination = useCallback(() => {
         setCurrentPage(0)
         setPageSize(defaultPageSize)
