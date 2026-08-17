@@ -3,6 +3,7 @@ import { VisibilityContext } from './VisibilityProvider'
 import { IconButtonProps } from '@mui/material/IconButton'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
+import Divider from '@mui/material/Divider'
 import { DataGridCheckbox } from './DataGridCheckbox'
 import styled from '@emotion/styled'
 
@@ -47,12 +48,24 @@ export const VisibilityColumnChooser = ({ IconComponent }: Props) => {
  * still while the grid underneath it is rebuilt.
  */
 export const VisibilityMenu = () => {
-    const { columns, hiddenColumn, setHiddenColumn, chooserAnchor, setChooserAnchor } =
-        useContext(VisibilityContext)
+    const {
+        columns,
+        hiddenColumn,
+        setHiddenColumn,
+        chooserAnchor,
+        setChooserAnchor,
+        resetHiddenColumns,
+        resetLabel
+    } = useContext(VisibilityContext)
 
     const handleClose = useCallback(() => {
         setChooserAnchor(null)
     }, [setChooserAnchor])
+
+    const handleReset = useCallback(() => {
+        resetHiddenColumns()
+        setChooserAnchor(null)
+    }, [resetHiddenColumns, setChooserAnchor])
 
     const toggle = useCallback(
         (columnName: string) => () => {
@@ -80,6 +93,11 @@ export const VisibilityMenu = () => {
                     {column.name}
                 </Container>
             ))}
+            {/* The way back, next to the control that broke the layout. It closes the menu, unlike
+                a toggle: the reader is done, and leaving it open over columns that all just moved
+                reads as though nothing happened. */}
+            {resetLabel && <Divider />}
+            {resetLabel && <MenuItem onClick={handleReset}>{resetLabel}</MenuItem>}
         </Menu>
     )
 }

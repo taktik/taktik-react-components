@@ -24,8 +24,12 @@ export declare const VisibilityContext: React.Context<{
         top: number;
         left: number;
     } | null) => void;
+    /** Back to the columns the page opens with — the stored set AND the live one. */
+    resetHiddenColumns: () => void;
+    /** Already translated by the consumer; the library has no i18n. Absent = no reset item. */
+    resetLabel?: string;
 }>;
-export declare const VisibilityProvider: ({ columns, children, visibilityFeatureDisabledFor, hiddenByDefault, enabled, localStorageKey, onHiddenColumnsChange }: {
+export declare const VisibilityProvider: ({ columns, children, visibilityFeatureDisabledFor, hiddenByDefault, enabled, localStorageKey, onHiddenColumnsChange, resetLabel }: {
     children: ReactNode;
     columns: ColumnDefinition[];
     visibilityFeatureDisabledFor?: string[];
@@ -34,4 +38,6 @@ export declare const VisibilityProvider: ({ columns, children, visibilityFeature
     hiddenByDefault?: string[];
     localStorageKey?: string;
     onHiddenColumnsChange?: (hiddenColumns: string[]) => void;
+    /** Already translated; passing it is what puts the reset item in the chooser's menu. */
+    resetLabel?: string;
 }) => React.JSX.Element;

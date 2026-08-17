@@ -5,6 +5,7 @@ import { ColumnDefinition, RowDefinition } from './types';
 import 'react-data-grid/lib/styles.css';
 import { Filters } from './FilterProvider';
 import { Props as PaginationProps } from './Pagination';
+import { PaginationControl } from './hooks/usePagination';
 import { DataGridExpandable } from './Expandable';
 export * from 'react-data-grid';
 export { withDetailRows, withDetailRendering, isDetailRow, detailRowClass, detailAwareRowHeight, clickBelongsToRow, clickExpandsRow, ExpanderToggle, SELECTION_COLUMN_KEY, EXPANDER_COLUMN_KEY } from './Expandable';
@@ -56,6 +57,14 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
         remotePagination?: PaginationProps;
         /** Footer wording ("Rows per page", "of"); applies to local and remote pagination alike. */
         labels?: PaginationProps['labels'];
+        /**
+         * Controls the LOCAL pager, in the ordinary React shape — pass a value and a callback and
+         * the consumer owns that piece of state, pass neither and the grid keeps it as it always
+         * has. It is what lets a locally-paged grid put its page somewhere the grid cannot see (a
+         * URL, a store) without giving up the slicing it does for you; `remotePagination` remains
+         * the separate answer for a grid the SERVER pages.
+         */
+        control?: PaginationControl;
     };
     visibilityColumnFeature?: {
         enabled?: boolean;
@@ -66,6 +75,11 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
          */
         hiddenByDefault?: string[];
         localStorageKey?: string;
+        /**
+         * Already translated by the consumer — the library has no i18n. Passing it adds a final
+         * "reset column layout" item to the chooser's menu; omitting it leaves the menu as it was.
+         */
+        resetLabel?: string;
         /**
          * Runs when the USER hides or shows a column, never when a grid reads the stored set on
          * mount — for a page holding several tables over one schema, which want one answer between
@@ -84,4 +98,4 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
 };
 export declare const DataGrid: <R extends RowDefinition = {
     id: string;
-}>({ filters, setFilters, columns, visibilityColumnFeature: { enabled: visibilityFeatureEnabled, visibilityFeatureDisabledFor, hiddenByDefault, localStorageKey, onHiddenColumnsChange }, ...rest }: DataGridProps<R>) => React.JSX.Element;
+}>({ filters, setFilters, columns, visibilityColumnFeature: { enabled: visibilityFeatureEnabled, visibilityFeatureDisabledFor, hiddenByDefault, localStorageKey, onHiddenColumnsChange, resetLabel }, ...rest }: DataGridProps<R>) => React.JSX.Element;

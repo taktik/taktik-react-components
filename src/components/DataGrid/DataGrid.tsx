@@ -20,7 +20,7 @@ import { PulseLoader } from 'react-spinners'
 import { FilterProvider, Filters } from './FilterProvider'
 import { useLocalFiltering } from './hooks/useLocalFiltering'
 import { Pagination, Props as PaginationProps } from './Pagination'
-import { usePagination } from './hooks/usePagination'
+import { PaginationControl, usePagination } from './hooks/usePagination'
 import { VisibilityContext, VisibilityProvider } from './VisibilityProvider'
 import {
     clickBelongsToRow,
@@ -106,6 +106,14 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
         remotePagination?: PaginationProps
         /** Footer wording ("Rows per page", "of"); applies to local and remote pagination alike. */
         labels?: PaginationProps['labels']
+        /**
+         * Controls the LOCAL pager, in the ordinary React shape — pass a value and a callback and
+         * the consumer owns that piece of state, pass neither and the grid keeps it as it always
+         * has. It is what lets a locally-paged grid put its page somewhere the grid cannot see (a
+         * URL, a store) without giving up the slicing it does for you; `remotePagination` remains
+         * the separate answer for a grid the SERVER pages.
+         */
+        control?: PaginationControl
     }
     visibilityColumnFeature?: {
         enabled?: boolean
@@ -116,6 +124,11 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
          */
         hiddenByDefault?: string[]
         localStorageKey?: string
+        /**
+         * Already translated by the consumer — the library has no i18n. Passing it adds a final
+         * "reset column layout" item to the chooser's menu; omitting it leaves the menu as it was.
+         */
+        resetLabel?: string
         /**
          * Runs when the USER hides or shows a column, never when a grid reads the stored set on
          * mount — for a page holding several tables over one schema, which want one answer between
@@ -201,7 +214,8 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
 }: DataGridProps<R>) => {
     const { gridKey } = useContext(VisibilityContext)
     const { pageSize, currentPage, setCurrentPage, setPageSize } = usePagination(
-        pagination?.defaultPageSize
+        pagination?.defaultPageSize,
+        pagination?.control
     )
 
     const renderCheckbox = renderers?.renderCheckbox ?? renderDefaultCheckbox
@@ -476,7 +490,8 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
         visibilityFeatureDisabledFor,
         hiddenByDefault,
         localStorageKey,
-        onHiddenColumnsChange
+        onHiddenColumnsChange,
+        resetLabel
     } = {},
     ...rest
 }: DataGridProps<R>) => (
@@ -487,6 +502,7 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
             hiddenByDefault={hiddenByDefault}
             localStorageKey={localStorageKey}
             onHiddenColumnsChange={onHiddenColumnsChange}
+            resetLabel={resetLabel}
             visibilityFeatureDisabledFor={visibilityFeatureDisabledFor}>
             <DataGridBase {...rest} columns={columns} filters={filters} setFilters={setFilters} />
         </VisibilityProvider>
