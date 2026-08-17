@@ -5191,12 +5191,12 @@ const wl = ({
       (c, l) => {
         t(l);
       },
-      []
+      [t]
     ), s = X(
       (c) => {
         n(parseInt(c.target.value, 10)), t(0);
       },
-      []
+      [n, t]
     );
     return /* @__PURE__ */ p(pl, { children: /* @__PURE__ */ p(
       Jo,
