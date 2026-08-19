@@ -1,11 +1,30 @@
 import styled from '@emotion/styled'
-import React, { useCallback } from 'react'
+import React, { ReactNode, useCallback } from 'react'
 import TablePagination from '@mui/material/TablePagination'
 
+/**
+ * The footer is a ROW with two ends: what the table holds on the left, the pager's own controls on
+ * the right. The pager keeps the right end to itself when the left one says nothing, so a grid that
+ * passes no `totalLabel` looks exactly as it did.
+ */
 const Container = styled.div`
     height: 80px;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
 `
+
+/** The left end of the footer. Its colour is the footer's, which the host theme paints. */
+const TotalLabel = styled.div`
+    margin-right: auto;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+`
+
 export type Props = {
     currentPage: number
     setCurrentPage: (page: number) => void
@@ -16,9 +35,23 @@ export type Props = {
         rowsPerPageLabel?: string
         ofLabel?: string
     }
+    /**
+     * What the table holds, rendered at the footer's left end ("58 devices"). The library has no
+     * i18n, so the caller words it — and it is handed the count the pager is counting, so the
+     * number can never disagree with the "1-25 of 58" beside it.
+     */
+    totalLabel?: (totalCount: number) => ReactNode
 }
 export const Pagination = React.memo(
-    ({ currentPage, setCurrentPage, setPageSize, pageSize, totalCount, labels }: Props) => {
+    ({
+        currentPage,
+        setCurrentPage,
+        setPageSize,
+        pageSize,
+        totalCount,
+        labels,
+        totalLabel
+    }: Props) => {
         /**
          * ⚠ The setters ARE dependencies. They used to be raw `useState` setters, stable for the
          * life of the grid, so an empty dependency array was invisible — the frozen first-render
@@ -42,6 +75,7 @@ export const Pagination = React.memo(
 
         return (
             <Container>
+                {totalLabel ? <TotalLabel>{totalLabel(totalCount)}</TotalLabel> : null}
                 <TablePagination
                     labelRowsPerPage={
                         labels?.rowsPerPageLabel ? (

@@ -107,6 +107,12 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
         /** Footer wording ("Rows per page", "of"); applies to local and remote pagination alike. */
         labels?: PaginationProps['labels']
         /**
+         * What the table holds, at the footer's LEFT end ("58 devices") — the counterpart of the
+         * pager's own "1-25 of 58". It is called with the count the pager is counting, so the two
+         * cannot disagree; the library has no i18n, so the caller words it.
+         */
+        totalLabel?: PaginationProps['totalLabel']
+        /**
          * Controls the LOCAL pager, in the ordinary React shape — pass a value and a callback and
          * the consumer owns that piece of state, pass neither and the grid keeps it as it always
          * has. It is what lets a locally-paged grid put its page somewhere the grid cannot see (a
@@ -154,16 +160,17 @@ const ContainerLoading = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
+`
 
-    > div:first-child {
-        background-color: ${taktikTheme.primary500};
-        opacity: 0.1;
+/** The translucent veil the spinner turns over; out of flow, so the spinner stays centred. */
+const LoadingScrim = styled.div`
+    background-color: ${taktikTheme.primary500};
+    opacity: 0.1;
 
-        position: absolute;
-        top: 0;
-        width: 100%;
-        height: 100%;
-    }
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
 `
 
 const RenderCheckbox = React.memo(
@@ -466,11 +473,12 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                         totalCount: rowsFiltered.length
                     })}
                     labels={pagination.labels ?? pagination.remotePagination?.labels}
+                    totalLabel={pagination.totalLabel ?? pagination.remotePagination?.totalLabel}
                 />
             ) : null}
             {loading ? (
                 <ContainerLoading>
-                    <div></div>
+                    <LoadingScrim />
                     <PulseLoader color={taktikTheme.primary500} />
                 </ContainerLoading>
             ) : null}

@@ -58,6 +58,12 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
         /** Footer wording ("Rows per page", "of"); applies to local and remote pagination alike. */
         labels?: PaginationProps['labels'];
         /**
+         * What the table holds, at the footer's LEFT end ("58 devices") — the counterpart of the
+         * pager's own "1-25 of 58". It is called with the count the pager is counting, so the two
+         * cannot disagree; the library has no i18n, so the caller words it.
+         */
+        totalLabel?: PaginationProps['totalLabel'];
+        /**
          * Controls the LOCAL pager, in the ordinary React shape — pass a value and a callback and
          * the consumer owns that piece of state, pass neither and the grid keeps it as it always
          * has. It is what lets a locally-paged grid put its page somewhere the grid cannot see (a
