@@ -32,7 +32,10 @@ export const Container = styled.div<{ $pagination?: boolean }>`
         background-color: var(--rdg--scrollbar-track-hover-background) !important;
     }
 
-    > div:first-child {
+    /* The box holding the grid itself. Every child of this container is a div — the grid box, the
+       pager, the loading overlay — and the grid box is always the first of them, so the first div
+       is the grid box. */
+    > div:first-of-type {
         flex-grow: 1;
         overflow: hidden;
     }
@@ -56,6 +59,14 @@ export const Container = styled.div<{ $pagination?: boolean }>`
 
     .rdg-cell {
         padding: var(--rdg-cell-padding) !important;
+    }
+
+    /* A sortable header is [label][sort arrow] in one flex box, with nothing between them — the
+       arrow reads as the last letter of the word. The gap goes on the LABEL rather than on the
+       arrow (which react-data-grid only renders once the column is sorted), so the header does not
+       shift sideways the moment it is clicked. */
+    .rdg-header-sort-name {
+        margin-inline-end: 6px;
     }
 
     /* A frozenRight column's cells: pinned at the right edge while the grid scrolls sideways —
@@ -130,6 +141,8 @@ export const Container = styled.div<{ $pagination?: boolean }>`
         box-shadow: inset 3px 0 0 0 var(--rdg-expanded-accent-color);
     }
 
+    /* A row holds nothing but .rdg-cell divs — the selection and expander cells among them — so
+       :first-of-type names the row's leading cell. */
     .rdg-row {
         &[aria-selected='true'] {
             .rdg-cell {
@@ -142,7 +155,7 @@ export const Container = styled.div<{ $pagination?: boolean }>`
                 border-top: solid var(--rdg-border-size) var(--rdg-border-color);
             }
 
-            .rdg-cell:first-child {
+            .rdg-cell:first-of-type {
                 border-top-left-radius: var(--rdg-border-radius-container);
             }
 
@@ -152,7 +165,7 @@ export const Container = styled.div<{ $pagination?: boolean }>`
         }
 
         &.last-row {
-            .rdg-cell:first-child {
+            .rdg-cell:first-of-type {
                 border-bottom-left-radius: var(--rdg-border-radius-container);
             }
 
@@ -164,7 +177,7 @@ export const Container = styled.div<{ $pagination?: boolean }>`
         .rdg-cell {
             border-bottom: solid var(--rdg-border-size) var(--rdg-border-color);
 
-            &:first-child {
+            &:first-of-type {
                 border-left: solid var(--rdg-border-size) var(--rdg-border-color);
             }
 
