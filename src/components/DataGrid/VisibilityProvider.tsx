@@ -47,6 +47,7 @@ export const VisibilityProvider = ({
     enabled,
     localStorageKey = LOCAL_STORAGE_HIDDEN_COLUMN_KEY,
     onHiddenColumnsChange,
+    onReset,
     resetLabel
 }: {
     children: ReactNode
@@ -57,6 +58,8 @@ export const VisibilityProvider = ({
     hiddenByDefault?: string[]
     localStorageKey?: string
     onHiddenColumnsChange?: (hiddenColumns: string[]) => void
+    /** A second stored layout of the consumer's own, cleared by the same one reset item. */
+    onReset?: () => void
     /** Already translated; passing it is what puts the reset item in the chooser's menu. */
     resetLabel?: string
 }) => {
@@ -124,11 +127,16 @@ export const VisibilityProvider = ({
      * provider reads that key once, in an effect whose deps are stable after mount, so a bare
      * `localStorage.removeItem` left the in-memory set — and therefore the grid — exactly as it was
      * until a full reload, and the next visit to the chooser wrote the unchanged set straight back.
+     *
+     * It is also where a consumer's OWN stored layout goes back (`onReset`): the reset bumps
+     * `gridKey` unconditionally, so the grid remounts and drops the column widths react-data-grid
+     * keeps in its own state — the consumer clearing what it stored in the same pass is what makes
+     * the two halves of "reset column layout" land together.
      */
-    const resetHiddenColumns = useCallback(
-        () => chooseHiddenColumns(defaultHiddenColumns),
-        [chooseHiddenColumns, defaultHiddenColumns]
-    )
+    const resetHiddenColumns = useCallback(() => {
+        chooseHiddenColumns(defaultHiddenColumns)
+        onReset?.()
+    }, [chooseHiddenColumns, defaultHiddenColumns, onReset])
 
     const filteredColumns = useMemo(
         () => columns.filter((column) => !visibilityFeatureDisabledFor?.includes(column.key)),
