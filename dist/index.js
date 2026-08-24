@@ -765,7 +765,7 @@ function Ai({
     return f;
   }, [w, a, e]);
 }
-function $i({
+function Yi({
   rows: e,
   rowHeight: t,
   clientHeight: n,
@@ -826,7 +826,7 @@ function $i({
     findRowIdx: d
   };
 }
-const Yi = "c1w9bbhr7-0-0-beta-47", _i = "c1creorc7-0-0-beta-47", Bi = `rdg-cell-drag-handle ${Yi}`;
+const $i = "c1w9bbhr7-0-0-beta-47", _i = "c1creorc7-0-0-beta-47", Bi = `rdg-cell-drag-handle ${$i}`;
 function Ui({
   gridRowStart: e,
   rows: t,
@@ -1095,7 +1095,7 @@ function sa({
       right: te,
       left: ae
     } = j.getBoundingClientRect(), de = g ? b.clientX - ae : te - b.clientX;
-    let $ = !1;
+    let Y = !1;
     function X(Ce) {
       const {
         width: he,
@@ -1106,10 +1106,10 @@ function sa({
       Ue = Rr(Ue, e), he > 0 && Ue !== he && o(e, Ue);
     }
     function K() {
-      $ = !0, o(e, "max-content");
+      Y = !0, o(e, "max-content");
     }
     function ye(Ce) {
-      $ || X(Ce), H.removeEventListener("pointermove", X), H.removeEventListener("dblclick", K), H.removeEventListener("lostpointercapture", ye);
+      Y || X(Ce), H.removeEventListener("pointermove", X), H.removeEventListener("dblclick", K), H.removeEventListener("lostpointercapture", ye);
     }
     H.setPointerCapture(U), H.addEventListener("pointermove", X), H.addEventListener("dblclick", K), H.addEventListener("lostpointercapture", ye);
   }
@@ -1172,8 +1172,8 @@ function sa({
   function R(b) {
     Jn(b) && u(!1);
   }
-  let Y;
-  return A && (Y = {
+  let $;
+  return A && ($ = {
     draggable: !0,
     onDragStart: ze,
     onDragEnd: Pe,
@@ -1197,7 +1197,7 @@ function sa({
     onFocus: Se,
     onClick: we,
     onKeyDown: O ? Ie : void 0,
-    ...Y,
+    ...$,
     children: [ne({
       column: e,
       sortDirection: v,
@@ -1454,9 +1454,9 @@ function Da({
     })
   });
 }
-const $r = /* @__PURE__ */ He(/* @__PURE__ */ pn(Da)), Yl = $r;
-function Yr(e, t) {
-  return /* @__PURE__ */ p($r, {
+const Yr = /* @__PURE__ */ He(/* @__PURE__ */ pn(Da)), $l = Yr;
+function $r(e, t) {
+  return /* @__PURE__ */ p(Yr, {
     ...t
   }, e);
 }
@@ -1562,7 +1562,7 @@ function Wa({
     })
   });
 }
-const Aa = /* @__PURE__ */ He(Wa), $a = "skuhp557-0-0-beta-47", Ya = "tf8l5ub7-0-0-beta-47", _a = `rdg-summary-row ${$a}`;
+const Aa = /* @__PURE__ */ He(Wa), Ya = "skuhp557-0-0-beta-47", $a = "tf8l5ub7-0-0-beta-47", _a = `rdg-summary-row ${Ya}`;
 function Ba({
   rowIdx: e,
   gridRowStart: t,
@@ -1596,7 +1596,7 @@ function Ba({
   return /* @__PURE__ */ p("div", {
     role: "row",
     "aria-rowindex": w,
-    className: Me(Cn, `rdg-row-${e % 2 === 0 ? "even" : "odd"}`, _a, c ? `${ua} ${Ya}` : fa, s === -1 && Bt),
+    className: Me(Cn, `rdg-row-${e % 2 === 0 ? "even" : "odd"}`, _a, c ? `${ua} ${$a}` : fa, s === -1 && Bt),
     style: {
       ...bn(t),
       "--rdg-summary-row-top": o !== void 0 ? `${o}px` : void 0,
@@ -1646,7 +1646,7 @@ function Ua(e, t) {
     "aria-describedby": Pe,
     "aria-rowcount": le,
     "data-testid": Te
-  } = e, E = _t(), R = Se ?? "grid", Y = c ?? 35, b = d ?? (typeof Y == "number" ? Y : 35), H = w ?? (typeof Y == "number" ? Y : 35), U = (W == null ? void 0 : W.renderRow) ?? (E == null ? void 0 : E.renderRow) ?? Yr, j = (W == null ? void 0 : W.renderSortStatus) ?? (E == null ? void 0 : E.renderSortStatus) ?? Ra, te = (W == null ? void 0 : W.renderCheckbox) ?? (E == null ? void 0 : E.renderCheckbox) ?? pi, ae = (W == null ? void 0 : W.noRowsFallback) ?? (E == null ? void 0 : E.noRowsFallback), de = A ?? !0, $ = we ?? "ltr", [X, K] = re(0), [ye, Ce] = re(0), [he, rt] = re(() => /* @__PURE__ */ new Map()), [We, Ue] = re(() => /* @__PURE__ */ new Map()), [Ge, In] = re(null), [Tn, io] = re(!1), [ot, ao] = re(void 0), [Oe, Rn] = re(null), En = Z((h) => he.get(h.key) ?? We.get(h.key) ?? h.width, [We, he]), [je, Mn, Pn, so] = Wi(), {
+  } = e, E = _t(), R = Se ?? "grid", $ = c ?? 35, b = d ?? (typeof $ == "number" ? $ : 35), H = w ?? (typeof $ == "number" ? $ : 35), U = (W == null ? void 0 : W.renderRow) ?? (E == null ? void 0 : E.renderRow) ?? $r, j = (W == null ? void 0 : W.renderSortStatus) ?? (E == null ? void 0 : E.renderSortStatus) ?? Ra, te = (W == null ? void 0 : W.renderCheckbox) ?? (E == null ? void 0 : E.renderCheckbox) ?? pi, ae = (W == null ? void 0 : W.noRowsFallback) ?? (E == null ? void 0 : E.noRowsFallback), de = A ?? !0, Y = we ?? "ltr", [X, K] = re(0), [ye, Ce] = re(0), [he, rt] = re(() => /* @__PURE__ */ new Map()), [We, Ue] = re(() => /* @__PURE__ */ new Map()), [Ge, In] = re(null), [Tn, io] = re(!1), [ot, ao] = re(void 0), [Oe, Rn] = re(null), En = Z((h) => he.get(h.key) ?? We.get(h.key) ?? h.width, [We, he]), [je, Mn, Pn, so] = Wi(), {
     columns: oe,
     colSpanColumns: On,
     lastFrozenColumnIndex: pe,
@@ -1663,11 +1663,11 @@ function Ua(e, t) {
     scrollLeft: ye,
     viewportWidth: Mn,
     enableVirtualization: de
-  }), it = (o == null ? void 0 : o.length) ?? 0, Ke = (i == null ? void 0 : i.length) ?? 0, Fn = it + Ke, qe = Ae + it, Ut = Ae - 1, ge = -qe, Dt = ge + Ut, $e = r.length + Ke - 1, [M, Xe] = re(() => ({
+  }), it = (o == null ? void 0 : o.length) ?? 0, Ke = (i == null ? void 0 : i.length) ?? 0, Fn = it + Ke, qe = Ae + it, Ut = Ae - 1, ge = -qe, Dt = ge + Ut, Ye = r.length + Ke - 1, [M, Xe] = re(() => ({
     idx: -1,
     rowIdx: ge - 1,
     mode: "SELECT"
-  })), Gt = ve(M), Ln = ve(ot), Hn = ve(-1), St = ve(null), It = ve(!1), jt = R === "treegrid", Kt = Ae * b, zn = Fn * H, Tt = Pn - Kt - zn, qt = f != null && l != null, Wn = $ === "rtl", ho = Wn ? "ArrowRight" : "ArrowLeft", An = Wn ? "ArrowLeft" : "ArrowRight", $n = le ?? Ae + r.length + Fn, go = G(() => ({
+  })), Gt = ve(M), Ln = ve(ot), Hn = ve(-1), St = ve(null), It = ve(!1), jt = R === "treegrid", Kt = Ae * b, zn = Fn * H, Tt = Pn - Kt - zn, qt = f != null && l != null, Wn = Y === "rtl", ho = Wn ? "ArrowRight" : "ArrowLeft", An = Wn ? "ArrowLeft" : "ArrowRight", Yn = le ?? Ae + r.length + Fn, go = G(() => ({
     renderCheckbox: te,
     renderSortStatus: j
   }), [te, j]), mo = G(() => {
@@ -1685,12 +1685,12 @@ function Ua(e, t) {
     rowOverscanEndIdx: st,
     totalRowHeight: Xt,
     gridTemplateRows: wo,
-    getRowTop: Yn,
+    getRowTop: $n,
     getRowHeight: yo,
     findRowIdx: _n
-  } = $i({
+  } = Yi({
     rows: r,
-    rowHeight: Y,
+    rowHeight: $,
     clientHeight: Tt,
     scrollTop: X,
     enableVirtualization: de
@@ -1913,7 +1913,7 @@ function Ua(e, t) {
     idx: h,
     rowIdx: y
   }) {
-    return y >= ge && y <= $e && jn(h);
+    return y >= ge && y <= Ye && jn(h);
   }
   function zo({
     idx: h,
@@ -1994,14 +1994,14 @@ function Ua(e, t) {
       case "End":
         return V ? {
           idx: F,
-          rowIdx: $e
+          rowIdx: Ye
         } : {
           idx: Ve,
-          rowIdx: y ? $e : B
+          rowIdx: y ? Ye : B
         };
       case "PageUp": {
         if (M.rowIdx === ge) return M;
-        const Q = Yn(B) + yo(B) - Tt;
+        const Q = $n(B) + yo(B) - Tt;
         return {
           idx: F,
           rowIdx: Q > 0 ? _n(Q) : 0
@@ -2009,7 +2009,7 @@ function Ua(e, t) {
       }
       case "PageDown": {
         if (M.rowIdx >= r.length) return M;
-        const Q = Yn(B) + Tt;
+        const Q = $n(B) + Tt;
         return {
           idx: F,
           rowIdx: Q < Xt ? _n(Q) : r.length - 1
@@ -2030,7 +2030,7 @@ function Ua(e, t) {
         shiftKey: N,
         maxColIdx: Ve,
         minRowIdx: ge,
-        maxRowIdx: $e,
+        maxRowIdx: Ye,
         selectedPosition: M
       })) {
         Gn();
@@ -2051,7 +2051,7 @@ function Ua(e, t) {
       bottomSummaryRows: i,
       minRowIdx: ge,
       mainHeaderRowIdx: Dt,
-      maxRowIdx: $e,
+      maxRowIdx: Ye,
       lastFrozenColumnIndex: pe,
       cellNavigationMode: F,
       currentPosition: M,
@@ -2074,7 +2074,7 @@ function Ua(e, t) {
       preventScroll: !0
     });
   }
-  function $o() {
+  function Yo() {
     if (P == null || M.mode === "EDIT" || !Kn(M))
       return;
     const {
@@ -2090,7 +2090,7 @@ function Ua(e, t) {
       column: N,
       columnWidth: F,
       maxColIdx: Ve,
-      isLastRow: y === $e,
+      isLastRow: y === Ye,
       selectedPosition: M,
       isCellEditable: Mt,
       latestDraggedOverRowIdx: Ln,
@@ -2101,7 +2101,7 @@ function Ua(e, t) {
       setDraggedOverRowIdx: Qt
     });
   }
-  function Yo(h) {
+  function $o(h) {
     if (M.rowIdx !== h || M.mode === "SELECT") return;
     const {
       idx: y,
@@ -2173,12 +2173,12 @@ function Ua(e, t) {
         lastFrozenColumnIndex: pe,
         onRowChange: Mo,
         selectCell: Zt,
-        selectedCellEditor: Yo(J)
+        selectedCellEditor: $o(J)
       }));
     }
     return h;
   }
-  (M.idx > Ve || M.rowIdx > $e) && (Xe({
+  (M.idx > Ve || M.rowIdx > Ye) && (Xe({
     idx: -1,
     rowIdx: ge - 1,
     mode: "SELECT"
@@ -2193,7 +2193,7 @@ function Ua(e, t) {
     "aria-describedby": Pe,
     "aria-multiselectable": qt ? !0 : void 0,
     "aria-colcount": oe.length,
-    "aria-rowcount": $n,
+    "aria-rowcount": Yn,
     className: Me(Oa, ne, Tn && Fa),
     style: {
       ..._,
@@ -2205,7 +2205,7 @@ function Ua(e, t) {
       "--rdg-scroll-height": `${Co}px`,
       ...uo
     },
-    dir: $,
+    dir: Y,
     ref: je,
     onScroll: No,
     onKeyDown: Oo,
@@ -2235,7 +2235,7 @@ function Ua(e, t) {
             selectedCellIdx: M.rowIdx === Dt ? M.idx : void 0,
             selectCell: Bn,
             shouldFocusGrid: !Vt,
-            direction: $
+            direction: Y
           })]
         })
       }), r.length === 0 && ae ? ae : /* @__PURE__ */ ie(yn, {
@@ -2260,7 +2260,7 @@ function Ua(e, t) {
         }), i == null ? void 0 : i.map((h, y) => {
           const N = qe + r.length + y + 1, F = r.length + y, B = M.rowIdx === F, V = Tt > Xt ? Pn - H * (i.length - y) : void 0, Q = V === void 0 ? H * (i.length - 1 - y) : void 0;
           return /* @__PURE__ */ p(er, {
-            "aria-rowindex": $n - Ke + y + 1,
+            "aria-rowindex": Yn - Ke + y + 1,
             rowIdx: F,
             gridRowStart: N,
             row: h,
@@ -2274,7 +2274,7 @@ function Ua(e, t) {
           }, y);
         })]
       })]
-    }), $o(), ai(Ne), jt && /* @__PURE__ */ p("div", {
+    }), Yo(), ai(Ne), jt && /* @__PURE__ */ p("div", {
       ref: St,
       tabIndex: Vn ? 0 : -1,
       className: Me(La, Vn && [la, pe !== -1 && da], !Ze(M.rowIdx) && Ha),
@@ -2411,17 +2411,17 @@ function Za({
   ...l
 }, x) {
   var Pe, le, Te;
-  const u = _t(), g = (c == null ? void 0 : c.renderRow) ?? (u == null ? void 0 : u.renderRow) ?? Yr, C = 1 + (((Pe = l.topSummaryRows) == null ? void 0 : Pe.length) ?? 0), k = l.direction === "rtl", D = k ? "ArrowRight" : "ArrowLeft", S = k ? "ArrowLeft" : "ArrowRight", I = fe(Ie), {
+  const u = _t(), g = (c == null ? void 0 : c.renderRow) ?? (u == null ? void 0 : u.renderRow) ?? $r, C = 1 + (((Pe = l.topSummaryRows) == null ? void 0 : Pe.length) ?? 0), k = l.direction === "rtl", D = k ? "ArrowRight" : "ArrowLeft", S = k ? "ArrowLeft" : "ArrowRight", I = fe(Ie), {
     columns: L,
     groupBy: v
   } = G(() => {
     const E = [...e].sort(({
-      key: Y
+      key: $
     }, {
       key: b
-    }) => Y === Be ? -1 : b === Be ? 1 : d.includes(Y) ? d.includes(b) ? d.indexOf(Y) - d.indexOf(b) : -1 : d.includes(b) ? 1 : 0), R = [];
-    for (const [Y, b] of E.entries())
-      d.includes(b.key) && (R.push(b.key), E[Y] = {
+    }) => $ === Be ? -1 : b === Be ? 1 : d.includes($) ? d.includes(b) ? d.indexOf($) - d.indexOf(b) : -1 : d.includes(b) ? 1 : 0), R = [];
+    for (const [$, b] of E.entries())
+      d.includes(b.key) && (R.push(b.key), E[$] = {
         ...b,
         frozen: !0,
         renderCell: () => null,
@@ -2434,16 +2434,16 @@ function Za({
     };
   }, [e, d]), [T, P] = G(() => {
     if (v.length === 0) return [void 0, t.length];
-    const E = (R, [Y, ...b], H) => {
+    const E = (R, [$, ...b], H) => {
       let U = 0;
       const j = {};
-      for (const [te, ae] of Object.entries(w(R, Y))) {
-        const [de, $] = b.length === 0 ? [ae, ae.length] : E(ae, b, H + U + 1);
+      for (const [te, ae] of Object.entries(w(R, $))) {
+        const [de, Y] = b.length === 0 ? [ae, ae.length] : E(ae, b, H + U + 1);
         j[te] = {
           childRows: ae,
           childGroups: de,
           startRowIndex: H + U
-        }, U += $ + 1;
+        }, U += Y + 1;
       }
       return [j, U];
     };
@@ -2451,18 +2451,18 @@ function Za({
   }, [v, w, t]), [O, z] = G(() => {
     const E = /* @__PURE__ */ new Set();
     if (!T) return [t, b];
-    const R = [], Y = (H, U, j) => {
+    const R = [], $ = (H, U, j) => {
       if (Qa(H)) {
         R.push(...H);
         return;
       }
       Object.keys(H).forEach((te, ae, de) => {
-        const $ = U !== void 0 ? `${U}__${te}` : te, X = f.has($), {
+        const Y = U !== void 0 ? `${U}__${te}` : te, X = f.has(Y), {
           childRows: K,
           childGroups: ye,
           startRowIndex: Ce
         } = H[te], he = {
-          id: $,
+          id: Y,
           parentId: U,
           groupKey: te,
           isExpanded: X,
@@ -2472,10 +2472,10 @@ function Za({
           startRowIndex: Ce,
           setSize: de.length
         };
-        R.push(he), E.add(he), X && Y(ye, $, j + 1);
+        R.push(he), E.add(he), X && $(ye, Y, j + 1);
       });
     };
-    return Y(T, void 0, 0), [R, b];
+    return $(T, void 0, 0), [R, b];
     function b(H) {
       return E.has(H);
     }
@@ -2487,10 +2487,10 @@ function Za({
     row: E
   }) : n, [z, n]), W = Z((E) => {
     const R = O.indexOf(E);
-    for (let Y = R - 1; Y >= 0; Y--) {
-      const b = O[Y];
+    for (let $ = R - 1; $ >= 0; $--) {
+      const b = O[$];
       if (z(b) && (!z(E) || E.parentId === b.id))
-        return [b, Y];
+        return [b, $];
     }
   }, [z, O]), ne = Z((E) => {
     if (z(E))
@@ -2500,10 +2500,10 @@ function Za({
     const R = W(E);
     if (R !== void 0) {
       const {
-        startRowIndex: Y,
+        startRowIndex: $,
         childRows: b
       } = R[0], H = b.indexOf(E);
-      return Y + H + 1;
+      return $ + H + 1;
     }
     return O.indexOf(E);
   }, [W, z, r, O]), _ = G(() => {
@@ -2518,17 +2518,17 @@ function Za({
     if (!s) return;
     gt(r);
     const R = new Set(a);
-    for (const Y of O) {
-      const b = ne(Y);
+    for (const $ of O) {
+      const b = ne($);
       if (_ != null && _.has(b) && !E.has(b))
-        if (z(Y))
-          for (const H of Y.childRows)
+        if (z($))
+          for (const H of $.childRows)
             R.delete(r(H));
         else
           R.delete(b);
       else if (!(_ != null && _.has(b)) && E.has(b))
-        if (z(Y))
-          for (const H of Y.childRows)
+        if (z($))
+          for (const H of $.childRows)
             R.add(r(H));
         else
           R.add(b);
@@ -2538,10 +2538,10 @@ function Za({
   function we(E, R) {
     if (o == null || o(E, R), R.isGridDefaultPrevented() || E.mode === "EDIT") return;
     const {
-      column: Y,
+      column: $,
       rowIdx: b,
       selectCell: H
-    } = E, U = (Y == null ? void 0 : Y.idx) ?? -1, j = O[b];
+    } = E, U = ($ == null ? void 0 : $.idx) ?? -1, j = O[b];
     if (z(j)) {
       if (U === -1 && (R.key === D && j.isExpanded || R.key === S && !j.isExpanded) && (R.preventDefault(), R.preventGridDefault(), Ie(j.id)), U === -1 && R.key === D && !j.isExpanded && j.level !== 0) {
         const te = W(j);
@@ -2555,7 +2555,7 @@ function Za({
   }
   function Se(E, {
     indexes: R,
-    column: Y
+    column: $
   }) {
     if (!i) return;
     const b = [...t], H = [];
@@ -2565,7 +2565,7 @@ function Za({
     }
     i(b, {
       indexes: H,
-      column: Y
+      column: $
     });
   }
   function Ie(E) {
@@ -2574,7 +2574,7 @@ function Za({
   }
   function ze(E, {
     row: R,
-    rowClass: Y,
+    rowClass: $,
     onCellClick: b,
     onCellDoubleClick: H,
     onCellContextMenu: U,
@@ -2582,7 +2582,7 @@ function Za({
     lastFrozenColumnIndex: te,
     copiedCellIdx: ae,
     draggedOverCellIdx: de,
-    setDraggedOverRowIdx: $,
+    setDraggedOverRowIdx: Y,
     selectedCellEditor: X,
     ...K
   }) {
@@ -2611,7 +2611,7 @@ function Za({
       ...K,
       "aria-rowindex": ye,
       row: R,
-      rowClass: Y,
+      rowClass: $,
       onCellClick: b,
       onCellDoubleClick: H,
       onCellContextMenu: U,
@@ -2619,7 +2619,7 @@ function Za({
       lastFrozenColumnIndex: te,
       copiedCellIdx: ae,
       draggedOverCellIdx: de,
-      setDraggedOverRowIdx: $,
+      setDraggedOverRowIdx: Y,
       selectedCellEditor: X
     });
   }
@@ -2878,29 +2878,49 @@ const ee = {
     .rdg-cell-resizable {
         /* Only style react-data-grid's resize handle, which it always renders as the
            cell's last child. A bare "> div" also matches the header-content wrapper
-           (getHeaderFilter's Box) — collapsing the label/filter to a 5px absolute strip.
+           (getHeaderFilter's Box) — collapsing the label/filter to an absolute strip.
 
-           The seam is discreet: the col-resize cursor is the affordance, the line only hints at it
-           under the pointer and commits while the drag is on. :active is what says "dragging" —
-           the handle takes pointer capture, so it keeps that state until the drag ends, wherever
-           the pointer goes. --rdg-resize-handle-color lets a consumer name the tone; without one
-           it is the grid's own border, the line the handle sits on. */
+           GRAB AREA and LINE are two boxes, which is what lets the target be big enough to aim at
+           while the line stays hairline-thin. The handle itself paints nothing: it is an 8px
+           transparent strip carrying the col-resize cursor, and its ::after draws the 2px line at
+           the boundary. The same split every other seam in the app uses.
+
+           ⚠ The strip has to sit ENTIRELY INSIDE the cell, because the cell clips
+           (overflow: hidden) and a clipped strip is neither painted NOR hit-testable. Hanging it
+           over the boundary — the obvious way to centre a seam on the edge it sits on — silently
+           threw away half the target: measured, a 5px handle at right: -2.5px answered over 3px of
+           screen, so aiming at a column boundary was a matter of luck rather than of pointing.
+
+           The seam is discreet: the cursor is the affordance, the line only hints at it under the
+           pointer and commits while the drag is on. :active is what says "dragging" — the handle
+           takes pointer capture, so it keeps that state until the drag ends, wherever the pointer
+           goes. --rdg-resize-handle-color lets a consumer name the tone; without one it is the
+           grid's own border, the line the handle sits on. */
         > div:last-child {
-            width: 5px;
-            cursor: col-resize;
-            background-color: var(--rdg-resize-handle-color, var(--rdg-border-color));
-            opacity: 0;
-            transition: opacity 0.2s ease;
             position: absolute;
             top: 0;
-            right: -2.5px;
+            right: 0;
             bottom: 0;
+            width: 8px;
+            cursor: col-resize;
 
-            &:hover {
+            &::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                width: 2px;
+                background-color: var(--rdg-resize-handle-color, var(--rdg-border-color));
+                opacity: 0;
+                transition: opacity 0.2s ease;
+            }
+
+            &:hover::after {
                 opacity: 0.5;
             }
 
-            &:active {
+            &:active::after {
                 opacity: 1;
             }
         }
@@ -3561,7 +3581,7 @@ const Ls = {
     evening: "evening",
     night: "night"
   }
-}, $s = {
+}, Ys = {
   narrow: {
     am: "a",
     pm: "p",
@@ -3592,7 +3612,7 @@ const Ls = {
     evening: "in the evening",
     night: "at night"
   }
-}, Ys = (e, t) => {
+}, $s = (e, t) => {
   const n = Number(e), r = n % 100;
   if (r > 20 || r < 10)
     switch (r % 10) {
@@ -3605,7 +3625,7 @@ const Ls = {
     }
   return n + "th";
 }, _s = {
-  ordinalNumber: Ys,
+  ordinalNumber: $s,
   era: ut({
     values: Ls,
     defaultWidth: "wide"
@@ -3626,7 +3646,7 @@ const Ls = {
   dayPeriod: ut({
     values: As,
     defaultWidth: "wide",
-    formattingValues: $s,
+    formattingValues: Ys,
     defaultFormattingWidth: "wide"
   })
 };
@@ -4374,11 +4394,11 @@ const Fe = {
         return cr(r);
       case "XXXX":
       case "XX":
-        return Ye(r);
+        return $e(r);
       case "XXXXX":
       case "XXX":
       default:
-        return Ye(r, ":");
+        return $e(r, ":");
     }
   },
   // Timezone (ISO-8601. If offset is 0, output is `'+00:00'` or equivalent)
@@ -4389,11 +4409,11 @@ const Fe = {
         return cr(r);
       case "xxxx":
       case "xx":
-        return Ye(r);
+        return $e(r);
       case "xxxxx":
       case "xxx":
       default:
-        return Ye(r, ":");
+        return $e(r, ":");
     }
   },
   // Timezone (GMT)
@@ -4406,7 +4426,7 @@ const Fe = {
         return "GMT" + sr(r, ":");
       case "OOOO":
       default:
-        return "GMT" + Ye(r, ":");
+        return "GMT" + $e(r, ":");
     }
   },
   // Timezone (specific non-location)
@@ -4419,7 +4439,7 @@ const Fe = {
         return "GMT" + sr(r, ":");
       case "zzzz":
       default:
-        return "GMT" + Ye(r, ":");
+        return "GMT" + $e(r, ":");
     }
   },
   // Seconds timestamp
@@ -4437,9 +4457,9 @@ function sr(e, t = "") {
   return i === 0 ? n + String(o) : n + String(o) + t + q(i, 2);
 }
 function cr(e, t) {
-  return e % 60 === 0 ? (e > 0 ? "-" : "+") + q(Math.abs(e) / 60, 2) : Ye(e, t);
+  return e % 60 === 0 ? (e > 0 ? "-" : "+") + q(Math.abs(e) / 60, 2) : $e(e, t);
 }
-function Ye(e, t = "") {
+function $e(e, t = "") {
   const n = e > 0 ? "-" : "+", r = Math.abs(e), o = q(Math.trunc(r / 60), 2), i = q(r % 60, 2);
   return n + o + t + i;
 }
@@ -4581,7 +4601,7 @@ function Lc(e, t, n) {
   });
 }
 function Hc(e, t) {
-  const n = Yc(t);
+  const n = $c(t);
   return "formatToParts" in n ? Wc(n, e) : Ac(n, e);
 }
 const zc = {
@@ -4626,9 +4646,9 @@ const sn = {}, ur = new Intl.DateTimeFormat("en-US", {
   hour: "2-digit",
   minute: "2-digit",
   second: "2-digit"
-}).format(/* @__PURE__ */ new Date("2014-06-25T04:00:00.123Z")), $c = ur === "06/25/2014, 00:00:00" || ur === "‎06‎/‎25‎/‎2014‎ ‎00‎:‎00‎:‎00";
-function Yc(e) {
-  return sn[e] || (sn[e] = $c ? new Intl.DateTimeFormat("en-US", {
+}).format(/* @__PURE__ */ new Date("2014-06-25T04:00:00.123Z")), Yc = ur === "06/25/2014, 00:00:00" || ur === "‎06‎/‎25‎/‎2014‎ ‎00‎:‎00‎:‎00";
+function $c(e) {
+  return sn[e] || (sn[e] = Yc ? new Intl.DateTimeFormat("en-US", {
     hourCycle: "h23",
     timeZone: e,
     year: "numeric",
@@ -4774,7 +4794,7 @@ function ln(e, t) {
     throw new RangeError("Invalid time zone specified: " + e);
   return n;
 }
-function $t(e, t) {
+function Yt(e, t) {
   const n = e < 0 ? "-" : "";
   let r = Math.abs(e).toString();
   for (; r.length < t; )
@@ -4782,15 +4802,15 @@ function $t(e, t) {
   return n + r;
 }
 function Je(e, t = "") {
-  const n = e > 0 ? "-" : "+", r = Math.abs(e), o = $t(Math.floor(r / 60), 2), i = $t(Math.floor(r % 60), 2);
+  const n = e > 0 ? "-" : "+", r = Math.abs(e), o = Yt(Math.floor(r / 60), 2), i = Yt(Math.floor(r % 60), 2);
   return n + o + t + i;
 }
 function mr(e, t) {
-  return e % 60 === 0 ? (e > 0 ? "-" : "+") + $t(Math.abs(e) / 60, 2) : Je(e, t);
+  return e % 60 === 0 ? (e > 0 ? "-" : "+") + Yt(Math.abs(e) / 60, 2) : Je(e, t);
 }
 function qc(e, t = "") {
   const n = e > 0 ? "-" : "+", r = Math.abs(e), o = Math.floor(r / 60), i = r % 60;
-  return i === 0 ? n + String(o) : n + String(o) + t + $t(i, 2);
+  return i === 0 ? n + String(o) : n + String(o) + t + Yt(i, 2);
 }
 function wr(e) {
   const t = new Date(Date.UTC(e.getFullYear(), e.getMonth(), e.getDate(), e.getHours(), e.getMinutes(), e.getSeconds(), e.getMilliseconds()));
@@ -5142,14 +5162,14 @@ var fl = function(e, t, n) {
     }
   `);
   return i && i.insertRule(a, 0), r;
-}, Yt = function() {
-  return Yt = Object.assign || function(e) {
+}, $t = function() {
+  return $t = Object.assign || function(e) {
     for (var t, n = 1, r = arguments.length; n < r; n++) {
       t = arguments[n];
       for (var o in t) Object.prototype.hasOwnProperty.call(t, o) && (e[o] = t[o]);
     }
     return e;
-  }, Yt.apply(this, arguments);
+  }, $t.apply(this, arguments);
 }, hl = function(e, t) {
   var n = {};
   for (var r in e) Object.prototype.hasOwnProperty.call(e, r) && t.indexOf(r) < 0 && (n[r] = e[r]);
@@ -5159,7 +5179,7 @@ var fl = function(e, t, n) {
   return n;
 }, gl = fl("PulseLoader", "0% {transform: scale(1); opacity: 1} 45% {transform: scale(0.1); opacity: 0.7} 80% {transform: scale(1); opacity: 1}", "pulse");
 function ml(e) {
-  var t = e.loading, n = t === void 0 ? !0 : t, r = e.color, o = r === void 0 ? "#000000" : r, i = e.speedMultiplier, a = i === void 0 ? 1 : i, s = e.cssOverride, c = s === void 0 ? {} : s, d = e.size, w = d === void 0 ? 15 : d, f = e.margin, m = f === void 0 ? 2 : f, l = hl(e, ["loading", "color", "speedMultiplier", "cssOverride", "size", "margin"]), x = Yt({ display: "inherit" }, c), u = function(g) {
+  var t = e.loading, n = t === void 0 ? !0 : t, r = e.color, o = r === void 0 ? "#000000" : r, i = e.speedMultiplier, a = i === void 0 ? 1 : i, s = e.cssOverride, c = s === void 0 ? {} : s, d = e.size, w = d === void 0 ? 15 : d, f = e.margin, m = f === void 0 ? 2 : f, l = hl(e, ["loading", "color", "speedMultiplier", "cssOverride", "size", "margin"]), x = $t({ display: "inherit" }, c), u = function(g) {
     return {
       backgroundColor: o,
       width: gn(w),
@@ -5173,7 +5193,7 @@ function ml(e) {
   };
   return n ? Ot.createElement(
     "span",
-    Yt({ style: x }, l),
+    $t({ style: x }, l),
     Ot.createElement("span", { style: u(1) }),
     Ot.createElement("span", { style: u(2) }),
     Ot.createElement("span", { style: u(3) })
@@ -5353,8 +5373,8 @@ const vl = (e = 10, t = {}) => {
     onSelectedRowsChange: c,
     renderCheckbox: z,
     selectAllLabel: d
-  }), W = G(() => A.map(($) => $.key).join("|"), [A]), ne = G(
-    () => A.some(($) => $.filterEnabled),
+  }), W = G(() => A.map((Y) => Y.key).join("|"), [A]), ne = G(
+    () => A.some((Y) => Y.filterEnabled),
     [A]
   ), _ = G(
     () => (l == null ? void 0 : l.enabled) && !l.remotePagination,
@@ -5374,8 +5394,8 @@ const vl = (e = 10, t = {}) => {
   }), le = G(() => {
     if (!_)
       return T;
-    const $ = Math.max(0, Math.ceil(we.length / v) - 1);
-    return Math.min(T, $);
+    const Y = Math.max(0, Math.ceil(we.length / v) - 1);
+    return Math.min(T, Y);
   }, [_, T, v, we.length]);
   _e(() => {
     le !== T && P(le);
@@ -5386,63 +5406,63 @@ const vl = (e = 10, t = {}) => {
   ), R = G(
     () => u ? xs(A, u.renderDetail) : A,
     [u, A]
-  ), Y = G(() => {
-    const $ = R.filter((K) => K.key === mn), X = R.filter((K) => K.key !== mn);
+  ), $ = G(() => {
+    const Y = R.filter((K) => K.key === mn), X = R.filter((K) => K.key !== mn);
     return [
-      ...$,
+      ...Y,
       ...X.filter((K) => K.frozen),
       ...X.filter((K) => !K.frozen)
     ];
   }, [R]), b = Z(
-    ($, X) => {
-      const K = Y[$];
+    (Y, X) => {
+      const K = $[Y];
       K && (S == null || S(K.key, X));
     },
-    [Y, S]
+    [$, S]
   ), H = Z(
-    ($, X) => {
+    (Y, X) => {
       const K = () => {
-        const ye = vs($, u == null ? void 0 : u.expandedIds);
+        const ye = vs(Y, u == null ? void 0 : u.expandedIds);
         return ye || (X === 0 ? "first-row" : X === n.length - 1 ? "last-row" : "");
       };
-      return [k == null ? void 0 : k($, X), K()].filter(Boolean).join(" ");
+      return [k == null ? void 0 : k(Y, X), K()].filter(Boolean).join(" ");
     },
     [n, u == null ? void 0 : u.expandedIds, k]
   ), U = Z(
-    ($) => {
-      g != null && g.onClick ? g.onClick($) : u && Gr(u, $.id);
+    (Y) => {
+      g != null && g.onClick ? g.onClick(Y) : u && Gr(u, Y.id);
     },
     [g, u]
   ), j = Z(
-    ($, X) => {
-      if (D == null || D($, X), X.isGridDefaultPrevented() || !u && !(g != null && g.onClick))
+    (Y, X) => {
+      if (D == null || D(Y, X), X.isGridDefaultPrevented() || !u && !(g != null && g.onClick))
         return;
       const K = window.getSelection();
       K && !K.isCollapsed && X.target instanceof Node && K.containsNode(X.target, !0) || jr(
-        $.row,
-        $.column.key,
+        Y.row,
+        Y.column.key,
         X.target,
         g == null ? void 0 : g.excludedColumns
-      ) && U($.row);
+      ) && U(Y.row);
     },
     [D, u, g, U]
   ), te = !(l != null && l.remotePagination);
   return _e(() => {
     if (!te)
       return;
-    const $ = s == null ? void 0 : s.filter(
+    const Y = s == null ? void 0 : s.filter(
       (X) => n.some((K) => K.id === X)
     );
-    ($ == null ? void 0 : $.length) != (s == null ? void 0 : s.length) && (c == null || c($ ?? []));
+    (Y == null ? void 0 : Y.length) != (s == null ? void 0 : s.length) && (c == null || c(Y ?? []));
   }, [n, s, te]), /* @__PURE__ */ ie(rs, { $pagination: !!(l != null && l.enabled), children: [
     /* @__PURE__ */ p("div", { children: /* @__PURE__ */ p(
       _r,
       {
         selectedRows: s ? new Set(s) : void 0,
-        onSelectedRowsChange: ($) => {
-          c == null || c(Array.from($));
+        onSelectedRowsChange: (Y) => {
+          c == null || c(Array.from(Y));
         },
-        rowKeyGetter: ($) => $.id,
+        rowKeyGetter: (Y) => Y.id,
         rows: E,
         onSortColumnsChange: Se ? Pe : i,
         sortColumns: Se ? ze : o,
@@ -5451,7 +5471,7 @@ const vl = (e = 10, t = {}) => {
         headerRowHeight: ne ? 70 : void 0,
         onCellClick: j,
         onColumnResize: S ? b : void 0,
-        enableVirtualization: R.some(($) => $.frozenRight) ? !1 : void 0,
+        enableVirtualization: R.some((Y) => Y.frozenRight) ? !1 : void 0,
         ...I,
         rowHeight: u ? Cs(
           C,
@@ -5529,7 +5549,7 @@ export {
   Kr as EXPANDER_COLUMN_KEY,
   Ur as ExpanderToggle,
   yt as FilterType,
-  Yl as Row,
+  $l as Row,
   mn as SELECTION_COLUMN_KEY,
   Be as SELECT_COLUMN_KEY,
   xn as SelectCellFormatter,
