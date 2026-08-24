@@ -107,29 +107,49 @@ export const Container = styled.div<{ $pagination?: boolean }>`
     .rdg-cell-resizable {
         /* Only style react-data-grid's resize handle, which it always renders as the
            cell's last child. A bare "> div" also matches the header-content wrapper
-           (getHeaderFilter's Box) — collapsing the label/filter to a 5px absolute strip.
+           (getHeaderFilter's Box) — collapsing the label/filter to an absolute strip.
 
-           The seam is discreet: the col-resize cursor is the affordance, the line only hints at it
-           under the pointer and commits while the drag is on. :active is what says "dragging" —
-           the handle takes pointer capture, so it keeps that state until the drag ends, wherever
-           the pointer goes. --rdg-resize-handle-color lets a consumer name the tone; without one
-           it is the grid's own border, the line the handle sits on. */
+           GRAB AREA and LINE are two boxes, which is what lets the target be big enough to aim at
+           while the line stays hairline-thin. The handle itself paints nothing: it is an 8px
+           transparent strip carrying the col-resize cursor, and its ::after draws the 2px line at
+           the boundary. The same split every other seam in the app uses.
+
+           ⚠ The strip has to sit ENTIRELY INSIDE the cell, because the cell clips
+           (overflow: hidden) and a clipped strip is neither painted NOR hit-testable. Hanging it
+           over the boundary — the obvious way to centre a seam on the edge it sits on — silently
+           threw away half the target: measured, a 5px handle at right: -2.5px answered over 3px of
+           screen, so aiming at a column boundary was a matter of luck rather than of pointing.
+
+           The seam is discreet: the cursor is the affordance, the line only hints at it under the
+           pointer and commits while the drag is on. :active is what says "dragging" — the handle
+           takes pointer capture, so it keeps that state until the drag ends, wherever the pointer
+           goes. --rdg-resize-handle-color lets a consumer name the tone; without one it is the
+           grid's own border, the line the handle sits on. */
         > div:last-child {
-            width: 5px;
-            cursor: col-resize;
-            background-color: var(--rdg-resize-handle-color, var(--rdg-border-color));
-            opacity: 0;
-            transition: opacity 0.2s ease;
             position: absolute;
             top: 0;
-            right: -2.5px;
+            right: 0;
             bottom: 0;
+            width: 8px;
+            cursor: col-resize;
 
-            &:hover {
+            &::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                width: 2px;
+                background-color: var(--rdg-resize-handle-color, var(--rdg-border-color));
+                opacity: 0;
+                transition: opacity 0.2s ease;
+            }
+
+            &:hover::after {
                 opacity: 0.5;
             }
 
-            &:active {
+            &:active::after {
                 opacity: 1;
             }
         }
