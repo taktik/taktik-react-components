@@ -30,7 +30,20 @@ export interface DataGridRowGestures<Row extends RowDefinition> {
      */
     excludedColumns?: string[];
 }
-export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib<Row>, 'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange'> & {
+export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib<Row>, 'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange' | 'onColumnResize'> & {
+    /**
+     * A column the user dragged wider or narrower, by KEY and in pixels.
+     *
+     * react-data-grid reports a resize by the INDEX of the column in its own final array, which is
+     * not something a consumer can map back to a column: the grid injects the selection (or
+     * expander) column, the visibility feature has already dropped the hidden ones, and
+     * react-data-grid re-orders what is left before numbering it. The translation therefore belongs
+     * here, where that final array is known.
+     *
+     * ⚠ It fires on every step of a drag, not once at the end — react-data-grid has no settle
+     * signal. A consumer that persists the width debounces it.
+     */
+    onColumnResize?: (columnKey: string, width: number) => void;
     selectable?: boolean;
     /**
      * Accessible name of the header's select-all checkbox — override it to match the consumer's
@@ -92,6 +105,12 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
          * them. Feeding the reported set back as `hiddenByDefault` re-reads it in every sibling.
          */
         onHiddenColumnsChange?: (hiddenColumns: string[]) => void;
+        /**
+         * Runs when the user picks the reset item. "Reset column layout" is ONE way back for every
+         * stored layout, so a consumer keeping a second one of its own (the widths its columns were
+         * dragged to) clears it from here rather than growing a second menu item beside this one.
+         */
+        onReset?: () => void;
     };
     /**
      * Master-detail rows: an open row is followed by one of its own, spanning the grid's width.
@@ -104,4 +123,4 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
 };
 export declare const DataGrid: <R extends RowDefinition = {
     id: string;
-}>({ filters, setFilters, columns, visibilityColumnFeature: { enabled: visibilityFeatureEnabled, visibilityFeatureDisabledFor, hiddenByDefault, localStorageKey, onHiddenColumnsChange, resetLabel }, ...rest }: DataGridProps<R>) => React.JSX.Element;
+}>({ filters, setFilters, columns, visibilityColumnFeature: { enabled: visibilityFeatureEnabled, visibilityFeatureDisabledFor, hiddenByDefault, localStorageKey, onHiddenColumnsChange, onReset, resetLabel }, ...rest }: DataGridProps<R>) => React.JSX.Element;

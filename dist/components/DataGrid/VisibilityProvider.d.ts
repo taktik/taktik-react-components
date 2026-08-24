@@ -29,7 +29,7 @@ export declare const VisibilityContext: React.Context<{
     /** Already translated by the consumer; the library has no i18n. Absent = no reset item. */
     resetLabel?: string;
 }>;
-export declare const VisibilityProvider: ({ columns, children, visibilityFeatureDisabledFor, hiddenByDefault, enabled, localStorageKey, onHiddenColumnsChange, resetLabel }: {
+export declare const VisibilityProvider: ({ columns, children, visibilityFeatureDisabledFor, hiddenByDefault, enabled, localStorageKey, onHiddenColumnsChange, onReset, resetLabel }: {
     children: ReactNode;
     columns: ColumnDefinition[];
     visibilityFeatureDisabledFor?: string[];
@@ -38,6 +38,8 @@ export declare const VisibilityProvider: ({ columns, children, visibilityFeature
     hiddenByDefault?: string[];
     localStorageKey?: string;
     onHiddenColumnsChange?: (hiddenColumns: string[]) => void;
+    /** A second stored layout of the consumer's own, cleared by the same one reset item. */
+    onReset?: () => void;
     /** Already translated; passing it is what puts the reset item in the chooser's menu. */
     resetLabel?: string;
 }) => React.JSX.Element;

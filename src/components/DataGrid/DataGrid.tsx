@@ -28,6 +28,7 @@ import {
     DEFAULT_DETAIL_HEIGHT,
     detailAwareRowHeight,
     detailRowClass,
+    SELECTION_COLUMN_KEY,
     toggleExpanded,
     withDetailRendering,
     withDetailRows
@@ -78,8 +79,21 @@ export interface DataGridRowGestures<Row extends RowDefinition> {
 
 export type DataGridProps<Row extends RowDefinition> = Omit<
     DataGridPropsFromLib<Row>,
-    'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange'
+    'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange' | 'onColumnResize'
 > & {
+    /**
+     * A column the user dragged wider or narrower, by KEY and in pixels.
+     *
+     * react-data-grid reports a resize by the INDEX of the column in its own final array, which is
+     * not something a consumer can map back to a column: the grid injects the selection (or
+     * expander) column, the visibility feature has already dropped the hidden ones, and
+     * react-data-grid re-orders what is left before numbering it. The translation therefore belongs
+     * here, where that final array is known.
+     *
+     * ⚠ It fires on every step of a drag, not once at the end — react-data-grid has no settle
+     * signal. A consumer that persists the width debounces it.
+     */
+    onColumnResize?: (columnKey: string, width: number) => void
     selectable?: boolean
     /**
      * Accessible name of the header's select-all checkbox — override it to match the consumer's
@@ -141,6 +155,12 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
          * them. Feeding the reported set back as `hiddenByDefault` re-reads it in every sibling.
          */
         onHiddenColumnsChange?: (hiddenColumns: string[]) => void
+        /**
+         * Runs when the user picks the reset item. "Reset column layout" is ONE way back for every
+         * stored layout, so a consumer keeping a second one of its own (the widths its columns were
+         * dragged to) clears it from here rather than growing a second menu item beside this one.
+         */
+        onReset?: () => void
     }
     /**
      * Master-detail rows: an open row is followed by one of its own, spanning the grid's width.
@@ -217,6 +237,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     rowHeight,
     rowClass,
     onCellClick,
+    onColumnResize,
     ...rest
 }: DataGridProps<R>) => {
     const { gridKey } = useContext(VisibilityContext)
@@ -311,6 +332,32 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         () =>
             expandable ? withDetailRendering(finalColumns, expandable.renderDetail) : finalColumns,
         [expandable, finalColumns]
+    )
+
+    /**
+     * The order react-data-grid numbers the columns in, which is not the order it was handed them:
+     * the selection column goes first, then every `frozen` one, and the rest keep their places. A
+     * resize arrives as an index into THIS array, so reproducing the order is what turns it back
+     * into a column key.
+     */
+    const resizeOrder = useMemo(() => {
+        const selection = displayColumns.filter((col) => col.key === SELECTION_COLUMN_KEY)
+        const others = displayColumns.filter((col) => col.key !== SELECTION_COLUMN_KEY)
+        return [
+            ...selection,
+            ...others.filter((col) => col.frozen),
+            ...others.filter((col) => !col.frozen)
+        ]
+    }, [displayColumns])
+
+    const reportColumnResize = useCallback(
+        (idx: number, width: number) => {
+            const column = resizeOrder[idx]
+            if (column) {
+                onColumnResize?.(column.key, width)
+            }
+        },
+        [resizeOrder, onColumnResize]
     )
 
     /**
@@ -428,6 +475,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                     rowClass={computeRawClass}
                     headerRowHeight={filtersEnabled ? 70 : undefined}
                     onCellClick={handleCellClick}
+                    onColumnResize={onColumnResize ? reportColumnResize : undefined}
                     // Column virtualization only renders the columns in view, and only `frozen`
                     // columns are exempt — a frozenRight column at the far end would not RENDER
                     // until scrolled near, let alone pin. ⚠ rdg's flag is all-or-nothing: turning
@@ -499,6 +547,7 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
         hiddenByDefault,
         localStorageKey,
         onHiddenColumnsChange,
+        onReset,
         resetLabel
     } = {},
     ...rest
@@ -510,6 +559,7 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
             hiddenByDefault={hiddenByDefault}
             localStorageKey={localStorageKey}
             onHiddenColumnsChange={onHiddenColumnsChange}
+            onReset={onReset}
             resetLabel={resetLabel}
             visibilityFeatureDisabledFor={visibilityFeatureDisabledFor}>
             <DataGridBase {...rest} columns={columns} filters={filters} setFilters={setFilters} />

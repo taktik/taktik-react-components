@@ -107,11 +107,17 @@ export const Container = styled.div<{ $pagination?: boolean }>`
     .rdg-cell-resizable {
         /* Only style react-data-grid's resize handle, which it always renders as the
            cell's last child. A bare "> div" also matches the header-content wrapper
-           (getHeaderFilter's Box) — collapsing the label/filter to a 5px absolute strip. */
+           (getHeaderFilter's Box) — collapsing the label/filter to a 5px absolute strip.
+
+           The seam is discreet: the col-resize cursor is the affordance, the line only hints at it
+           under the pointer and commits while the drag is on. :active is what says "dragging" —
+           the handle takes pointer capture, so it keeps that state until the drag ends, wherever
+           the pointer goes. --rdg-resize-handle-color lets a consumer name the tone; without one
+           it is the grid's own border, the line the handle sits on. */
         > div:last-child {
             width: 5px;
             cursor: col-resize;
-            background-color: var(--rdg-border-color);
+            background-color: var(--rdg-resize-handle-color, var(--rdg-border-color));
             opacity: 0;
             transition: opacity 0.2s ease;
             position: absolute;
@@ -121,6 +127,10 @@ export const Container = styled.div<{ $pagination?: boolean }>`
 
             &:hover {
                 opacity: 0.5;
+            }
+
+            &:active {
+                opacity: 1;
             }
         }
     }
