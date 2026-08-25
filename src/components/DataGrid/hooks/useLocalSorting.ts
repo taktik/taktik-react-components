@@ -48,21 +48,41 @@ function getComparator<R = RowDefinition>(
     }
 }
 
+/**
+ * The rows in the order a sort asks for, and the sort itself where the consumer does not hold it.
+ *
+ * **Who holds the sort VALUE and who ORDERS THE ROWS are two questions.** They used to be one: the
+ * grid ordered its rows out of this hook's own state, so a consumer that took the value over — to put
+ * it in a URL, a store, anywhere it survives a remount — got a header that moved and rows that did
+ * not. `sortColumns` is the controlled value and `enabled` is the ordering, so a consumer may take
+ * either without giving up the other.
+ */
 export const useLocalSorting = <R extends RowDefinition = RowDefinition>({
     columns,
     rows,
-    defaultSortColumns
+    defaultSortColumns,
+    sortColumns: controlledSortColumns,
+    enabled = true
 }: {
     columns: ColumnDefinition<R>[]
     rows: R[]
     defaultSortColumns?: SortColumn[]
+    /**
+     * The sort a CONSUMER holds. Supply it and the rows are ordered by it; leave it out and this
+     * hook keeps the value itself, starting at `defaultSortColumns`.
+     */
+    sortColumns?: readonly SortColumn[] | null
+    /** Whether the grid orders the rows at all — off for a grid whose rows arrive already ordered. */
+    enabled?: boolean
 }) => {
     const [sortColumns, setSortedColumns] = useState<SortColumn[]>(defaultSortColumns ?? [])
+    /** The sort the ROWS are put in: the consumer's where it holds one, this hook's own otherwise. */
+    const ordering = controlledSortColumns ?? sortColumns
 
     const sortedRows = useMemo(() => {
-        if (sortColumns.length === 0) return rows
+        if (!enabled || ordering.length === 0) return rows
         return [...rows].sort((a, b) => {
-            for (const sort of sortColumns) {
+            for (const sort of ordering) {
                 const column = columns.find((col) => col.key === sort.columnKey)
                 const comparator = getComparator(
                     sort.columnKey as keyof R,
@@ -77,7 +97,7 @@ export const useLocalSorting = <R extends RowDefinition = RowDefinition>({
             }
             return 0
         })
-    }, [rows, sortColumns])
+    }, [rows, ordering, enabled])
 
     const setSortedColumnsFn = useCallback((sort: SortColumn[]) => {
         if (sort.length !== 0) {
