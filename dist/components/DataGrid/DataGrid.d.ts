@@ -51,6 +51,21 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
      */
     selectAllLabel?: string;
     defaultSortColumns?: SortColumn[];
+    /**
+     * Whether the GRID orders the rows — a different question from where the sort VALUE lives, and
+     * the grid used to answer both with one prop.
+     *
+     * Handing over `onSortColumnsChange` means the consumer holds the value, and until this existed
+     * it also meant the grid stopped ordering the rows: a consumer keeping its sort somewhere it
+     * survives a remount (a URL, a store) got a header that moved and rows that did not. Set it
+     * `true` alongside `sortColumns`/`onSortColumnsChange` and the grid still sorts the rows it
+     * holds, exactly as it does when it owns the value — the sorting counterpart of
+     * `pagination.control`, which lets a consumer own the page without giving up the slicing.
+     *
+     * Omitted, it is inferred as it always was: the grid sorts unless the consumer took the value,
+     * which is the right answer for a grid the SERVER orders and pages.
+     */
+    sortRowsLocally?: boolean;
     columns: ColumnDefinition<Row>[];
     rows: Row[];
     theme?: DataGridTheme;
