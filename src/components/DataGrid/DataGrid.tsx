@@ -434,8 +434,15 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
             // The click that ENDS a text-selection drag still fires on the cell. Running the row
             // action would rebuild the row and destroy the selection the user just made — before
             // they could right-click it for the browser's Copy.
+            //
+            // ⚠ Only a FIRST click (detail 1) can be that drag's end. A rapid second or third click
+            // (detail ≥ 2) makes a selection of its own — the browser selects the word or line under
+            // the caret, snapping to the nearest text even from a cell's blank space — and eating
+            // those turned fast toggle-clicking into a lottery: every other click died against a
+            // selection the click itself had just created.
             const selection = window.getSelection()
             if (
+                event.detail <= 1 &&
                 selection &&
                 !selection.isCollapsed &&
                 event.target instanceof Node &&
