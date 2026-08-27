@@ -580,18 +580,6 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                     onColumnResize={onColumnResize ? reportColumnResize : undefined}
                     columnWidths={columnWidths}
                     onColumnWidthsChange={onColumnWidthsChange}
-                    // Column virtualization only renders the columns in view, and a PINNED column
-                    // is pinned by CSS rather than by anything react-data-grid knows about — so
-                    // the trailing one would not render until scrolled near, and the leading one
-                    // would stop rendering the moment the grid scrolls away from it. Both edges
-                    // therefore need it off. ⚠ rdg's flag is all-or-nothing: turning it off here
-                    // disables ROW virtualization too, so a pinned column is only suitable for
-                    // grids whose row count is bounded (a paginated page, not a huge sheet).
-                    enableVirtualization={
-                        displayColumns.some((col) => col.frozenRight || col.frozenLeft)
-                            ? false
-                            : undefined
-                    }
                     {...rest}
                     // After the spread: a detail row's height is the feature's to decide, and a
                     // consumer's own rowHeight still applies to every ordinary row.

@@ -2,7 +2,6 @@ import React from 'react'
 import styled from '@emotion/styled'
 import { ColSpanArgs, SELECT_COLUMN_KEY } from 'react-data-grid'
 import { ColumnDefinition, RowDefinition } from './types'
-import { leadingColumnPinning } from './pinning'
 
 /** Width the toggle adds to the leading cell it shares with the selection checkbox. */
 export const EXPANDER_WIDTH = 40
@@ -200,7 +199,7 @@ export const expanderColumn = <Row extends RowDefinition>(
 ): ColumnDefinition<Row> => ({
     key: EXPANDER_COLUMN_KEY,
     name: '',
-    ...leadingColumnPinning,
+    frozen: true,
     width: EXPANDER_WIDTH,
     minWidth: EXPANDER_WIDTH,
     maxWidth: EXPANDER_WIDTH,
@@ -210,47 +209,63 @@ export const expanderColumn = <Row extends RowDefinition>(
     renderCell: ({ row }) => <ExpanderToggle row={row} expandable={expandable} />
 })
 
+/** A column react-data-grid pins to the START edge — `frozen: true` is its alias for `'start'`. */
+const isStartFrozen = <Row extends RowDefinition>(column: ColumnDefinition<Row>): boolean =>
+    column.frozen === true || column.frozen === 'start'
+
+/**
+ * A column pinned to the END edge. `frozenRight` is this library's public name for it and
+ * {@link useComputeFinalColumns} translates it, so a column may arrive spelled either way.
+ */
+const isEndFrozen = <Row extends RowDefinition>(column: ColumnDefinition<Row>): boolean =>
+    column.frozen === 'end' || !!column.frozenRight
+
+const isPinned = <Row extends RowDefinition>(column: ColumnDefinition<Row>): boolean =>
+    isStartFrozen(column) || isEndFrozen(column)
+
 /**
  * Turn the computed columns into ones that also render a detail row: the first column that can span
- * (a LEADING column cannot) draws the detail across every column from there, and EVERY leading
- * column draws nothing on a detail row — a detail row is not selectable, a checkbox there would
- * report a selection the grid's own rows do not contain, and a row-actions menu there would act on a
+ * (a PINNED column cannot) draws the detail across the unfrozen band, and EVERY pinned column draws
+ * nothing on a detail row — a detail row is not selectable, a checkbox there would report a
+ * selection the grid's own rows do not contain, and a row-actions menu there would act on a
  * synthetic row rather than a real one.
  *
- * A leading column is the grid's own `frozenLeft` cell, or one react-data-grid was handed as
- * `frozen`. ⚠ The geometry is computed in RENDER order, not declaration order: rdg hoists frozen
- * columns to the front before rendering. A grid that declares a frozen column after unfrozen ones
- * would otherwise get a span one track too wide and keep that column rendering inside its own
- * detail rows. A trailing column pinned with `frozenRight` is simply covered by the span, so a
- * detail row renders no cell for it.
+ * ⚠ The geometry is computed in RENDER order, not declaration order: react-data-grid sorts columns
+ * into three bands — start-frozen, unfrozen, end-frozen — stable within each. A grid declaring a
+ * frozen column after unfrozen ones would otherwise get a span one track too wide and keep that
+ * column rendering inside its own detail rows.
+ *
+ * ⚠ The span STOPS at the end-frozen band rather than covering it: react-data-grid rejects an
+ * unfrozen column's `colSpan` outright once it reaches an end-frozen column, and a rejected span
+ * renders the whole detail inside one narrow track. So a detail row stops short of the pinned
+ * actions column, which renders nothing there.
  */
-const isLeadingColumn = <Row extends RowDefinition>(column: ColumnDefinition<Row>): boolean =>
-    !!column.frozen || !!column.frozenLeft
-
 export const withDetailRendering = <Row extends RowDefinition>(
     columns: ColumnDefinition<Row>[],
     renderDetail: (row: Row) => React.ReactNode
 ): ColumnDefinition<Row>[] => {
     const rendered = [
-        ...columns.filter(isLeadingColumn),
-        ...columns.filter((column) => !isLeadingColumn(column))
+        ...columns.filter(isStartFrozen),
+        ...columns.filter((column) => !isPinned(column)),
+        ...columns.filter(isEndFrozen)
     ]
-    const spanFrom = rendered.findIndex((column) => !isLeadingColumn(column))
+    const spanFrom = rendered.findIndex((column) => !isPinned(column))
     if (spanFrom === -1) {
         return columns
     }
     const spanning = rendered[spanFrom]
-    const span = rendered.length - spanFrom
+    const firstEndFrozen = rendered.findIndex(isEndFrozen)
+    const span = (firstEndFrozen === -1 ? rendered.length : firstEndFrozen) - spanFrom
     return columns.map((column) => {
         if (column !== spanning) {
-            if (!isLeadingColumn(column)) {
+            if (!isPinned(column)) {
                 // swallowed by the span
                 return column
             }
             // A column with no renderCell of its own must keep falling through to the library's
             // default on ordinary rows — wrapping it unconditionally would blank it everywhere.
-            // (This is what empties the leading cell on a detail row: no second checkbox, and no
-            // second toggle competing with the parent's.)
+            // (This is what empties the pinned cells on a detail row: no second checkbox, no
+            // second toggle competing with the parent's, and no kebab acting on a synthetic row.)
             if (!column.renderCell) {
                 return column
             }
