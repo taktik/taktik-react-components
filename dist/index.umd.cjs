@@ -131,11 +131,34 @@
     }
 
     /* The gradient rdg paints beside each pinned column is shown deliberately — a provisional
-       design choice, history in flowr's admin-migration doc 25. Suppressing it again has no API:
+       design choice, history in flowr's admin-migration doc 25. Restyling it has no API either:
        the shadow elements carry no stable class, custom property or prop (upstream PR #3969), and
        the only handle is their shape — the sole children of .rdg with neither a role nor a
-       measuring key. ⚠ Only Chromium hides the gradient while the grid cannot scroll (a
-       scroll-state container query); other browsers paint it permanently. */
+       measuring key — ⚠ the one selector here written against rdg's DOM rather than against a
+       stable rdg-* name, so it wants a re-check on every react-data-grid bump. ⚠ Only Chromium
+       hides the gradient while the grid cannot scroll (a scroll-state container query); other
+       browsers paint it permanently.
+
+       Its own gradient is kept, because each edge fades towards the middle of the grid and only
+       rdg's own two generated classes tell the two directions apart. What is dialled down is the
+       whole element: a filter multiplies the paint and leaves opacity alone, which matters because
+       opacity is the property that scroll-state query drives — one of ours would win over it and
+       leave a permanent band on a grid with nothing to scroll.
+
+       Each edge is TWO elements, one over the header rows and one over the body, so no single
+       mask can span the grid. The first stop sits at the header's own height, which is the whole
+       of the header element: the header row carries no shadow at all, and the band eases in over
+       the body's first rows and out again above its last, instead of ending square at both. */
+    .rdg > div:not([role]):not([data-measuring-cell-key]) {
+        filter: opacity(var(--rdg-frozen-shadow-opacity, 0.45));
+        mask-image: linear-gradient(
+            to bottom,
+            transparent var(--rdg-header-row-height, 0px),
+            black calc(var(--rdg-header-row-height, 0px) + 36px),
+            black calc(100% - 36px),
+            transparent 100%
+        );
+    }
 
     /* A detail row holds a panel, not a line of text: it needs to wrap, to start at the top, and to
        scroll inside itself rather than spill over the row below. */
