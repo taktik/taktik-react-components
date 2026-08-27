@@ -13,9 +13,7 @@ import { getHeaderFilter } from '../HeaderFilter'
 import { convertDate, DATE_FORMAT } from '../../../utils'
 import { VisibilityContext } from '../VisibilityProvider'
 import { DataGridCheckbox } from '../DataGridCheckbox'
-
-/** Cells of a `frozenRight` column — pinned to the right edge by Container.tsx's styles. */
-export const FROZEN_RIGHT_CLASS = 'rdg-cell-frozen-right'
+import { FROZEN_RIGHT_CLASS, leadingColumnPinning } from '../pinning'
 
 const joinClasses = (...classes: (string | null | undefined)[]): string =>
     classes.filter(Boolean).join(' ')
@@ -110,6 +108,7 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
             const width = expandable ? 50 + EXPANDER_WIDTH : 50
             finalColumns.push({
                 ...SelectColumn,
+                ...leadingColumnPinning,
                 width,
                 minWidth: width,
                 maxWidth: width,

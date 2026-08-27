@@ -1,9 +1,22 @@
-import React, { useCallback, useContext, useEffect, useMemo } from 'react'
-import Grid, {
-    CellClickArgs,
+import React, {
+    Key,
+    ReactNode,
+    useCallback,
+    useContext,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef
+} from 'react'
+import {
+    CalculatedColumn,
+    CellMouseArgs,
     CellMouseEvent,
+    DataGrid as Grid,
     DataGridProps as DataGridPropsFromLib,
     RenderCheckboxProps,
+    RenderRowProps,
+    Renderers,
     SortColumn
 } from 'react-data-grid'
 import { DataGridTheme, defaultTheme } from './dataGridTheme'
@@ -28,7 +41,6 @@ import {
     DEFAULT_DETAIL_HEIGHT,
     detailAwareRowHeight,
     detailRowClass,
-    SELECTION_COLUMN_KEY,
     toggleExpanded,
     withDetailRendering,
     withDetailRows
@@ -77,21 +89,48 @@ export interface DataGridRowGestures<Row extends RowDefinition> {
     excludedColumns?: string[]
 }
 
+/**
+ * What a consumer's own row renderer is handed: react-data-grid's row props, plus the row's columns
+ * as a plain array.
+ *
+ * react-data-grid hands a row a GENERATOR FACTORY rather than an array, so that a row can be built
+ * without materialising anything. A consumer answering the mouse needs the list itself — which
+ * column a hovered element sits in is a question about the whole row — and materialising it inside
+ * the renderer would allocate one array per row per render, on the hottest path the grid has. The
+ * grid does it once instead: the factory is stable for as long as the column layout is, so one array
+ * serves every row until the columns, the scroll position or the viewport change it.
+ */
+export interface DataGridRenderRowProps<Row> extends RenderRowProps<Row> {
+    /**
+     * The row's columns in the order react-data-grid laid them out, which is not the order they were
+     * declared in — and under column virtualization, only the ones it is rendering.
+     *
+     * ⚠ Not a DOM attribute: a consumer spreading these props onto an element drops this one first.
+     */
+    viewportColumns: readonly CalculatedColumn<Row, unknown>[]
+}
+
+export type DataGridRenderers<Row> = Omit<Renderers<Row, unknown>, 'renderRow'> & {
+    renderRow?: (key: Key, props: DataGridRenderRowProps<Row>) => ReactNode
+}
+
 export type DataGridProps<Row extends RowDefinition> = Omit<
     DataGridPropsFromLib<Row>,
-    'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange' | 'onColumnResize'
+    'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange' | 'onColumnResize' | 'renderers'
 > & {
+    /** See {@link DataGridRenderRowProps} for what `renderRow` is handed on top of the library's own props. */
+    renderers?: DataGridRenderers<Row>
     /**
-     * A column the user dragged wider or narrower, by KEY and in pixels.
+     * A column the user dragged wider or narrower, by KEY and in pixels, reported on every step of
+     * the drag.
      *
-     * react-data-grid reports a resize by the INDEX of the column in its own final array, which is
-     * not something a consumer can map back to a column: the grid injects the selection (or
-     * expander) column, the visibility feature has already dropped the hidden ones, and
-     * react-data-grid re-orders what is left before numbering it. The translation therefore belongs
-     * here, where that final array is known.
+     * react-data-grid reports the resize by COLUMN, and the grid's own array is not the one the
+     * consumer handed it — the selection (or expander) column is injected, the visibility feature has
+     * already dropped the hidden ones, and react-data-grid re-orders what is left. The key is the one
+     * identifier that means the same thing on both sides, so that is what a consumer is given.
      *
-     * ⚠ It fires on every step of a drag, not once at the end — react-data-grid has no settle
-     * signal. A consumer that persists the width debounces it.
+     * A consumer PERSISTING a width wants `columnWidths`/`onColumnWidthsChange` instead: those report
+     * once, when the drag settles.
      */
     onColumnResize?: (columnKey: string, width: number) => void
     selectable?: boolean
@@ -254,6 +293,8 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     rowClass,
     onCellClick,
     onColumnResize,
+    columnWidths,
+    onColumnWidthsChange,
     ...rest
 }: DataGridProps<R>) => {
     const { gridKey } = useContext(VisibilityContext)
@@ -355,31 +396,64 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         [expandable, finalColumns]
     )
 
-    /**
-     * The order react-data-grid numbers the columns in, which is not the order it was handed them:
-     * the selection column goes first, then every `frozen` one, and the rest keep their places. A
-     * resize arrives as an index into THIS array, so reproducing the order is what turns it back
-     * into a column key.
-     */
-    const resizeOrder = useMemo(() => {
-        const selection = displayColumns.filter((col) => col.key === SELECTION_COLUMN_KEY)
-        const others = displayColumns.filter((col) => col.key !== SELECTION_COLUMN_KEY)
-        return [
-            ...selection,
-            ...others.filter((col) => col.frozen),
-            ...others.filter((col) => !col.frozen)
-        ]
-    }, [displayColumns])
-
     const reportColumnResize = useCallback(
-        (idx: number, width: number) => {
-            const column = resizeOrder[idx]
-            if (column) {
-                onColumnResize?.(column.key, width)
-            }
-        },
-        [resizeOrder, onColumnResize]
+        (column: CalculatedColumn<R, unknown>, width: number) =>
+            onColumnResize?.(column.key, width),
+        [onColumnResize]
     )
+
+    /**
+     * A measured width belongs to the column set it was measured in. react-data-grid only
+     * re-measures on a grid WIDTH change, so a width map handed back after the column set changed
+     * keeps every surviving column at the size it had beside its old neighbours — and the grid ends
+     * up wider or narrower than its container by exactly the columns that came or went. Dropping the
+     * measurements and keeping only what the user DRAGGED is what asks for a fresh measurement;
+     * a dragged width is the user's answer and survives.
+     */
+    const measuredFor = useRef(columnsKey)
+    useLayoutEffect(() => {
+        if (measuredFor.current === columnsKey) {
+            return
+        }
+        measuredFor.current = columnsKey
+        if (!columnWidths || !onColumnWidthsChange) {
+            return
+        }
+        const dragged = new Map([...columnWidths].filter(([, width]) => width.type === 'resized'))
+        if (dragged.size !== columnWidths.size) {
+            onColumnWidthsChange(dragged)
+        }
+    }, [columnsKey, columnWidths, onColumnWidthsChange])
+
+    /**
+     * The consumer's row renderer, handed the row's columns as an array — see
+     * {@link DataGridRenderRowProps}. Cached on the identity of react-data-grid's own iterator
+     * factory, which is what changes when the column layout does, so the array is built once per
+     * layout rather than once per row.
+     */
+    const { renderRow: consumerRenderRow, ...consumerRenderers } = renderers ?? {}
+    const viewportColumns = useRef<{
+        iterate: unknown
+        columns: readonly CalculatedColumn<R, unknown>[]
+    }>(undefined)
+    const renderRow = useMemo(() => {
+        if (!consumerRenderRow) {
+            return undefined
+        }
+        return (key: Key, props: RenderRowProps<R>) => {
+            const { iterateOverViewportColumnsForRow: iterate } = props
+            if (viewportColumns.current?.iterate !== iterate) {
+                viewportColumns.current = {
+                    iterate,
+                    columns: [...iterate(undefined)].map(([column]) => column)
+                }
+            }
+            return consumerRenderRow(key, {
+                ...props,
+                viewportColumns: viewportColumns.current.columns
+            })
+        }
+    }, [consumerRenderRow])
 
     /**
      * The grid's own row classes, composed with the consumer's `rowClass` rather than replaced by it:
@@ -423,7 +497,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
      * `preventGridDefault()`, as for any other grid default.
      */
     const handleCellClick = useCallback(
-        (args: CellClickArgs<R, unknown>, event: CellMouseEvent) => {
+        (args: CellMouseArgs<R, unknown>, event: CellMouseEvent) => {
             onCellClick?.(args, event)
             if (event.isGridDefaultPrevented()) {
                 return
@@ -504,14 +578,19 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                     headerRowHeight={filtersEnabled ? 70 : undefined}
                     onCellClick={handleCellClick}
                     onColumnResize={onColumnResize ? reportColumnResize : undefined}
-                    // Column virtualization only renders the columns in view, and only `frozen`
-                    // columns are exempt — a frozenRight column at the far end would not RENDER
-                    // until scrolled near, let alone pin. ⚠ rdg's flag is all-or-nothing: turning
-                    // it off here disables ROW virtualization too, so frozenRight is only suitable
-                    // for grids whose row count is bounded (a paginated page, not a huge sheet).
-                    // Virtualization stays on for every grid without a frozenRight column.
+                    columnWidths={columnWidths}
+                    onColumnWidthsChange={onColumnWidthsChange}
+                    // Column virtualization only renders the columns in view, and a PINNED column
+                    // is pinned by CSS rather than by anything react-data-grid knows about — so
+                    // the trailing one would not render until scrolled near, and the leading one
+                    // would stop rendering the moment the grid scrolls away from it. Both edges
+                    // therefore need it off. ⚠ rdg's flag is all-or-nothing: turning it off here
+                    // disables ROW virtualization too, so a pinned column is only suitable for
+                    // grids whose row count is bounded (a paginated page, not a huge sheet).
                     enableVirtualization={
-                        displayColumns.some((col) => col.frozenRight) ? false : undefined
+                        displayColumns.some((col) => col.frozenRight || col.frozenLeft)
+                            ? false
+                            : undefined
                     }
                     {...rest}
                     // After the spread: a detail row's height is the feature's to decide, and a
@@ -534,7 +613,8 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                                   noRowsFallback: <div className='rdg-no-data'>{noDataMessage}</div>
                               }
                             : {}),
-                        ...renderers
+                        ...consumerRenderers,
+                        renderRow
                     }}
                     style={{ ...defaultTheme, ...(theme ?? {}) } as React.CSSProperties}
                 />

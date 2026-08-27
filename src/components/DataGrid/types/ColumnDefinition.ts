@@ -20,6 +20,18 @@ export type ColumnDefinition<Row extends RowDefinition = RowDefinition> = Column
      * all-or-nothing. Fine for a paginated grid; not for one holding thousands of rows.
      */
     frozenRight?: boolean
+    /**
+     * Pin this column to the LEFT edge while the grid scrolls sideways — the grid's OWN leading
+     * cell (the selection checkbox, the expander toggle). Not something a consumer declares.
+     *
+     * ⚠ It is `frozenRight`'s sticky mechanism rather than react-data-grid's own `frozen`, because
+     * rdg yields every start-frozen column TWICE while column virtualization is off — and a
+     * `frozenRight` column is what turns virtualization off, so that is the mode every grid here
+     * runs in. Two leading cells means two select-all checkboxes stacked over one column. The cure
+     * is rdg's native `frozen: 'end'` for the trailing column, which lets virtualization back on
+     * and makes both of these shims deletable.
+     */
+    frozenLeft?: boolean
     renderFilterInput?: (props: TextFieldProps) => React.ReactNode
     filterType?: FilterType
     getColumnValue?: (item?: unknown) => unknown

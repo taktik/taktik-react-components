@@ -69,12 +69,12 @@ export const Container = styled.div<{ $pagination?: boolean }>`
         margin-inline-end: 6px;
     }
 
-    /* A frozenRight column's cells: pinned at the right edge while the grid scrolls sideways —
-       the same sticky mechanism rdg uses for frozen-left, which it only implements leftward
-       (it SORTS frozen columns to the front). Cells are already background-color: inherit, so
-       the pinned cell stays opaque with the row's own state (hover, selected) beneath it.
-       z-indexes mirror rdg's layering: body frozen cells sit at 1, frozen header cells at 3. */
-    /* No seam on purpose (Olivier, 2026-08-04): a permanent left edge read as clutter; the cell's
+    /* The pinned columns' cells: held at an edge while the grid scrolls sideways. Both edges are
+       the library's own sticky positioning rather than react-data-grid's own frozen columns — see
+       pinning.ts for why each edge is. Cells are already background-color: inherit, so a pinned
+       cell stays opaque with the row's own state (hover, selected) beneath it. z-indexes mirror
+       rdg's own layering: body cells sit at 1, header cells at 3. */
+    /* No seam on purpose (Olivier, 2026-08-04): a permanent edge read as clutter; the cell's
        opaque background over the scrolling columns is signal enough. */
     .rdg-cell-frozen-right {
         position: sticky;
@@ -82,7 +82,14 @@ export const Container = styled.div<{ $pagination?: boolean }>`
         z-index: 1;
     }
 
-    .rdg-header-row .rdg-cell-frozen-right {
+    .rdg-cell-frozen-left {
+        position: sticky;
+        inset-inline-start: 0;
+        z-index: 1;
+    }
+
+    .rdg-header-row .rdg-cell-frozen-right,
+    .rdg-header-row .rdg-cell-frozen-left {
         z-index: 3;
     }
 
@@ -104,55 +111,63 @@ export const Container = styled.div<{ $pagination?: boolean }>`
         pointer-events: none;
     }
 
-    .rdg-cell-resizable {
-        /* Only style react-data-grid's resize handle, which it always renders as the
-           cell's last child. A bare "> div" also matches the header-content wrapper
-           (getHeaderFilter's Box) — collapsing the label/filter to an absolute strip.
+    /* GRAB AREA and LINE are two boxes, which is what lets the target be big enough to aim at
+       while the line stays hairline-thin. The handle itself paints nothing: it is an 8px
+       transparent strip carrying the col-resize cursor, and its ::after draws the 2px line at
+       the boundary. The same split every other seam in the app uses.
 
-           GRAB AREA and LINE are two boxes, which is what lets the target be big enough to aim at
-           while the line stays hairline-thin. The handle itself paints nothing: it is an 8px
-           transparent strip carrying the col-resize cursor, and its ::after draws the 2px line at
-           the boundary. The same split every other seam in the app uses.
+       ⚠ The strip has to sit ENTIRELY INSIDE the cell, because the cell clips
+       (overflow: hidden) and a clipped strip is neither painted NOR hit-testable. Hanging it
+       over the boundary — the obvious way to centre a seam on the edge it sits on — silently
+       threw away half the target: measured, a 5px handle at right: -2.5px answered over 3px of
+       screen, so aiming at a column boundary was a matter of luck rather than of pointing.
 
-           ⚠ The strip has to sit ENTIRELY INSIDE the cell, because the cell clips
-           (overflow: hidden) and a clipped strip is neither painted NOR hit-testable. Hanging it
-           over the boundary — the obvious way to centre a seam on the edge it sits on — silently
-           threw away half the target: measured, a 5px handle at right: -2.5px answered over 3px of
-           screen, so aiming at a column boundary was a matter of luck rather than of pointing.
+       The seam is discreet: the cursor is the affordance, the line only hints at it under the
+       pointer and commits while the drag is on. :active is what says "dragging" — the handle
+       takes pointer capture, so it keeps that state until the drag ends, wherever the pointer
+       goes. --rdg-resize-handle-color lets a consumer name the tone; without one it is the
+       grid's own border, the line the handle sits on. */
+    .rdg-resize-handle {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 8px;
+        cursor: col-resize;
 
-           The seam is discreet: the cursor is the affordance, the line only hints at it under the
-           pointer and commits while the drag is on. :active is what says "dragging" — the handle
-           takes pointer capture, so it keeps that state until the drag ends, wherever the pointer
-           goes. --rdg-resize-handle-color lets a consumer name the tone; without one it is the
-           grid's own border, the line the handle sits on. */
-        > div:last-child {
+        &::after {
+            content: '';
             position: absolute;
             top: 0;
             right: 0;
             bottom: 0;
-            width: 8px;
-            cursor: col-resize;
-
-            &::after {
-                content: '';
-                position: absolute;
-                top: 0;
-                right: 0;
-                bottom: 0;
-                width: 2px;
-                background-color: var(--rdg-resize-handle-color, var(--rdg-border-color));
-                opacity: 0;
-                transition: opacity 0.2s ease;
-            }
-
-            &:hover::after {
-                opacity: 0.5;
-            }
-
-            &:active::after {
-                opacity: 1;
-            }
+            width: 2px;
+            background-color: var(--rdg-resize-handle-color, var(--rdg-border-color));
+            opacity: 0;
+            transition: opacity 0.2s ease;
         }
+
+        &:hover::after {
+            opacity: 0.5;
+        }
+
+        &:active::after {
+            opacity: 1;
+        }
+    }
+
+    /* No gradient beside a pinned column, ever — the same rule as the seam above it. rdg paints one
+       beside each column it holds as frozen, as bare divs directly inside the grid (the only
+       children of .rdg with neither a role nor a measuring key), and it carries no stable class, no custom
+       property and no prop, so the shape of the element is the only thing there is to name
+       (upstream PR #3969). It looks like an affordance and is not one: only the browsers
+       supporting the scroll-state container query hide it when the grid cannot scroll, and the
+       rest paint it permanently.
+
+       ⚠ RE-CHECK THIS SELECTOR ON EVERY react-data-grid BUMP: it describes a structure rather than
+       an API, which is exactly what nothing else in this file does. */
+    .rdg > div:not([role]):not([data-measuring-cell-key]) {
+        background-image: none;
     }
 
     /* A detail row holds a panel, not a line of text: it needs to wrap, to start at the top, and to
@@ -164,8 +179,8 @@ export const Container = styled.div<{ $pagination?: boolean }>`
     }
 
     /* One bar down the open row AND its detail, so a reader can tell which pair belongs together
-       when several are open at once. On the first cell only — it is frozen, so the bar stays put
-       while the grid scrolls sideways. */
+       when several are open at once. On the first cell only — it is pinned at the left edge, so the
+       bar stays put while the grid scrolls sideways. */
     .rdg-row-expanded .rdg-cell:first-of-type,
     .rdg-detail-row .rdg-cell:first-of-type {
         box-shadow: inset 3px 0 0 0 var(--rdg-expanded-accent-color);

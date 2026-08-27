@@ -17,14 +17,14 @@
     "taktik"
   ],
   "dependencies": {
-    "react-data-grid": "7.0.0-beta.47"
+    "react-data-grid": "7.0.0-beta.61"
   },
   "peerDependencies": {
     "@emotion/react": ">=11.0.0",
     "@emotion/styled": ">=11.0.0",
     "@mui/material": ">=6.0.0",
-    "react": "^18.3.1 || ^19.0.0",
-    "react-dom": "^18.3.1 || ^19.0.0"
+    "react": "^19.2",
+    "react-dom": "^19.2"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": "prettier --write"
@@ -44,7 +44,7 @@
     "lint-staged": "15.2.10",
     "prettier": "^3.3.3",
     "react": "19.2.7",
-    "react-data-grid": "7.0.0-beta.47",
+    "react-data-grid": "7.0.0-beta.61",
     "react-dom": "19.2.7",
     "react-spinners": "^0.14.1",
     "typescript": "5.7.2",

@@ -2,8 +2,6 @@ import { ColumnDefinition, RowDefinition } from '../types';
 import { ReactNode } from 'react';
 import { RenderCheckboxProps } from 'react-data-grid';
 import { DataGridExpandable } from '../Expandable';
-/** Cells of a `frozenRight` column — pinned to the right edge by Container.tsx's styles. */
-export declare const FROZEN_RIGHT_CLASS = "rdg-cell-frozen-right";
 export declare const useComputeFinalColumns: <R extends RowDefinition = {
     id: string;
 }>({ columns, expandable, selectionEnabled, selectableRows, selectedRows, onSelectedRowsChange, renderCheckbox, selectAllLabel }: {

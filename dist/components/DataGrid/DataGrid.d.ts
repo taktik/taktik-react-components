@@ -1,5 +1,5 @@
-import React from 'react';
-import { DataGridProps as DataGridPropsFromLib, SortColumn } from 'react-data-grid';
+import React, { Key, ReactNode } from 'react';
+import { CalculatedColumn, DataGridProps as DataGridPropsFromLib, RenderRowProps, Renderers, SortColumn } from 'react-data-grid';
 import { DataGridTheme } from './dataGridTheme';
 import { ColumnDefinition, RowDefinition } from './types';
 import 'react-data-grid/lib/styles.css';
@@ -30,18 +30,43 @@ export interface DataGridRowGestures<Row extends RowDefinition> {
      */
     excludedColumns?: string[];
 }
-export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib<Row>, 'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange' | 'onColumnResize'> & {
+/**
+ * What a consumer's own row renderer is handed: react-data-grid's row props, plus the row's columns
+ * as a plain array.
+ *
+ * react-data-grid hands a row a GENERATOR FACTORY rather than an array, so that a row can be built
+ * without materialising anything. A consumer answering the mouse needs the list itself — which
+ * column a hovered element sits in is a question about the whole row — and materialising it inside
+ * the renderer would allocate one array per row per render, on the hottest path the grid has. The
+ * grid does it once instead: the factory is stable for as long as the column layout is, so one array
+ * serves every row until the columns, the scroll position or the viewport change it.
+ */
+export interface DataGridRenderRowProps<Row> extends RenderRowProps<Row> {
     /**
-     * A column the user dragged wider or narrower, by KEY and in pixels.
+     * The row's columns in the order react-data-grid laid them out, which is not the order they were
+     * declared in — and under column virtualization, only the ones it is rendering.
      *
-     * react-data-grid reports a resize by the INDEX of the column in its own final array, which is
-     * not something a consumer can map back to a column: the grid injects the selection (or
-     * expander) column, the visibility feature has already dropped the hidden ones, and
-     * react-data-grid re-orders what is left before numbering it. The translation therefore belongs
-     * here, where that final array is known.
+     * ⚠ Not a DOM attribute: a consumer spreading these props onto an element drops this one first.
+     */
+    viewportColumns: readonly CalculatedColumn<Row, unknown>[];
+}
+export type DataGridRenderers<Row> = Omit<Renderers<Row, unknown>, 'renderRow'> & {
+    renderRow?: (key: Key, props: DataGridRenderRowProps<Row>) => ReactNode;
+};
+export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib<Row>, 'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange' | 'onColumnResize' | 'renderers'> & {
+    /** See {@link DataGridRenderRowProps} for what `renderRow` is handed on top of the library's own props. */
+    renderers?: DataGridRenderers<Row>;
+    /**
+     * A column the user dragged wider or narrower, by KEY and in pixels, reported on every step of
+     * the drag.
      *
-     * ⚠ It fires on every step of a drag, not once at the end — react-data-grid has no settle
-     * signal. A consumer that persists the width debounces it.
+     * react-data-grid reports the resize by COLUMN, and the grid's own array is not the one the
+     * consumer handed it — the selection (or expander) column is injected, the visibility feature has
+     * already dropped the hidden ones, and react-data-grid re-orders what is left. The key is the one
+     * identifier that means the same thing on both sides, so that is what a consumer is given.
+     *
+     * A consumer PERSISTING a width wants `columnWidths`/`onColumnWidthsChange` instead: those report
+     * once, when the drag settles.
      */
     onColumnResize?: (columnKey: string, width: number) => void;
     selectable?: boolean;

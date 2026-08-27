@@ -14,7 +14,6 @@ export type DataGridTheme = {
     '--rdg-checkbox-focus-color'?: string;
     '--rdg-selection-color'?: string;
     '--rdg-font-size'?: string;
-    '--rdg-cell-frozen-box-shadow'?: string;
     '--rdg-line-height'?: string;
     '--rdg-font-weight'?: string;
     '--rdg-font-family'?: string;

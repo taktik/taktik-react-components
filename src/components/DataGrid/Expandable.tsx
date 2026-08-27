@@ -2,6 +2,7 @@ import React from 'react'
 import styled from '@emotion/styled'
 import { ColSpanArgs, SELECT_COLUMN_KEY } from 'react-data-grid'
 import { ColumnDefinition, RowDefinition } from './types'
+import { leadingColumnPinning } from './pinning'
 
 /** Width the toggle adds to the leading cell it shares with the selection checkbox. */
 export const EXPANDER_WIDTH = 40
@@ -191,7 +192,7 @@ export const EXPANDER_COLUMN_KEY = 'rdg-expander-column'
 /**
  * The toggle as a column of its own — for a grid that has no selection column for it to share.
  *
- * Frozen and injected first, which IS first here: there is no select column to outrank it. A grid
+ * Pinned and injected first, which IS first here: there is no select column to outrank it. A grid
  * with selection uses {@link ExpanderToggle} inside the leading cell instead.
  */
 export const expanderColumn = <Row extends RowDefinition>(
@@ -199,7 +200,7 @@ export const expanderColumn = <Row extends RowDefinition>(
 ): ColumnDefinition<Row> => ({
     key: EXPANDER_COLUMN_KEY,
     name: '',
-    frozen: true,
+    ...leadingColumnPinning,
     width: EXPANDER_WIDTH,
     minWidth: EXPANDER_WIDTH,
     maxWidth: EXPANDER_WIDTH,
@@ -211,26 +212,30 @@ export const expanderColumn = <Row extends RowDefinition>(
 
 /**
  * Turn the computed columns into ones that also render a detail row: the first column that can span
- * (a frozen column cannot) draws the detail across every column from there, and EVERY frozen column
- * draws nothing on a detail row — a detail row is not selectable, a checkbox there would report a
- * selection the grid's own rows do not contain, and a row-actions menu there would act on a synthetic
- * row rather than a real one.
+ * (a LEADING column cannot) draws the detail across every column from there, and EVERY leading
+ * column draws nothing on a detail row — a detail row is not selectable, a checkbox there would
+ * report a selection the grid's own rows do not contain, and a row-actions menu there would act on a
+ * synthetic row rather than a real one.
  *
- * ⚠ The geometry is computed in RENDER order, not declaration order: react-data-grid hoists frozen
+ * A leading column is the grid's own `frozenLeft` cell, or one react-data-grid was handed as
+ * `frozen`. ⚠ The geometry is computed in RENDER order, not declaration order: rdg hoists frozen
  * columns to the front before rendering. A grid that declares a frozen column after unfrozen ones
  * would otherwise get a span one track too wide and keep that column rendering inside its own
- * detail rows. A trailing NON-frozen column (e.g. one pinned with `frozenRight`) is simply covered
- * by the span, so a detail row renders no cell for it.
+ * detail rows. A trailing column pinned with `frozenRight` is simply covered by the span, so a
+ * detail row renders no cell for it.
  */
+const isLeadingColumn = <Row extends RowDefinition>(column: ColumnDefinition<Row>): boolean =>
+    !!column.frozen || !!column.frozenLeft
+
 export const withDetailRendering = <Row extends RowDefinition>(
     columns: ColumnDefinition<Row>[],
     renderDetail: (row: Row) => React.ReactNode
 ): ColumnDefinition<Row>[] => {
     const rendered = [
-        ...columns.filter((column) => column.frozen),
-        ...columns.filter((column) => !column.frozen)
+        ...columns.filter(isLeadingColumn),
+        ...columns.filter((column) => !isLeadingColumn(column))
     ]
-    const spanFrom = rendered.findIndex((column) => !column.frozen)
+    const spanFrom = rendered.findIndex((column) => !isLeadingColumn(column))
     if (spanFrom === -1) {
         return columns
     }
@@ -238,7 +243,7 @@ export const withDetailRendering = <Row extends RowDefinition>(
     const span = rendered.length - spanFrom
     return columns.map((column) => {
         if (column !== spanning) {
-            if (!column.frozen) {
+            if (!isLeadingColumn(column)) {
                 // swallowed by the span
                 return column
             }
