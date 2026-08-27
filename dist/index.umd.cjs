@@ -130,20 +130,12 @@
         }
     }
 
-    /* No gradient beside a pinned column, ever (Olivier, 2026-08-04: a permanent edge read as
-       clutter, and the cell's own opaque background over the scrolling columns is signal enough).
-       rdg paints one beside each frozen column, as bare divs directly inside the grid (the only
-       children of .rdg with neither a role nor a measuring key), and it carries no stable class, no
-       custom property and no prop, so the shape of the element is the only thing there is to name
-       (upstream PR #3969). It looks like an affordance and is not one: only the browsers supporting
-       the scroll-state container query hide it when the grid cannot scroll, and the rest paint it
-       permanently.
-
-       ⚠ RE-CHECK THIS SELECTOR ON EVERY react-data-grid BUMP: it describes a structure rather than
-       an API, which is exactly what nothing else in this file does. */
-    .rdg > div:not([role]):not([data-measuring-cell-key]) {
-        background-image: none;
-    }
+    /* The gradient rdg paints beside each pinned column is shown deliberately — a provisional
+       design choice, history in flowr's admin-migration doc 25. Suppressing it again has no API:
+       the shadow elements carry no stable class, custom property or prop (upstream PR #3969), and
+       the only handle is their shape — the sole children of .rdg with neither a role nor a
+       measuring key. ⚠ Only Chromium hides the gradient while the grid cannot scroll (a
+       scroll-state container query); other browsers paint it permanently. */
 
     /* A detail row holds a panel, not a line of text: it needs to wrap, to start at the top, and to
        scroll inside itself rather than spill over the row below. */
