@@ -69,30 +69,6 @@ export const Container = styled.div<{ $pagination?: boolean }>`
         margin-inline-end: 6px;
     }
 
-    /* The pinned columns' cells: held at an edge while the grid scrolls sideways. Both edges are
-       the library's own sticky positioning rather than react-data-grid's own frozen columns — see
-       pinning.ts for why each edge is. Cells are already background-color: inherit, so a pinned
-       cell stays opaque with the row's own state (hover, selected) beneath it. z-indexes mirror
-       rdg's own layering: body cells sit at 1, header cells at 3. */
-    /* No seam on purpose (Olivier, 2026-08-04): a permanent edge read as clutter; the cell's
-       opaque background over the scrolling columns is signal enough. */
-    .rdg-cell-frozen-right {
-        position: sticky;
-        inset-inline-end: 0;
-        z-index: 1;
-    }
-
-    .rdg-cell-frozen-left {
-        position: sticky;
-        inset-inline-start: 0;
-        z-index: 1;
-    }
-
-    .rdg-header-row .rdg-cell-frozen-right,
-    .rdg-header-row .rdg-cell-frozen-left {
-        z-index: 3;
-    }
-
     /* react-data-grid renders the noRowsFallback as a bare grid child; center it in the body
        (below the header, whose height rdg exposes as --rdg-header-row-height) so every empty
        grid shows its message/icon in the same place. .rdg establishes a containing block via
@@ -156,13 +132,14 @@ export const Container = styled.div<{ $pagination?: boolean }>`
         }
     }
 
-    /* No gradient beside a pinned column, ever — the same rule as the seam above it. rdg paints one
-       beside each column it holds as frozen, as bare divs directly inside the grid (the only
-       children of .rdg with neither a role nor a measuring key), and it carries no stable class, no custom
-       property and no prop, so the shape of the element is the only thing there is to name
-       (upstream PR #3969). It looks like an affordance and is not one: only the browsers
-       supporting the scroll-state container query hide it when the grid cannot scroll, and the
-       rest paint it permanently.
+    /* No gradient beside a pinned column, ever (Olivier, 2026-08-04: a permanent edge read as
+       clutter, and the cell's own opaque background over the scrolling columns is signal enough).
+       rdg paints one beside each frozen column, as bare divs directly inside the grid (the only
+       children of .rdg with neither a role nor a measuring key), and it carries no stable class, no
+       custom property and no prop, so the shape of the element is the only thing there is to name
+       (upstream PR #3969). It looks like an affordance and is not one: only the browsers supporting
+       the scroll-state container query hide it when the grid cannot scroll, and the rest paint it
+       permanently.
 
        ⚠ RE-CHECK THIS SELECTOR ON EVERY react-data-grid BUMP: it describes a structure rather than
        an API, which is exactly what nothing else in this file does. */

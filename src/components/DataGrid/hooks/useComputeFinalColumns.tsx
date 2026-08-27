@@ -13,10 +13,6 @@ import { getHeaderFilter } from '../HeaderFilter'
 import { convertDate, DATE_FORMAT } from '../../../utils'
 import { VisibilityContext } from '../VisibilityProvider'
 import { DataGridCheckbox } from '../DataGridCheckbox'
-import { FROZEN_RIGHT_CLASS, leadingColumnPinning } from '../pinning'
-
-const joinClasses = (...classes: (string | null | undefined)[]): string =>
-    classes.filter(Boolean).join(' ')
 
 export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>({
     columns,
@@ -69,18 +65,10 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
             renderHeaderCell: getRenderHeaderCell()
         }
         if (col.frozenRight) {
-            // Sticky classes carry the pinning (Container.tsx styles them); `frozen` must stay off,
-            // or rdg would sort the column to the LEFT — the very thing frozenRight exists to avoid.
-            adapted.frozen = false
-            adapted.cellClass =
-                typeof col.cellClass === 'function'
-                    ? (row: R) =>
-                          joinClasses(
-                              FROZEN_RIGHT_CLASS,
-                              (col.cellClass as (row: R) => string | null | undefined)(row)
-                          )
-                    : joinClasses(FROZEN_RIGHT_CLASS, col.cellClass)
-            adapted.headerCellClass = joinClasses(FROZEN_RIGHT_CLASS, col.headerCellClass)
+            // `frozenRight` is this library's name for react-data-grid's own end-frozen band: rdg
+            // sorts those columns into a contiguous tail and keeps them in the DOM whatever the
+            // horizontal scroll, so the pinning costs nothing and column virtualization stays on.
+            adapted.frozen = 'end'
         }
         return adapted
     }, [])
@@ -108,7 +96,6 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
             const width = expandable ? 50 + EXPANDER_WIDTH : 50
             finalColumns.push({
                 ...SelectColumn,
-                ...leadingColumnPinning,
                 width,
                 minWidth: width,
                 maxWidth: width,

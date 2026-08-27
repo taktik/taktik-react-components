@@ -7,30 +7,18 @@ import { TextFieldProps } from '@mui/material/TextField';
 export type ColumnDefinition<Row extends RowDefinition = RowDefinition> = Column<Row> & {
     type?: ColumnType;
     /**
-     * Pin this column to the RIGHT edge while the grid scrolls sideways — for a trailing actions
-     * column that must stay reachable. react-data-grid's own `frozen` cannot do this: it SORTS
-     * frozen columns to the left, so a frozen trailing column ends up leading instead. This is
-     * implemented as `position: sticky; inset-inline-end: 0` on the column's cells (the same
-     * mechanism rdg uses for frozen-left), so declare the column LAST — sticky pins it at the
-     * edge, it does not reorder. Mutually exclusive with `frozen`.
+     * Pin this column to the END edge while the grid scrolls sideways — for a trailing actions
+     * column that must stay reachable. It is the public name of react-data-grid's `frozen: 'end'`,
+     * which the grid translates it to; use it rather than `frozen`, whose bare `true` means the
+     * START edge and would sort a trailing column to the front.
      *
-     * ⚠ Costs virtualization: rdg only exempts `frozen` columns from column virtualization, so a
-     * grid with a frozenRight column renders ALL its cells — rows included, the flag is
-     * all-or-nothing. Fine for a paginated grid; not for one holding thousands of rows.
+     * Declare the column LAST. rdg sorts end-frozen columns into a contiguous tail in declaration
+     * order, so a column declared mid-table still renders at the edge — and the detail rows of an
+     * expandable grid would then span a different set of tracks than the table reads.
+     *
+     * Virtualization stays ON: rdg keeps the end-frozen tail in the DOM at every scroll position.
      */
     frozenRight?: boolean;
-    /**
-     * Pin this column to the LEFT edge while the grid scrolls sideways — the grid's OWN leading
-     * cell (the selection checkbox, the expander toggle). Not something a consumer declares.
-     *
-     * ⚠ It is `frozenRight`'s sticky mechanism rather than react-data-grid's own `frozen`, because
-     * rdg yields every start-frozen column TWICE while column virtualization is off — and a
-     * `frozenRight` column is what turns virtualization off, so that is the mode every grid here
-     * runs in. Two leading cells means two select-all checkboxes stacked over one column. The cure
-     * is rdg's native `frozen: 'end'` for the trailing column, which lets virtualization back on
-     * and makes both of these shims deletable.
-     */
-    frozenLeft?: boolean;
     renderFilterInput?: (props: TextFieldProps) => React.ReactNode;
     filterType?: FilterType;
     getColumnValue?: (item?: unknown) => unknown;

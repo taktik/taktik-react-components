@@ -83,6 +83,23 @@ export declare const EXPANDER_COLUMN_KEY = "rdg-expander-column";
  * with selection uses {@link ExpanderToggle} inside the leading cell instead.
  */
 export declare const expanderColumn: <Row extends RowDefinition>(expandable: DataGridExpandable<Row>) => ColumnDefinition<Row>;
+/**
+ * Turn the computed columns into ones that also render a detail row: the first column that can span
+ * (a PINNED column cannot) draws the detail across the unfrozen band, and EVERY pinned column draws
+ * nothing on a detail row — a detail row is not selectable, a checkbox there would report a
+ * selection the grid's own rows do not contain, and a row-actions menu there would act on a
+ * synthetic row rather than a real one.
+ *
+ * ⚠ The geometry is computed in RENDER order, not declaration order: react-data-grid sorts columns
+ * into three bands — start-frozen, unfrozen, end-frozen — stable within each. A grid declaring a
+ * frozen column after unfrozen ones would otherwise get a span one track too wide and keep that
+ * column rendering inside its own detail rows.
+ *
+ * ⚠ The span STOPS at the end-frozen band rather than covering it: react-data-grid rejects an
+ * unfrozen column's `colSpan` outright once it reaches an end-frozen column, and a rejected span
+ * renders the whole detail inside one narrow track. So a detail row stops short of the pinned
+ * actions column, which renders nothing there.
+ */
 export declare const withDetailRendering: <Row extends RowDefinition>(columns: ColumnDefinition<Row>[], renderDetail: (row: Row) => React.ReactNode) => ColumnDefinition<Row>[];
 /**
  * The height a row occupies: its detail's when it is one, the grid's rhythm otherwise.
