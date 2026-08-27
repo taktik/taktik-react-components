@@ -22,6 +22,12 @@ export type DataGridTheme = {
     '--rdg-header-font-size'?: string
     '--rdg-border-size'?: string
     '--rdg-cell-padding'?: string
+    /**
+     * How much of the gradient react-data-grid paints beside a pinned column is actually shown,
+     * 0 to 1. Defaults to a whisper; a consumer whose two themes want different strengths (a dark
+     * shadow reads far less over a dark ground) names its own value per theme.
+     */
+    '--rdg-frozen-shadow-opacity'?: string
     '--rdg-border-radius-container'?: string
     '--rdg-row-selected-color'?: string
     '--rdg-scrollbar-width'?: string
