@@ -20,8 +20,22 @@ const Container = styled(MenuItem)`
     /* the grab area owns the gesture: no scroll-vs-drag arbitration, no 300ms touch delay */
     touch-action: none;
 
+    /*
+     * The row being moved is LIFTED, not faded. The rows reflow live under the pointer, so THIS row
+     * is the one travelling — fading it makes the thing the reader is moving the faintest item in
+     * the list, which is the payload-drag idiom (the source stays put and a ghost flies) applied
+     * where the source does not stay put. A neutral alpha rather than a palette colour because this
+     * menu is portalled out of the grid, so the grid's own custom properties do not reach it; a mid
+     * grey at low alpha lifts over a light paper and a dark one alike.
+     */
     &[data-dragging='true'] {
-        opacity: 0.5;
+        position: relative;
+        z-index: 1;
+        background-color: rgba(128, 128, 128, 0.16);
+        box-shadow:
+            rgba(0, 0, 0, 0.2) 0 3px 5px -1px,
+            rgba(0, 0, 0, 0.14) 0 6px 10px 0,
+            rgba(0, 0, 0, 0.12) 0 1px 18px 0;
     }
 `
 
