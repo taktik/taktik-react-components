@@ -4,10 +4,15 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
-    "build": "vite build && tsc",
+    "build": "rm -rf dist && vite build && tsc",
     "format": "prettier --write 'src/**/*.{ts,tsx,js,jsx}'",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "react",
