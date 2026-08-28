@@ -263,9 +263,15 @@ const ContainerLoading = styled.div`
     justify-content: center;
 `
 
-/** The translucent veil the spinner turns over; out of flow, so the spinner stays centred. */
-const LoadingScrim = styled.div`
-    background-color: ${taktikTheme.primary500};
+/**
+ * The translucent veil the spinner turns over; out of flow, so the spinner stays centred.
+ *
+ * It sits OUTSIDE the element the grid's custom properties are set on, so the colour is handed down
+ * from the merged theme rather than read with `var()` — and it is the theme's colour rather than
+ * `taktikTheme`'s, which painted a light-blue wash over a dark grid.
+ */
+const LoadingScrim = styled.div<{ $color: string }>`
+    background-color: ${({ $color }) => $color};
     opacity: 0.1;
 
     position: absolute;
@@ -333,6 +339,13 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     )
 
     const renderCheckbox = renderers?.renderCheckbox ?? renderDefaultCheckbox
+
+    /**
+     * The consumer's theme over the library's. Everything INSIDE the grid element reads these as
+     * custom properties; the loader sits outside it and takes its colour from here.
+     */
+    const gridTheme = { ...defaultTheme, ...(theme ?? {}) }
+    const loadingColor = gridTheme['--rdg-loading-color'] ?? taktikTheme.primary500
 
     const finalColumns = useComputeFinalColumns({
         columns,
@@ -643,7 +656,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                         ...consumerRenderers,
                         renderRow
                     }}
-                    style={{ ...defaultTheme, ...(theme ?? {}) } as React.CSSProperties}
+                    style={gridTheme as React.CSSProperties}
                 />
             </div>
             {pagination?.enabled ? (
@@ -665,8 +678,8 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
             ) : null}
             {loading ? (
                 <ContainerLoading>
-                    <LoadingScrim />
-                    <PulseLoader color={taktikTheme.primary500} />
+                    <LoadingScrim $color={loadingColor} />
+                    <PulseLoader color={loadingColor} />
                 </ContainerLoading>
             ) : null}
             {/* Outside the keyed Grid on purpose: a column toggle remounts the grid, and a menu

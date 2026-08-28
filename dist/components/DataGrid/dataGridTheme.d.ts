@@ -12,6 +12,14 @@ export type DataGridTheme = {
     '--rdg-expanded-accent-color'?: string;
     '--rdg-row-selected-hover-background-color'?: string;
     '--rdg-checkbox-focus-color'?: string;
+    /** The tick inside a ticked selection checkbox. */
+    '--rdg-checkbox-color'?: string;
+    /**
+     * The veil and the spinner shown while the grid is loading. It is ONE colour: the veil is that
+     * colour at a tenth, the spinner is it at full strength, and a grid on a dark ground wants both
+     * changed together.
+     */
+    '--rdg-loading-color'?: string;
     '--rdg-selection-color'?: string;
     '--rdg-font-size'?: string;
     '--rdg-line-height'?: string;
