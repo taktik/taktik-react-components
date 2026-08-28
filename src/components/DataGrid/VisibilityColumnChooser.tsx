@@ -195,15 +195,8 @@ export const VisibilityMenu = () => {
         pointerId: number
         grip: HTMLElement
     } | null>(null)
-    /**
-     * A drag ends in a click, and that one must not toggle a column.
-     *
-     * ⚠ It is CLEARED by whichever handler eats it, the grip's as well as the row's — pointer
-     * capture puts that terminal click on the GRIP, whose own handler stops it before the row's
-     * ever runs, so a flag only the row could clear stayed raised and swallowed the next genuine
-     * click on any row in the menu.
-     */
-    const swallowClick = useRef(false)
+    /** Disarms the terminal-click suppressor an earlier drag left armed — see endDrag. */
+    const disarmSuppressor = useRef<(() => void) | null>(null)
 
     // The columns caught up with what was reported: the preview has nothing left to say.
     useEffect(() => {
@@ -224,10 +217,6 @@ export const VisibilityMenu = () => {
 
     const toggle = useCallback(
         (columnName: string) => () => {
-            if (swallowClick.current) {
-                swallowClick.current = false
-                return
-            }
             const index = hiddenColumn.indexOf(columnName)
             setHiddenColumn(
                 index === -1
@@ -260,7 +249,6 @@ export const VisibilityMenu = () => {
             event.preventDefault()
             event.stopPropagation()
             event.currentTarget.setPointerCapture(event.pointerId)
-            swallowClick.current = false
             dragOrder.current = order
             dragging.current = {
                 key,
@@ -281,11 +269,33 @@ export const VisibilityMenu = () => {
         dragging.current = null
         setDraggingKey(null)
         if (drag.moved) {
-            swallowClick.current = true
             reorderColumns?.(dragOrder.current)
             announce(drag.key, dragOrder.current)
+            /*
+             * A moved drag ends in a click, and that one must not toggle a column — but it may land
+             * ANYWHERE: on the grip while capture held, on whatever row slid under the pointer, or
+             * outside the menu entirely when the drag ended past its edge, in which case it lands on
+             * nothing of ours at all. So no handler of ours can be trusted to see it: it is eaten at
+             * the WINDOW, capture phase, and the suppressor is disarmed by the next pointerdown —
+             * the terminal click is the only click that can ever arrive without a fresh pointerdown
+             * of its own before it (a sticky flag cleared by our handlers ate the NEXT genuine
+             * toggle whenever the terminal click missed them).
+             */
+            disarmSuppressor.current?.()
+            const suppress = (event: MouseEvent) => event.stopPropagation()
+            const disarm = () => {
+                window.removeEventListener('click', suppress, true)
+                window.removeEventListener('pointerdown', disarm, true)
+                disarmSuppressor.current = null
+            }
+            disarmSuppressor.current = disarm
+            window.addEventListener('click', suppress, true)
+            window.addEventListener('pointerdown', disarm, true)
         }
     }, [announce, reorderColumns])
+
+    // an armed suppressor must not outlive the menu
+    useEffect(() => () => disarmSuppressor.current?.(), [])
 
     /**
      * The drag is DELIVERED through the window, not through the grip's own handlers.
@@ -405,13 +415,8 @@ export const VisibilityMenu = () => {
                                 <Grip
                                     aria-hidden='true'
                                     onPointerDown={startDrag(key)}
-                                    // Pointer capture puts a drag's terminal click HERE, and a press
-                                    // on the grip is never a toggle either way — so this is where
-                                    // that click is eaten, and where the flag it raised is put down.
-                                    onClick={(event) => {
-                                        event.stopPropagation()
-                                        swallowClick.current = false
-                                    }}>
+                                    // a press on the grip is never a toggle, moved or not
+                                    onClick={(event) => event.stopPropagation()}>
                                     <GripIcon />
                                 </Grip>
                             )}
