@@ -83,12 +83,23 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
         }
         if (selectionEnabled) {
             const allIds = (selectableRows ?? []).map((row) => row.id)
-            const allSelected =
-                allIds.length > 0 && allIds.every((id) => selectedRows?.includes(id))
+            // Both sides as sets: a picker holding two thousand rows with two thousand picked asks
+            // these questions on every render of the header, and `includes` on both would make each
+            // of them four million comparisons.
+            const selected = new Set(selectedRows ?? [])
+            const selectableIds = new Set(allIds)
+            const selectedHere = allIds.filter((id) => selected.has(id)).length
+            const allSelected = allIds.length > 0 && selectedHere === allIds.length
+            /**
+             * Some but not all: the box says so rather than showing empty. An empty box beside a
+             * table with three of twenty-five rows ticked is indistinguishable from nothing picked,
+             * and a screen reader is told "unchecked" about a table that has a selection.
+             */
+            const someSelected = selectedHere > 0 && !allSelected
             // Only the rows in hand — one page's worth under server pagination, where a plain `[]`
             // on unchecking would throw away picks made on every other page.
             const toggleAll = (checked: boolean): string[] => {
-                const others = (selectedRows ?? []).filter((id) => !allIds.includes(id))
+                const others = (selectedRows ?? []).filter((id) => !selectableIds.has(id))
                 return checked ? [...others, ...allIds] : others
             }
             // The toggle shares this cell rather than taking one of its own, because rdg pins its
@@ -111,12 +122,14 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
                         {renderCheckbox ? (
                             renderCheckbox({
                                 checked: allSelected,
+                                indeterminate: someSelected,
                                 'aria-label': selectAllLabel,
                                 onChange: (checked) => onSelectedRowsChange?.(toggleAll(checked))
                             })
                         ) : (
                             <DataGridCheckbox
                                 checked={allSelected}
+                                indeterminate={someSelected}
                                 slotProps={{ input: { 'aria-label': selectAllLabel } }}
                                 onChange={(_, checked) =>
                                     onSelectedRowsChange?.(toggleAll(checked))

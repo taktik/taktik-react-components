@@ -25,11 +25,11 @@ export const Container = styled.div<{ $pagination?: boolean }>`
     }
 
     *::-webkit-scrollbar-thumb:hover {
-        background-color: var(--rdg--scrollbar-thumb-hover-background) !important;
+        background-color: var(--rdg-scrollbar-thumb-hover-background) !important;
     }
 
     *::-webkit-scrollbar-track:hover {
-        background-color: var(--rdg--scrollbar-track-hover-background) !important;
+        background-color: var(--rdg-scrollbar-track-hover-background) !important;
     }
 
     /* The box holding the grid itself. Every child of this container is a div — the grid box, the
@@ -40,16 +40,46 @@ export const Container = styled.div<{ $pagination?: boolean }>`
         overflow: hidden;
     }
 
+    /* The grid's face, offered to everything inside it — including a detail panel and whatever a
+       consumer renders in a cell, which inherit it and can answer it with a declaration of their
+       own. The table's own rows take it as an instruction instead, below. */
     .rdg {
         border: none;
         block-size: 100%;
+        font-weight: var(--rdg-font-weight);
+        line-height: var(--rdg-line-height);
+        font-family: var(--rdg-font-family);
     }
 
+    /* Bare form controls a consumer puts in a cell: the grid draws the cell's own edges, so a UA
+       border inside one is a second box around the same thing. Unweighted on purpose — anything
+       carrying a border of its own keeps it. */
     * {
+        border: none;
+    }
+
+    /* The TABLE's own text — its header and its data cells, and nothing else. The declarations are
+       important here because a table reads as a table only if its rows share one face, whatever a
+       UI kit's own typography says inside a cell.
+       Deliberately not the universal selector, which is not "the grid" but every node the consumer
+       renders in it: a detail row is a panel the consumer laid out rather than a line of the table,
+       and it is left out of this so it can wear its own type — it still inherits the grid's from
+       .rdg above, and can now answer it. */
+    .rdg-header-row,
+    .rdg-row:not(.rdg-detail-row) > .rdg-cell {
         font-weight: var(--rdg-font-weight) !important;
         line-height: var(--rdg-line-height) !important;
         font-family: var(--rdg-font-family) !important;
-        border: none;
+    }
+
+    /* The pager is the library's OWN chrome rather than consumer content, so it wears the grid's
+       face and not the UI kit's, whose typography it carries by itself. The consumer's own
+       totalLabel node is a sibling of this and keeps its type. */
+    .MuiTablePagination-root,
+    .MuiTablePagination-root * {
+        font-weight: var(--rdg-font-weight) !important;
+        line-height: var(--rdg-line-height) !important;
+        font-family: var(--rdg-font-family) !important;
     }
 
     .rdg-header-row {
