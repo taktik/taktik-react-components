@@ -27,6 +27,14 @@ export const VisibilityContext = React.createContext<{
     resetHiddenColumns: () => void
     /** Already translated by the consumer; the library has no i18n. Absent = no reset item. */
     resetLabel?: string
+    /**
+     * The order the reader arranged the chooser's rows into, top to bottom — which is the table's
+     * columns left to right. `undefined` when the consumer keeps no order, and then the chooser
+     * offers no reorder gesture at all: the library does not store this one, it reports it.
+     */
+    reorderColumns?: (columnKeys: string[]) => void
+    /** Already translated; how a moved column's new place is said out loud. See `VisibilityMenu`. */
+    reorderAnnouncement?: (column: string, position: number, total: number) => string
 }>({
     columns: [],
     hiddenColumn: [],
@@ -48,6 +56,8 @@ export const VisibilityProvider = ({
     localStorageKey = LOCAL_STORAGE_HIDDEN_COLUMN_KEY,
     onHiddenColumnsChange,
     onReset,
+    onColumnOrderChange,
+    reorderAnnouncement,
     resetLabel
 }: {
     children: ReactNode
@@ -60,6 +70,15 @@ export const VisibilityProvider = ({
     onHiddenColumnsChange?: (hiddenColumns: string[]) => void
     /** A second stored layout of the consumer's own, cleared by the same one reset item. */
     onReset?: () => void
+    /**
+     * Runs when the reader arranges the chooser's rows — top to bottom is left to right. The
+     * library does not store this one: the consumer applies the reported order to the columns it
+     * hands back, which is what closes the loop and what makes the menu show the arrangement.
+     * Passing it is what puts the reorder gesture in the menu.
+     */
+    onColumnOrderChange?: (columnKeys: string[]) => void
+    /** Already translated; how a moved column's new place is said out loud. */
+    reorderAnnouncement?: (column: string, position: number, total: number) => string
     /** Already translated; passing it is what puts the reset item in the chooser's menu. */
     resetLabel?: string
 }) => {
@@ -153,6 +172,8 @@ export const VisibilityProvider = ({
                 setHiddenColumn: chooseHiddenColumns,
                 resetHiddenColumns,
                 resetLabel,
+                reorderColumns: onColumnOrderChange,
+                reorderAnnouncement,
                 enabled
             }}>
             {children}
