@@ -159,17 +159,6 @@ export const clickBelongsToRow = <Row extends RowDefinition>(
     return !(target instanceof Element && target.closest(INTERACTIVE))
 }
 
-/**
- * The expandable feature's spelling of {@link clickBelongsToRow}: a click that is the row's expands or
- * collapses it. One rule serves both row-wide gestures, so a control that must not expand a row cannot
- * accidentally still fire its double-click action.
- */
-export const clickExpandsRow = <Row extends RowDefinition>(
-    row: Row,
-    columnKey: string,
-    target: EventTarget | null
-): boolean => clickBelongsToRow(row, columnKey, target)
-
 /** The leading cell's layout: toggle, then whatever the selection column renders. */
 export const LeadingCell = styled.div`
     display: flex;

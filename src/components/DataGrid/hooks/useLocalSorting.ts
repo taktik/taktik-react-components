@@ -4,11 +4,17 @@ import { SortColumn } from 'react-data-grid'
 
 export type Comparator<R = RowDefinition> = (a: R, b: R) => number
 
+/**
+ * Built once for the module rather than per comparison: a collator is several times faster than
+ * `String#localeCompare`, which builds one internally on every call, and orders identically.
+ */
+const collator = new Intl.Collator(undefined, { numeric: false })
+
 function getComparator<R = RowDefinition>(
     sortColumn: keyof R,
     type?: ColumnType,
-    sortComparator?: (a: unknown, b: unknown, objectA: unknown, objectB: unknown) => number,
-    getColumnValue?: (item: unknown) => unknown
+    sortComparator?: (a: unknown, b: unknown, objectA: R, objectB: R) => number,
+    getColumnValue?: (item: R) => unknown
 ): Comparator<R> {
     return (a, b) => {
         const valueA = getColumnValue ? getColumnValue(a) : a[sortColumn]
@@ -17,25 +23,27 @@ function getComparator<R = RowDefinition>(
             if (sortComparator) {
                 return sortComparator(valueA, valueB, a, b)
             }
+            // An unusable value goes to the END of the ascending order, whichever side it is on —
+            // a row with no date or no number is what the reader is least looking for. Deliberately
+            // silent: this runs once per COMPARISON, and a column of empty cells would otherwise
+            // write tens of thousands of identical console lines on a single header click.
             if (type === ColumnType.NUMBER) {
                 const numA = Number(valueA)
                 const numB = Number(valueB)
                 if (isNaN(numA) || isNaN(numB)) {
-                    console.warn(`Invalid number for sorting:`, { a: valueA, b: valueB })
-                    return isNaN(numA) ? 1 : -1 // Push invalid values to the end
+                    return isNaN(numA) ? 1 : -1
                 }
                 return numA - numB
             } else if (type === ColumnType.DATE) {
                 const dateA = new Date(valueA as string | number | Date).getTime()
                 const dateB = new Date(valueB as string | number | Date).getTime()
                 if (isNaN(dateA) || isNaN(dateB)) {
-                    console.warn(`Invalid date for sorting:`, { a: valueA, b: valueB })
-                    return isNaN(dateA) ? 1 : -1 // Push invalid values to the end
+                    return isNaN(dateA) ? 1 : -1
                 }
                 return dateA - dateB
             }
             if (type === ColumnType.STRING || !type) {
-                return String(valueA).localeCompare(String(valueB))
+                return collator.compare(String(valueA), String(valueB))
             }
             if (type === ColumnType.BOOLEAN) {
                 return Number(!!valueA) - Number(!!valueB)
@@ -80,29 +88,47 @@ export const useLocalSorting = <R extends RowDefinition = RowDefinition>({
     const ordering = controlledSortColumns ?? sortColumns
 
     /**
+     * The sort by VALUE rather than by identity. A consumer holding the sort usually writes the
+     * array inline, so a fresh identity arrives on every render and the sort below would run again
+     * each time — for a table whose order has not changed.
+     */
+    const orderingKey = ordering.map((sort) => `${String(sort.columnKey)}:${sort.direction}`).join()
+    const stableOrdering = useMemo(() => ordering, [orderingKey]) // eslint-disable-line react-hooks/exhaustive-deps
+
+    /**
      * `columns` is a dependency because it CARRIES the comparators (`sortComparator`,
      * `getColumnValue`): a column set rebuilt around data that arrives after first paint — a name
      * lookup, a translation map — has to re-order the rows, not keep the order the empty one gave.
+     *
+     * Each sort step resolves its column and builds its comparator ONCE, above the sort. Done inside
+     * the comparison, as it was, a 5 000-row table over 20 columns scanned the column array and
+     * allocated a closure some 61 000 times per sort — which is also what would make the `columns`
+     * dependency above expensive rather than free.
      */
     const sortedRows = useMemo(() => {
-        if (!enabled || ordering.length === 0) return rows
-        return [...rows].sort((a, b) => {
-            for (const sort of ordering) {
-                const column = columns.find((col) => col.key === sort.columnKey)
-                const comparator = getComparator(
+        if (!enabled || stableOrdering.length === 0) return rows
+        const steps = stableOrdering.map((sort) => {
+            const column = columns.find((col) => col.key === sort.columnKey)
+            return {
+                compare: getComparator<R>(
                     sort.columnKey as keyof R,
                     column?.type,
                     column?.sortComparator,
                     column?.getColumnValue
-                )
-                const compResult = comparator(a, b)
+                ),
+                descending: sort.direction === 'DESC'
+            }
+        })
+        return [...rows].sort((a, b) => {
+            for (const step of steps) {
+                const compResult = step.compare(a, b)
                 if (compResult !== 0) {
-                    return sort.direction === 'ASC' ? compResult : -compResult
+                    return step.descending ? -compResult : compResult
                 }
             }
             return 0
         })
-    }, [rows, ordering, enabled, columns])
+    }, [rows, stableOrdering, enabled, columns])
 
     const setSortedColumnsFn = useCallback((sort: SortColumn[]) => {
         if (sort.length !== 0) {

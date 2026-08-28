@@ -58,12 +58,6 @@ export declare const toggleExpanded: <Row extends RowDefinition>(expandable: Dat
  * kebab does not fill its cell, where a click beside the button is still that column's, not the row's.
  */
 export declare const clickBelongsToRow: <Row extends RowDefinition>(row: Row, columnKey: string, target: EventTarget | null, excludedColumns?: string[]) => boolean;
-/**
- * The expandable feature's spelling of {@link clickBelongsToRow}: a click that is the row's expands or
- * collapses it. One rule serves both row-wide gestures, so a control that must not expand a row cannot
- * accidentally still fire its double-click action.
- */
-export declare const clickExpandsRow: <Row extends RowDefinition>(row: Row, columnKey: string, target: EventTarget | null) => boolean;
 /** The leading cell's layout: toggle, then whatever the selection column renders. */
 export declare const LeadingCell: import("@emotion/styled").StyledComponent<{
     theme?: import("@emotion/react").Theme;

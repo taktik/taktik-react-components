@@ -1,5 +1,5 @@
 import styled from '@emotion/styled'
-import React, { ReactNode, useCallback } from 'react'
+import React, { ReactNode, useCallback, useMemo } from 'react'
 import TablePagination from '@mui/material/TablePagination'
 
 /**
@@ -41,7 +41,15 @@ export type Props = {
      * number can never disagree with the "1-25 of 58" beside it.
      */
     totalLabel?: (totalCount: number) => ReactNode
+    /**
+     * The sizes the dropdown offers. Defaults to the four MUI has always shown here; a consumer
+     * paging in tens, or one opening a grid at one of `DEFAULT_PAGE_SIZES`, names its own.
+     */
+    rowsPerPageOptions?: number[]
 }
+
+/** What the footer offers when the consumer names nothing — MUI's own list, said out loud. */
+const DEFAULT_ROWS_PER_PAGE_OPTIONS = [10, 25, 50, 100]
 export const Pagination = React.memo(
     ({
         currentPage,
@@ -50,7 +58,8 @@ export const Pagination = React.memo(
         pageSize,
         totalCount,
         labels,
-        totalLabel
+        totalLabel,
+        rowsPerPageOptions = DEFAULT_ROWS_PER_PAGE_OPTIONS
     }: Props) => {
         /**
          * ⚠ The setters ARE dependencies. They used to be raw `useState` setters, stable for the
@@ -73,6 +82,20 @@ export const Pagination = React.memo(
             [setPageSize, setCurrentPage]
         )
 
+        /**
+         * The size in use is an option whether or not the consumer listed it. MUI renders the Select
+         * BLANK when its value is not among the options — so a grid opened at a size of its own
+         * (`DEFAULT_PAGE_SIZES.MEDIUM`, a size restored from a URL) showed an empty control, and
+         * picking anything from it moved the reader to a page size they had not chosen.
+         */
+        const options = useMemo(
+            () =>
+                rowsPerPageOptions.includes(pageSize)
+                    ? rowsPerPageOptions
+                    : [...rowsPerPageOptions, pageSize].sort((a, b) => a - b),
+            [rowsPerPageOptions, pageSize]
+        )
+
         return (
             <Container>
                 {totalLabel ? <TotalLabel>{totalLabel(totalCount)}</TotalLabel> : null}
@@ -90,6 +113,7 @@ export const Pagination = React.memo(
                     page={currentPage}
                     onPageChange={handleChangePage}
                     rowsPerPage={pageSize}
+                    rowsPerPageOptions={options}
                     onRowsPerPageChange={handleChangeRowsPerPage}
                 />
             </Container>

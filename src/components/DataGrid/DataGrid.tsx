@@ -58,7 +58,6 @@ export {
     detailRowClass,
     detailAwareRowHeight,
     clickBelongsToRow,
-    clickExpandsRow,
     ExpanderToggle,
     SELECTION_COLUMN_KEY,
     EXPANDER_COLUMN_KEY
@@ -133,6 +132,12 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
      * once, when the drag settles.
      */
     onColumnResize?: (columnKey: string, width: number) => void
+    /**
+     * Whether rows can be picked at all. Defaults to true, so a grid that hands over
+     * `onSelectedRowsChange` gets its checkbox column as it always has; set it `false` to keep the
+     * handler and drop the column — for a table whose selection is driven from somewhere else, or
+     * one that turns picking off for a reader who may not act on the rows.
+     */
     selectable?: boolean
     /**
      * Accessible name of the header's select-all checkbox — override it to match the consumer's
@@ -174,6 +179,12 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
         remotePagination?: PaginationProps
         /** Footer wording ("Rows per page", "of"); applies to local and remote pagination alike. */
         labels?: PaginationProps['labels']
+        /**
+         * The sizes the footer's dropdown offers. The page size in use is always among them,
+         * whoever chose it — a control rendering a value it has no option for shows BLANK, and the
+         * next pick silently moves the reader to a size they did not ask for.
+         */
+        rowsPerPageOptions?: PaginationProps['rowsPerPageOptions']
         /**
          * What the table holds, at the footer's LEFT end ("58 devices") — the counterpart of the
          * pager's own "1-25 of 58". It is called with the count the pager is counting, so the two
@@ -264,7 +275,7 @@ const LoadingScrim = styled.div`
 `
 
 const RenderCheckbox = React.memo(
-    ({ checked, onChange, 'aria-label': ariaLabel }: RenderCheckboxProps) => {
+    ({ checked, indeterminate, onChange, 'aria-label': ariaLabel }: RenderCheckboxProps) => {
         const onChangeFn = useCallback(
             (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
                 onChange(checked, (event.nativeEvent as MouseEvent).shiftKey)
@@ -274,6 +285,7 @@ const RenderCheckbox = React.memo(
         return (
             <DataGridCheckbox
                 checked={checked}
+                indeterminate={indeterminate}
                 slotProps={{ input: { 'aria-label': ariaLabel } }}
                 onChange={onChangeFn}
             />
@@ -295,6 +307,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     onSortColumnsChange,
     defaultSortColumns,
     sortRowsLocally,
+    selectable = true,
     selectedRows,
     onSelectedRowsChange,
     selectAllLabel = DEFAULT_SELECT_ALL_LABEL,
@@ -325,7 +338,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         columns,
         // The expand toggle rides in the selection cell, ahead of the checkbox
         expandable,
-        selectionEnabled: !!onSelectedRowsChange,
+        selectionEnabled: selectable && !!onSelectedRowsChange,
         selectableRows: rows,
         selectedRows,
         onSelectedRowsChange,
@@ -339,7 +352,19 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     // the page) the stale widths make the grid wider or narrower than its container by exactly
     // the added/removed columns' width. Remount the grid whenever the column set changes —
     // the same idiom the visibility feature uses through gridKey.
-    const columnsKey = useMemo(() => finalColumns.map((col) => col.key).join('|'), [finalColumns])
+    //
+    // ⚠ WHICH columns, not in which order: the keys are sorted before they are joined. rdg holds
+    // its measured widths BY KEY, so a reorder leaves every one of them right and needs no fresh
+    // measurement — and an order-sensitive key would throw the grid away and rebuild it on each
+    // step of a reorder (one per Alt+ArrowDown), losing the scroll position and every cell with it.
+    const columnsKey = useMemo(
+        () =>
+            finalColumns
+                .map((col) => col.key)
+                .sort()
+                .join('|'),
+        [finalColumns]
+    )
 
     const filtersEnabled = useMemo(
         () => finalColumns.some((col) => col.filterEnabled),
@@ -478,21 +503,17 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
      */
     const computeRawClass = useCallback(
         (row: R, index: number) => {
-            const own = () => {
-                const detail = detailRowClass(row, expandable?.expandedIds)
-                if (detail) {
-                    return detail
-                }
-                if (index === 0) {
-                    return 'first-row'
-                } else if (index === rows.length - 1) {
-                    return 'last-row'
-                }
-                return ''
-            }
-            return [rowClass?.(row, index), own()].filter(Boolean).join(' ')
+            // The rounded corners belong to the first and last rows RENDERED, and the index rdg
+            // reports is an index into that same array — not into the consumer's full row set, which
+            // a page slice or an open detail row makes a different length.
+            const own = [
+                detailRowClass(row, expandable?.expandedIds),
+                index === 0 ? 'first-row' : '',
+                index === rowsWithDetails.length - 1 ? 'last-row' : ''
+            ]
+            return [rowClass?.(row, index), ...own].filter(Boolean).join(' ')
         },
-        [rows, expandable?.expandedIds, rowClass]
+        [rowsWithDetails, expandable?.expandedIds, rowClass]
     )
 
     /** What a click on the row means: the consumer's action, or opening the row where it expands. */
@@ -555,7 +576,10 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     )
 
     /**
-     * Drop selected ids that no longer name a row — one filtered out, or deleted under the selection.
+     * Drop selected ids that no longer name a row — one deleted under the selection, or gone from the
+     * set the consumer handed over. Measured against `rows` as it arrived, so narrowing a LOCAL
+     * filter never silently unpicks anything: a row hidden by a filter is still a row the reader
+     * chose, and it comes back ticked when the filter widens again.
      *
      * ⚠ Only when the grid holds EVERY row. Under server pagination `rows` is one page, so "not among
      * the rows" means "not on this page": a picker opened on thirty already-chosen devices would keep
@@ -566,13 +590,12 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         if (!holdsEveryRow) {
             return
         }
-        const selectedRowsAvailable = selectedRows?.filter((rowId) =>
-            rows.some((row) => row.id === rowId)
-        )
-        if (selectedRowsAvailable?.length != selectedRows?.length) {
+        const rowIds = new Set(rows.map((row) => row.id))
+        const selectedRowsAvailable = selectedRows?.filter((rowId) => rowIds.has(rowId))
+        if (selectedRowsAvailable?.length !== selectedRows?.length) {
             onSelectedRowsChange?.(selectedRowsAvailable ?? [])
         }
-    }, [rows, selectedRows, holdsEveryRow])
+    }, [rows, selectedRows, holdsEveryRow, onSelectedRowsChange])
 
     return (
         <Container $pagination={!!pagination?.enabled}>
@@ -634,6 +657,10 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                     })}
                     labels={pagination.labels ?? pagination.remotePagination?.labels}
                     totalLabel={pagination.totalLabel ?? pagination.remotePagination?.totalLabel}
+                    rowsPerPageOptions={
+                        pagination.rowsPerPageOptions ??
+                        pagination.remotePagination?.rowsPerPageOptions
+                    }
                 />
             ) : null}
             {loading ? (

@@ -34,8 +34,8 @@ export type DataGridTheme = {
     '--rdg-scrollbar-height'?: string
     '--rdg-scrollbar-thumb-background'?: string
     '--rdg-scrollbar-track-background'?: string
-    '--rdg--scrollbar-thumb-hover-background'?: string
-    '--rdg--scrollbar-track-hover-background'?: string
+    '--rdg-scrollbar-thumb-hover-background'?: string
+    '--rdg-scrollbar-track-hover-background'?: string
 }
 
 export const defaultTheme: DataGridTheme = {
@@ -62,6 +62,6 @@ export const defaultTheme: DataGridTheme = {
     '--rdg-scrollbar-height': '8px',
     '--rdg-scrollbar-thumb-background': taktikTheme.primary500,
     '--rdg-scrollbar-track-background': taktikTheme.gray100,
-    '--rdg--scrollbar-thumb-hover-background': taktikTheme.primary500,
-    '--rdg--scrollbar-track-hover-background': taktikTheme.gray200
+    '--rdg-scrollbar-thumb-hover-background': taktikTheme.primary500,
+    '--rdg-scrollbar-track-hover-background': taktikTheme.gray200
 }

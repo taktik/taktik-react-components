@@ -21,12 +21,17 @@ export type ColumnDefinition<Row extends RowDefinition = RowDefinition> = Column
     frozenRight?: boolean;
     renderFilterInput?: (props: TextFieldProps) => React.ReactNode;
     filterType?: FilterType;
-    getColumnValue?: (item?: unknown) => unknown;
+    /**
+     * Where this column's value lives, when it is not simply `row[key]` — a name resolved from an
+     * id, a total counted off the row, anything the cell computes. Sorting and filtering both ask
+     * through it, so one function is enough to make a computed column behave like a plain one.
+     */
+    getColumnValue?: (item: Row) => unknown;
     filterOptions?: {
         label: string;
         value: string;
     }[];
-    sortComparator?: (a: unknown, b: unknown, objectA: unknown, objectB: unknown) => number;
+    sortComparator?: (a: unknown, b: unknown, objectA: Row, objectB: Row) => number;
     filterComparator?: (value: unknown, valueToMatch: unknown, row: Row) => boolean;
     filterEnabled?: boolean;
     dateOptions?: {

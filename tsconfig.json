@@ -13,8 +13,7 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "src",
-    "dist"
+    "src"
   ],
   "exclude": [
     "node_modules"

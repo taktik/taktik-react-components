@@ -4,6 +4,16 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "style": "dist/style.css",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs"
+    },
+    "./style.css": "./dist/style.css",
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist",
     "README.md"
@@ -37,14 +47,12 @@
   "devDependencies": {
     "@emotion/react": "11.13.5",
     "@emotion/styled": "11.13.5",
-    "@mui/icons-material": "9.2.0",
     "@mui/material": "9.2.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "4.3.3",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
-    "globals": "15.12.0",
     "husky": "9.1.7",
     "lint-staged": "15.2.10",
     "prettier": "^3.3.3",
@@ -53,9 +61,6 @@
     "react-dom": "19.2.7",
     "react-spinners": "^0.14.1",
     "typescript": "5.7.2",
-    "vite": "5.4.11",
-    "vite-plugin-dts": "4.3.0",
-    "vite-plugin-static-copy": "2.1.0",
-    "vite-plugin-svgr": "4.3.0"
+    "vite": "5.4.11"
   }
 }

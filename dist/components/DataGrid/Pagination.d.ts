@@ -15,5 +15,10 @@ export type Props = {
      * number can never disagree with the "1-25 of 58" beside it.
      */
     totalLabel?: (totalCount: number) => ReactNode;
+    /**
+     * The sizes the dropdown offers. Defaults to the four MUI has always shown here; a consumer
+     * paging in tens, or one opening a grid at one of `DEFAULT_PAGE_SIZES`, names its own.
+     */
+    rowsPerPageOptions?: number[];
 };
-export declare const Pagination: React.MemoExoticComponent<({ currentPage, setCurrentPage, setPageSize, pageSize, totalCount, labels, totalLabel }: Props) => React.JSX.Element>;
+export declare const Pagination: React.MemoExoticComponent<({ currentPage, setCurrentPage, setPageSize, pageSize, totalCount, labels, totalLabel, rowsPerPageOptions }: Props) => React.JSX.Element>;

@@ -1,10 +1,6 @@
 import React, { ReactNode, useCallback, useEffect, useMemo } from 'react'
 import { ColumnDefinition } from './types'
 
-type ColumnVisibility = {
-    label: string
-    visible: boolean
-}
 export const VisibilityContext = React.createContext<{
     columns: ColumnDefinition[]
     hiddenColumn: string[]

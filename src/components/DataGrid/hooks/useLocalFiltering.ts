@@ -59,7 +59,11 @@ export const useLocalFiltering = <R extends RowDefinition = RowDefinition>({
                 return matchFn({
                     comparator: col.filterComparator,
                     filterType: col.filterType ?? FilterType.TEXT,
-                    value: row[key as keyof R],
+                    // `getColumnValue` says where a column's value lives, for filtering as for
+                    // sorting: a computed column — one whose cell is derived rather than read off
+                    // the row — would otherwise be filtered against whatever its key happens to
+                    // name, often nothing, while it sorts by what the reader can see.
+                    value: col.getColumnValue ? col.getColumnValue(row) : row[key as keyof R],
                     valueToMatch: value,
                     row
                 })

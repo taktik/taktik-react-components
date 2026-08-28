@@ -8,7 +8,7 @@ import { Props as PaginationProps } from './Pagination';
 import { PaginationControl } from './hooks/usePagination';
 import { DataGridExpandable } from './Expandable';
 export * from 'react-data-grid';
-export { withDetailRows, withDetailRendering, isDetailRow, detailRowClass, detailAwareRowHeight, clickBelongsToRow, clickExpandsRow, ExpanderToggle, SELECTION_COLUMN_KEY, EXPANDER_COLUMN_KEY } from './Expandable';
+export { withDetailRows, withDetailRendering, isDetailRow, detailRowClass, detailAwareRowHeight, clickBelongsToRow, ExpanderToggle, SELECTION_COLUMN_KEY, EXPANDER_COLUMN_KEY } from './Expandable';
 export type { DataGridExpandable } from './Expandable';
 /**
  * What the row answers to a mouse, for the whole row rather than one cell — a click opening the
@@ -69,6 +69,12 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
      * once, when the drag settles.
      */
     onColumnResize?: (columnKey: string, width: number) => void;
+    /**
+     * Whether rows can be picked at all. Defaults to true, so a grid that hands over
+     * `onSelectedRowsChange` gets its checkbox column as it always has; set it `false` to keep the
+     * handler and drop the column — for a table whose selection is driven from somewhere else, or
+     * one that turns picking off for a reader who may not act on the rows.
+     */
     selectable?: boolean;
     /**
      * Accessible name of the header's select-all checkbox — override it to match the consumer's
@@ -110,6 +116,12 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
         remotePagination?: PaginationProps;
         /** Footer wording ("Rows per page", "of"); applies to local and remote pagination alike. */
         labels?: PaginationProps['labels'];
+        /**
+         * The sizes the footer's dropdown offers. The page size in use is always among them,
+         * whoever chose it — a control rendering a value it has no option for shows BLANK, and the
+         * next pick silently moves the reader to a size they did not ask for.
+         */
+        rowsPerPageOptions?: PaginationProps['rowsPerPageOptions'];
         /**
          * What the table holds, at the footer's LEFT end ("58 devices") — the counterpart of the
          * pager's own "1-25 of 58". It is called with the count the pager is counting, so the two
