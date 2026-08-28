@@ -212,9 +212,25 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
         /**
          * Runs when the user picks the reset item. "Reset column layout" is ONE way back for every
          * stored layout, so a consumer keeping a second one of its own (the widths its columns were
-         * dragged to) clears it from here rather than growing a second menu item beside this one.
+         * dragged to, the order it arranged them in) clears it from here rather than growing a
+         * second menu item beside this one.
          */
         onReset?: () => void
+        /**
+         * Runs when the reader ARRANGES the chooser's rows — dragged by the grip, or moved with
+         * Alt+ArrowUp/ArrowDown — reporting every chooser column in its new order. Top to bottom in
+         * the menu is left to right in the table.
+         *
+         * ⚠ The library reports this one and does not store it: the consumer applies the order to
+         * the `columns` it hands back, which is what makes the table and the menu show it. Passing a
+         * handler is also what puts the gesture in the menu at all.
+         */
+        onColumnOrderChange?: (columnKeys: string[]) => void
+        /**
+         * Already translated by the consumer — the library has no i18n. How a moved column's new
+         * place is announced to a screen reader; without one it is said as "Name 2/7".
+         */
+        reorderAnnouncement?: (column: string, position: number, total: number) => string
     }
     /**
      * Master-detail rows: an open row is followed by one of its own, spanning the grid's width.
@@ -644,6 +660,8 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
         localStorageKey,
         onHiddenColumnsChange,
         onReset,
+        onColumnOrderChange,
+        reorderAnnouncement,
         resetLabel
     } = {},
     ...rest
@@ -656,6 +674,8 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
             localStorageKey={localStorageKey}
             onHiddenColumnsChange={onHiddenColumnsChange}
             onReset={onReset}
+            onColumnOrderChange={onColumnOrderChange}
+            reorderAnnouncement={reorderAnnouncement}
             resetLabel={resetLabel}
             visibilityFeatureDisabledFor={visibilityFeatureDisabledFor}>
             <DataGridBase {...rest} columns={columns} filters={filters} setFilters={setFilters} />

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { VisibilityContext } from './VisibilityProvider'
 import { IconButtonProps } from '@mui/material/IconButton'
 import Menu from '@mui/material/Menu'
@@ -16,7 +16,100 @@ const Container = styled(MenuItem)`
     align-items: center;
     justify-content: flex-start;
     gap: 12px;
+
+    /* the grab area owns the gesture: no scroll-vs-drag arbitration, no 300ms touch delay */
+    touch-action: none;
+
+    &[data-dragging='true'] {
+        opacity: 0.5;
+    }
 `
+
+/**
+ * The grab area, at the row's trailing end so the checkbox keeps the place it has always had. It is
+ * DISCREET, like every other seam in the house: it sits at a low opacity and the cursor is what says
+ * it can be dragged, so the menu reads as the plain list it was until you reach for a row.
+ */
+const Grip = styled.span`
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    padding-left: 16px;
+    color: currentColor;
+    opacity: 0.35;
+    cursor: grab;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+        opacity: 0.7;
+    }
+
+    /* pointer capture holds :active for the whole drag, wherever the pointer goes */
+    &:active {
+        cursor: grabbing;
+        opacity: 1;
+    }
+`
+
+/** Off screen, still read out: where a moved column landed. */
+const LiveRegion = styled.span`
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+`
+
+const GripIcon = () => (
+    <svg width='10' height='16' viewBox='0 0 10 16' aria-hidden='true' focusable='false'>
+        {[3, 8, 13].map((cy) => (
+            <g key={cy}>
+                <circle cx='3' cy={cy} r='1.1' fill='currentColor' />
+                <circle cx='7' cy={cy} r='1.1' fill='currentColor' />
+            </g>
+        ))}
+    </svg>
+)
+
+/** The list with one key taken out of its place and put back at another. */
+const withKeyMoved = (order: string[], from: number, to: number): string[] => {
+    const next = [...order]
+    const [moved] = next.splice(from, 1)
+    next.splice(to, 0, moved)
+    return next
+}
+
+const sameOrder = (a: string[], b: string[]): boolean =>
+    a.length === b.length && a.every((key, index) => key === b[index])
+
+/**
+ * Which row the pointer is over, by the rows' own boxes rather than by a row height — a column whose
+ * name wraps is taller than its neighbours, and a gesture measured in average rows drifts away from
+ * the pointer down a list of them. Above the first row and below the last both clamp to the end they
+ * are past, so a drag that leaves the menu still lands somewhere.
+ */
+const rowUnderPointer = (
+    clientY: number,
+    order: string[],
+    rows: Map<string, HTMLElement>
+): number => {
+    let last = -1
+    for (let index = 0; index < order.length; index++) {
+        const box = rows.get(order[index])?.getBoundingClientRect()
+        if (!box) {
+            continue
+        }
+        if (clientY < box.bottom) {
+            return clientY < box.top && last === -1 ? 0 : index
+        }
+        last = index
+    }
+    return last
+}
 
 /**
  * The eye button in the actions column header — the TRIGGER only.
@@ -46,6 +139,18 @@ export const VisibilityColumnChooser = ({ IconComponent }: Props) => {
  * react-data-grid, whose remount-per-column-set would close it (or, re-anchored per mount, visibly
  * close and reopen it) on every toggle. Anchored to the point the trigger captured, so it holds
  * still while the grid underneath it is rebuilt.
+ *
+ * Its rows are also where the table's columns are ARRANGED, when the consumer keeps an order
+ * (`onColumnOrderChange`): top to bottom here is left to right in the table. The gesture is on the
+ * grip alone, so the checkbox beside it goes on toggling with a plain click, and it runs on pointer
+ * events with pointer capture — the same mechanism the resize handle uses, and for the same reason:
+ * one surface, one finger, no arbitration with the menu's own scrolling. Alt+ArrowUp/ArrowDown on a
+ * focused row is the same move without a pointer.
+ *
+ * ⚠ The order is the CONSUMER's, not the library's: it is reported, applied to the columns handed
+ * back, and only then does the menu settle on it. `preview` is what covers that round trip — the
+ * rows follow the pointer immediately and hold the arrangement until columns arrive saying the same
+ * thing, which is also what keeps them still when nobody applies it.
  */
 export const VisibilityMenu = () => {
     const {
@@ -55,20 +160,55 @@ export const VisibilityMenu = () => {
         chooserAnchor,
         setChooserAnchor,
         resetHiddenColumns,
-        resetLabel
+        resetLabel,
+        reorderColumns,
+        reorderAnnouncement
     } = useContext(VisibilityContext)
+
+    const [preview, setPreview] = useState<string[] | null>(null)
+    const [draggingKey, setDraggingKey] = useState<string | null>(null)
+    const [announcement, setAnnouncement] = useState('')
+
+    const columnKeys = useMemo(() => columns.map((column) => column.key), [columns])
+    const order = preview ?? columnKeys
+    const byKey = useMemo(() => new Map(columns.map((column) => [column.key, column])), [columns])
+    const rows = useRef(new Map<string, HTMLElement>())
+    /** The order the pointer is arranging RIGHT NOW — a drag moves faster than React commits. */
+    const dragOrder = useRef<string[]>([])
+    const dragging = useRef<{ key: string; moved: boolean } | null>(null)
+    /**
+     * A drag ends in a click, and that one must not toggle a column.
+     *
+     * ⚠ It is CLEARED by whichever handler eats it, the grip's as well as the row's — pointer
+     * capture puts that terminal click on the GRIP, whose own handler stops it before the row's
+     * ever runs, so a flag only the row could clear stayed raised and swallowed the next genuine
+     * click on any row in the menu.
+     */
+    const swallowClick = useRef(false)
+
+    // The columns caught up with what was reported: the preview has nothing left to say.
+    useEffect(() => {
+        setPreview((current) => (current && sameOrder(current, columnKeys) ? null : current))
+    }, [columnKeys])
 
     const handleClose = useCallback(() => {
         setChooserAnchor(null)
+        setPreview(null)
+        setAnnouncement('')
     }, [setChooserAnchor])
 
     const handleReset = useCallback(() => {
         resetHiddenColumns()
         setChooserAnchor(null)
+        setPreview(null)
     }, [resetHiddenColumns, setChooserAnchor])
 
     const toggle = useCallback(
         (columnName: string) => () => {
+            if (swallowClick.current) {
+                swallowClick.current = false
+                return
+            }
             const index = hiddenColumn.indexOf(columnName)
             setHiddenColumn(
                 index === -1
@@ -79,25 +219,165 @@ export const VisibilityMenu = () => {
         [hiddenColumn, setHiddenColumn]
     )
 
+    const announce = useCallback(
+        (key: string, next: string[]) => {
+            const name = String(byKey.get(key)?.name ?? key)
+            const position = next.indexOf(key) + 1
+            setAnnouncement(
+                reorderAnnouncement
+                    ? reorderAnnouncement(name, position, next.length)
+                    : `${name} ${position}/${next.length}`
+            )
+        },
+        [byKey, reorderAnnouncement]
+    )
+
+    const startDrag = useCallback(
+        (key: string) => (event: React.PointerEvent<HTMLElement>) => {
+            if (!reorderColumns || event.button !== 0) {
+                return
+            }
+            // the menu must not read the press as a pick, and the browser must not select text
+            event.preventDefault()
+            event.stopPropagation()
+            event.currentTarget.setPointerCapture(event.pointerId)
+            swallowClick.current = false
+            dragOrder.current = order
+            dragging.current = { key, moved: false }
+            setDraggingKey(key)
+        },
+        [order, reorderColumns]
+    )
+
+    const onDragMove = useCallback((event: React.PointerEvent<HTMLElement>) => {
+        const drag = dragging.current
+        if (!drag) {
+            return
+        }
+        const from = dragOrder.current.indexOf(drag.key)
+        const to = rowUnderPointer(event.clientY, dragOrder.current, rows.current)
+        if (from === -1 || to === -1 || to === from) {
+            return
+        }
+        drag.moved = true
+        dragOrder.current = withKeyMoved(dragOrder.current, from, to)
+        setPreview(dragOrder.current)
+    }, [])
+
+    const endDrag = useCallback(() => {
+        const drag = dragging.current
+        if (!drag) {
+            return
+        }
+        dragging.current = null
+        setDraggingKey(null)
+        if (drag.moved) {
+            swallowClick.current = true
+            reorderColumns?.(dragOrder.current)
+            announce(drag.key, dragOrder.current)
+        }
+    }, [announce, reorderColumns])
+
+    /**
+     * The same move without a pointer. ⚠ The event is stopped before it reaches MUI's `MenuList`,
+     * which reads ArrowUp/ArrowDown as "move the focus" and does not look at the modifier — so
+     * without this the row would move AND the focus would step off it.
+     */
+    const onRowKeyDown = useCallback(
+        (key: string) => (event: React.KeyboardEvent<HTMLElement>) => {
+            if (!reorderColumns || !event.altKey) {
+                return
+            }
+            const delta = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0
+            if (!delta) {
+                return
+            }
+            event.preventDefault()
+            event.stopPropagation()
+            const from = order.indexOf(key)
+            const to = from + delta
+            if (from === -1 || to < 0 || to >= order.length) {
+                return
+            }
+            const next = withKeyMoved(order, from, to)
+            dragOrder.current = next
+            setPreview(next)
+            reorderColumns(next)
+            announce(key, next)
+        },
+        [announce, order, reorderColumns]
+    )
+
+    const setRow = useCallback(
+        (key: string) => (element: HTMLElement | null) => {
+            if (element) {
+                rows.current.set(key, element)
+            } else {
+                rows.current.delete(key)
+            }
+        },
+        []
+    )
+
     return (
-        <Menu
-            id='column-visibility-menu'
-            anchorReference='anchorPosition'
-            anchorPosition={chooserAnchor ?? undefined}
-            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-            open={chooserAnchor !== null}
-            onClose={handleClose}>
-            {columns.map((column) => (
-                <Container key={column.key} onClick={toggle(column.key)}>
-                    <DataGridCheckbox checked={!hiddenColumn.includes(column.key)} />
-                    {column.name}
-                </Container>
-            ))}
-            {/* The way back, next to the control that broke the layout. It closes the menu, unlike
+        <>
+            <Menu
+                id='column-visibility-menu'
+                anchorReference='anchorPosition'
+                anchorPosition={chooserAnchor ?? undefined}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                open={chooserAnchor !== null}
+                onClose={handleClose}>
+                {order.map((key) => {
+                    const column = byKey.get(key)
+                    return column ? (
+                        <Container
+                            key={key}
+                            ref={setRow(key)}
+                            data-dragging={draggingKey === key}
+                            aria-keyshortcuts={
+                                reorderColumns ? 'Alt+ArrowUp Alt+ArrowDown' : undefined
+                            }
+                            onKeyDown={onRowKeyDown(key)}
+                            onClick={toggle(key)}>
+                            <DataGridCheckbox checked={!hiddenColumn.includes(key)} />
+                            {column.name}
+                            {reorderColumns && (
+                                <Grip
+                                    aria-hidden='true'
+                                    onPointerDown={startDrag(key)}
+                                    onPointerMove={onDragMove}
+                                    onPointerUp={endDrag}
+                                    onPointerCancel={endDrag}
+                                    // Pointer capture puts a drag's terminal click HERE, and a press
+                                    // on the grip is never a toggle either way — so this is where
+                                    // that click is eaten, and where the flag it raised is put down.
+                                    onClick={(event) => {
+                                        event.stopPropagation()
+                                        swallowClick.current = false
+                                    }}>
+                                    <GripIcon />
+                                </Grip>
+                            )}
+                        </Container>
+                    ) : null
+                })}
+                {/* The way back, next to the control that broke the layout. It closes the menu, unlike
                 a toggle: the reader is done, and leaving it open over columns that all just moved
                 reads as though nothing happened. */}
-            {resetLabel && <Divider />}
-            {resetLabel && <MenuItem onClick={handleReset}>{resetLabel}</MenuItem>}
-        </Menu>
+                {resetLabel && <Divider />}
+                {resetLabel && <MenuItem onClick={handleReset}>{resetLabel}</MenuItem>}
+            </Menu>
+            {/* Outside the Menu on purpose: it is a `MenuList`, which walks its children looking for
+                the item to focus, and a bare span among them is not one. It lives exactly as long as
+                the menu does — mounted EMPTY when the menu opens, which is what a live region needs
+                to announce at all, and gone when it closes, so a grid does not stand permanently in
+                the document holding a second empty `role="status"` beside whatever else it draws. */}
+            {chooserAnchor !== null && (
+                <LiveRegion role='status' aria-live='polite'>
+                    {announcement}
+                </LiveRegion>
+            )}
+        </>
     )
 }
