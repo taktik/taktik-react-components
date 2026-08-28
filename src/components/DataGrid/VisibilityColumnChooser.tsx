@@ -155,11 +155,11 @@ export const VisibilityColumnChooser = ({ IconComponent }: Props) => {
  * still while the grid underneath it is rebuilt.
  *
  * Its rows are also where the table's columns are ARRANGED, when the consumer keeps an order
- * (`onColumnOrderChange`): top to bottom here is left to right in the table. The gesture is on the
- * grip alone, so the checkbox beside it goes on toggling with a plain click, and it runs on pointer
- * events with pointer capture — the same mechanism the resize handle uses, and for the same reason:
- * one surface, one finger, no arbitration with the menu's own scrolling. Alt+ArrowUp/ArrowDown on a
- * focused row is the same move without a pointer.
+ * (`onColumnOrderChange`): top to bottom here is left to right in the table. The gesture STARTS on
+ * the grip alone, so the checkbox beside it goes on toggling with a plain click, and it is DELIVERED
+ * through window pointer listeners for the reason the effect below states — the rows the drag
+ * reorders are the very nodes React moves, and a moved node drops its pointer capture.
+ * Alt+ArrowUp/ArrowDown on a focused row is the same move without a pointer.
  *
  * ⚠ The order is the CONSUMER's, not the library's: it is reported, applied to the columns handed
  * back, and only then does the menu settle on it. `preview` is what covers that round trip — the
@@ -189,7 +189,12 @@ export const VisibilityMenu = () => {
     const rows = useRef(new Map<string, HTMLElement>())
     /** The order the pointer is arranging RIGHT NOW — a drag moves faster than React commits. */
     const dragOrder = useRef<string[]>([])
-    const dragging = useRef<{ key: string; moved: boolean } | null>(null)
+    const dragging = useRef<{
+        key: string
+        moved: boolean
+        pointerId: number
+        grip: HTMLElement
+    } | null>(null)
     /**
      * A drag ends in a click, and that one must not toggle a column.
      *
@@ -257,26 +262,16 @@ export const VisibilityMenu = () => {
             event.currentTarget.setPointerCapture(event.pointerId)
             swallowClick.current = false
             dragOrder.current = order
-            dragging.current = { key, moved: false }
+            dragging.current = {
+                key,
+                moved: false,
+                pointerId: event.pointerId,
+                grip: event.currentTarget
+            }
             setDraggingKey(key)
         },
         [order, reorderColumns]
     )
-
-    const onDragMove = useCallback((event: React.PointerEvent<HTMLElement>) => {
-        const drag = dragging.current
-        if (!drag) {
-            return
-        }
-        const from = dragOrder.current.indexOf(drag.key)
-        const to = rowUnderPointer(event.clientY, dragOrder.current, rows.current)
-        if (from === -1 || to === -1 || to === from) {
-            return
-        }
-        drag.moved = true
-        dragOrder.current = withKeyMoved(dragOrder.current, from, to)
-        setPreview(dragOrder.current)
-    }, [])
 
     const endDrag = useCallback(() => {
         const drag = dragging.current
@@ -291,6 +286,56 @@ export const VisibilityMenu = () => {
             announce(drag.key, dragOrder.current)
         }
     }, [announce, reorderColumns])
+
+    /**
+     * The drag is DELIVERED through the window, not through the grip's own handlers.
+     *
+     * ⚠ Reordering the keyed rows makes React physically MOVE a row's DOM node, and a moved node
+     * loses its pointer capture — whether the dragged row or its neighbours move depends on the
+     * direction and on how many rows one pointer event crosses, which is why a grip-delivered drag
+     * froze only on fast or far movements. Window listeners see the pointer whatever happens to the
+     * grip; the capture is still taken, and RE-TAKEN after each move it survives being lost, because
+     * capture is what keeps events flowing when the pointer leaves the browser window itself.
+     */
+    useEffect(() => {
+        if (!draggingKey) {
+            return undefined
+        }
+        const onMove = (event: PointerEvent) => {
+            const drag = dragging.current
+            if (!drag || event.pointerId !== drag.pointerId) {
+                return
+            }
+            if (drag.grip.isConnected && !drag.grip.hasPointerCapture(drag.pointerId)) {
+                try {
+                    drag.grip.setPointerCapture(drag.pointerId)
+                } catch {
+                    // a pointer already released refuses capture; window delivery still stands
+                }
+            }
+            const from = dragOrder.current.indexOf(drag.key)
+            const to = rowUnderPointer(event.clientY, dragOrder.current, rows.current)
+            if (from === -1 || to === -1 || to === from) {
+                return
+            }
+            drag.moved = true
+            dragOrder.current = withKeyMoved(dragOrder.current, from, to)
+            setPreview(dragOrder.current)
+        }
+        const onEnd = (event: PointerEvent) => {
+            if (event.pointerId === dragging.current?.pointerId) {
+                endDrag()
+            }
+        }
+        window.addEventListener('pointermove', onMove)
+        window.addEventListener('pointerup', onEnd)
+        window.addEventListener('pointercancel', onEnd)
+        return () => {
+            window.removeEventListener('pointermove', onMove)
+            window.removeEventListener('pointerup', onEnd)
+            window.removeEventListener('pointercancel', onEnd)
+        }
+    }, [draggingKey, endDrag])
 
     /**
      * The same move without a pointer. ⚠ The event is stopped before it reaches MUI's `MenuList`,
@@ -360,9 +405,6 @@ export const VisibilityMenu = () => {
                                 <Grip
                                     aria-hidden='true'
                                     onPointerDown={startDrag(key)}
-                                    onPointerMove={onDragMove}
-                                    onPointerUp={endDrag}
-                                    onPointerCancel={endDrag}
                                     // Pointer capture puts a drag's terminal click HERE, and a press
                                     // on the grip is never a toggle either way — so this is where
                                     // that click is eaten, and where the flag it raised is put down.

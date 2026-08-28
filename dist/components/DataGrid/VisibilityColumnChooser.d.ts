@@ -20,11 +20,11 @@ export declare const VisibilityColumnChooser: ({ IconComponent }: Props) => Reac
  * still while the grid underneath it is rebuilt.
  *
  * Its rows are also where the table's columns are ARRANGED, when the consumer keeps an order
- * (`onColumnOrderChange`): top to bottom here is left to right in the table. The gesture is on the
- * grip alone, so the checkbox beside it goes on toggling with a plain click, and it runs on pointer
- * events with pointer capture — the same mechanism the resize handle uses, and for the same reason:
- * one surface, one finger, no arbitration with the menu's own scrolling. Alt+ArrowUp/ArrowDown on a
- * focused row is the same move without a pointer.
+ * (`onColumnOrderChange`): top to bottom here is left to right in the table. The gesture STARTS on
+ * the grip alone, so the checkbox beside it goes on toggling with a plain click, and it is DELIVERED
+ * through window pointer listeners for the reason the effect below states — the rows the drag
+ * reorders are the very nodes React moves, and a moved node drops its pointer capture.
+ * Alt+ArrowUp/ArrowDown on a focused row is the same move without a pointer.
  *
  * ⚠ The order is the CONSUMER's, not the library's: it is reported, applied to the columns handed
  * back, and only then does the menu settle on it. `preview` is what covers that round trip — the
