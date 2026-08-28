@@ -47,6 +47,35 @@ export const VisibilityContext = React.createContext<{
 
 const LOCAL_STORAGE_HIDDEN_COLUMN_KEY = 'data-grid-hidden-column-visibility'
 
+/**
+ * The stored set, or `null` when there is nothing usable under the key.
+ *
+ * Nothing here may throw: the value is PERSISTENT and this runs in an effect, so a half-written
+ * entry — or a `localStorage` that refuses to be read at all, which is what a partitioned-storage
+ * context does — would take the grid down on every visit until someone cleared site data.
+ */
+const readStoredHiddenColumns = (key: string): string[] | null => {
+    try {
+        const stored = localStorage.getItem(key)
+        if (!stored) {
+            return null
+        }
+        const parsed = JSON.parse(stored)
+        return Array.isArray(parsed) ? parsed : null
+    } catch {
+        return null
+    }
+}
+
+/** Storage that refuses the write — Safari private mode, a full quota — costs the grid nothing. */
+const writeStoredHiddenColumns = (key: string, columns: string[]) => {
+    try {
+        localStorage.setItem(key, JSON.stringify(columns))
+    } catch {
+        // The chosen set still applies for this session; it just does not survive the visit.
+    }
+}
+
 export const VisibilityProvider = ({
     columns,
     children,
@@ -95,7 +124,7 @@ export const VisibilityProvider = ({
      */
     const setHiddenColumnAndPersist = useCallback(
         (columns: string[]) => {
-            localStorage.setItem(localStorageKey, JSON.stringify(columns))
+            writeStoredHiddenColumns(localStorageKey, columns)
             setGridKey((prev) => prev + 1)
             setHiddenColumn(columns)
         },
@@ -115,14 +144,9 @@ export const VisibilityProvider = ({
     )
 
     useEffect(() => {
-        const storedHiddenColumns = localStorage.getItem(localStorageKey)
-        if (storedHiddenColumns) {
-            const parsed = JSON.parse(storedHiddenColumns)
-            setHiddenColumnAndPersist(Array.isArray(parsed) ? parsed : []) // clean if not good format
-        } else {
-            // first time
-            setHiddenColumnAndPersist(defaultHiddenColumns)
-        }
+        // Nothing stored, or nothing usable stored: the grid opens on its defaults, and persisting
+        // them puts the key back in a shape the next visit can read.
+        setHiddenColumnAndPersist(readStoredHiddenColumns(localStorageKey) ?? defaultHiddenColumns)
     }, [localStorageKey, defaultHiddenColumns, setHiddenColumnAndPersist])
 
     /**

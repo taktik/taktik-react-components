@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo } from 'react'
+import React, { useCallback, useContext } from 'react'
 import { renderHeaderCell, RenderHeaderCellProps } from 'react-data-grid'
 import { ColumnDefinition, FilterType, RowDefinition } from './types'
 import Box from '@mui/material/Box'
@@ -26,55 +26,72 @@ const Base = <R extends RowDefinition = RowDefinition>({ children, ...props }: B
     </Container>
 )
 
-export const getHeaderFilter =
-    <R extends RowDefinition = RowDefinition>(col: ColumnDefinition<R>) =>
-    (props: RenderHeaderCellProps<R>) => {
-        const { filters, setFilters } = useContext(FilterContext)
-        const value = useMemo(() => filters[col.key], [filters, col])
-        const onChange = useCallback(
-            (value: unknown) => {
-                setFilters({ ...filters, [col.key]: value })
-            },
-            [col]
-        )
+type FilterHeaderProps<R extends RowDefinition = RowDefinition> = RenderHeaderCellProps<R> & {
+    col: ColumnDefinition<R>
+}
 
-        if (!col.filterEnabled) {
-            return <Base<R> {...props} />
-        }
-        if (
-            col.filterType === FilterType.AUTOCOMPLETE &&
-            (value === undefined || typeof value === 'string')
-        ) {
-            return (
-                <Base<R> {...props}>
-                    <Autocomplete
-                        options={col.filterOptions ?? []}
-                        onChange={onChange}
-                        value={value}
-                        renderInput={col.renderFilterInput}
-                    />
-                </Base>
-            )
-        }
+/**
+ * A real component on purpose, and it has to stay one.
+ *
+ * It re-reads the filter context on every change, which is what lets a filter typed into one column
+ * keep the ones already set on the others. And react-data-grid calls `renderHeaderCell` as a plain
+ * function from inside its own render body, so hooks written there would ride the header cell's
+ * fiber rather than one of their own — legal only for as long as rdg keeps calling it exactly there.
+ */
+const FilterHeader = <R extends RowDefinition = RowDefinition>({
+    col,
+    ...props
+}: FilterHeaderProps<R>) => {
+    const { filters, setFilters } = useContext(FilterContext)
+    const value = filters[col.key]
+    const onChange = useCallback(
+        (value: unknown) => {
+            setFilters({ ...filters, [col.key]: value })
+        },
+        [col.key, filters, setFilters]
+    )
+
+    if (!col.filterEnabled) {
+        return <Base<R> {...props} />
+    }
+    if (
+        col.filterType === FilterType.AUTOCOMPLETE &&
+        (value === undefined || typeof value === 'string')
+    ) {
         return (
             <Base<R> {...props}>
-                {col.renderFilterInput ? (
-                    col.renderFilterInput({
-                        onChange: (e) => onChange(e.target.value),
-                        value: value ?? '',
-                        autoComplete: 'off',
-                        onClick: stopPropagation,
-                        onKeyDown: stopPropagation
-                    })
-                ) : (
-                    <Input
-                        autoComplete={'off'}
-                        onClick={stopPropagation}
-                        onKeyDown={stopPropagation}
-                        value={value ?? ''}
-                        onChange={(e) => onChange(e.target.value)}
-                    />
-                )}
+                <Autocomplete
+                    options={col.filterOptions ?? []}
+                    onChange={onChange}
+                    value={value}
+                    renderInput={col.renderFilterInput}
+                />
             </Base>
         )
     }
+    return (
+        <Base<R> {...props}>
+            {col.renderFilterInput ? (
+                col.renderFilterInput({
+                    onChange: (e) => onChange(e.target.value),
+                    value: value ?? '',
+                    autoComplete: 'off',
+                    onClick: stopPropagation,
+                    onKeyDown: stopPropagation
+                })
+            ) : (
+                <Input
+                    autoComplete={'off'}
+                    onClick={stopPropagation}
+                    onKeyDown={stopPropagation}
+                    value={value ?? ''}
+                    onChange={(e) => onChange(e.target.value)}
+                />
+            )}
+        </Base>
+    )
+}
+
+export const getHeaderFilter =
+    <R extends RowDefinition = RowDefinition>(col: ColumnDefinition<R>) =>
+    (props: RenderHeaderCellProps<R>) => <FilterHeader<R> col={col} {...props} />

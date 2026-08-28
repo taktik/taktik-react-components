@@ -79,6 +79,11 @@ export const useLocalSorting = <R extends RowDefinition = RowDefinition>({
     /** The sort the ROWS are put in: the consumer's where it holds one, this hook's own otherwise. */
     const ordering = controlledSortColumns ?? sortColumns
 
+    /**
+     * `columns` is a dependency because it CARRIES the comparators (`sortComparator`,
+     * `getColumnValue`): a column set rebuilt around data that arrives after first paint — a name
+     * lookup, a translation map — has to re-order the rows, not keep the order the empty one gave.
+     */
     const sortedRows = useMemo(() => {
         if (!enabled || ordering.length === 0) return rows
         return [...rows].sort((a, b) => {
@@ -97,7 +102,7 @@ export const useLocalSorting = <R extends RowDefinition = RowDefinition>({
             }
             return 0
         })
-    }, [rows, ordering, enabled])
+    }, [rows, ordering, enabled, columns])
 
     const setSortedColumnsFn = useCallback((sort: SortColumn[]) => {
         if (sort.length !== 0) {
