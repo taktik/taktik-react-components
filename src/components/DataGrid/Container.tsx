@@ -162,8 +162,8 @@ export const Container = styled.div<{ $pagination?: boolean }>`
         }
     }
 
-    /* The gradient rdg paints beside each pinned column is shown deliberately — a provisional
-       design choice, history in flowr's admin-migration doc 25. Restyling it has no API either:
+    /* The gradient rdg paints beside each pinned column is shown deliberately, and provisionally.
+       Restyling it has no API either:
        the shadow elements carry no stable class, custom property or prop (upstream PR #3969), and
        the only handle is their shape — the sole children of .rdg with neither a role nor a
        measuring key — ⚠ the one selector here written against rdg's DOM rather than against a

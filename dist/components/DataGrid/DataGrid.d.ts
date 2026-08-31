@@ -53,7 +53,13 @@ export interface DataGridRenderRowProps<Row> extends RenderRowProps<Row> {
 export type DataGridRenderers<Row> = Omit<Renderers<Row, unknown>, 'renderRow'> & {
     renderRow?: (key: Key, props: DataGridRenderRowProps<Row>) => ReactNode;
 };
-export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib<Row>, 'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange' | 'onColumnResize' | 'renderers'> & {
+/**
+ * ⚠ `onColumnsReorder` is omitted deliberately: react-data-grid's own drag-a-header reorder is NOT
+ * supported here. Column order is the column chooser's, reported as an array of keys
+ * (`visibilityColumnFeature.onColumnOrderChange`) — two vocabularies for one idea, and letting both
+ * through would mean two gestures writing an order neither knows about.
+ */
+export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib<Row>, 'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange' | 'onColumnResize' | 'onColumnsReorder' | 'renderers'> & {
     /** See {@link DataGridRenderRowProps} for what `renderRow` is handed on top of the library's own props. */
     renderers?: DataGridRenderers<Row>;
     /**
@@ -81,6 +87,10 @@ export type DataGridProps<Row extends RowDefinition> = Omit<DataGridPropsFromLib
      * language, or to say what is being selected ("Select all devices").
      */
     selectAllLabel?: string;
+    /**
+     * The order a grid that holds its own sort opens on, and comes back to: its header cycles
+     * ascending → descending → this, so the third click is the way back rather than a dead end.
+     */
     defaultSortColumns?: SortColumn[];
     /**
      * Whether the GRID orders the rows — a different question from where the sort VALUE lives, and

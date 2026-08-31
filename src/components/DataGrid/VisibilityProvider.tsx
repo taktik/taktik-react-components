@@ -100,6 +100,12 @@ export const VisibilityProvider = ({
      * library does not store this one: the consumer applies the reported order to the columns it
      * hands back, which is what closes the loop and what makes the menu show the arrangement.
      * Passing it is what puts the reorder gesture in the menu.
+     *
+     * ⚠ **Merge it, do not replace with it.** The keys reported are the ones the CHOOSER shows —
+     * a column it never offers (an actions column pinned to the edge) is not among them, and one
+     * added to the grid later is not either. A consumer that rebuilt its array from this list alone
+     * would drop the first and exile the second; the order is a preference laid OVER the array the
+     * page declared, so a key it does not mention keeps the slot the page gave it.
      */
     onColumnOrderChange?: (columnKeys: string[]) => void
     /** Already translated; how a moved column's new place is said out loud. */

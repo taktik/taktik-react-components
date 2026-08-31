@@ -26,5 +26,5 @@ export declare const useLocalSorting: <R extends RowDefinition = {
 }) => {
     sortedRows: R[];
     sortColumns: SortColumn[];
-    setSortedColumns: (sort: SortColumn[]) => void;
+    setSortedColumns: (next: SortColumn[]) => void;
 };
