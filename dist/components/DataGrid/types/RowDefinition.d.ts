@@ -1,3 +1,3 @@
-export type RowDefinition<Row = {}> = Row & {
+export type RowDefinition<Row = unknown> = Row & {
     id: string;
 };

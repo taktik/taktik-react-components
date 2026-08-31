@@ -11,11 +11,9 @@ export const FilterContext = React.createContext<{
 })
 
 /**
- *
- * @param children
- * @param filtersProp
- * @param setFiltersProp, if provided, remote filtering
- * @constructor
+ * Holds the header filters. Uncontrolled by default; passing `setFilters` hands ownership to the
+ * consumer, and `filters` becomes the only source the grid reads — which is how a remotely filtered
+ * grid keeps its filter state next to the query that uses it.
  */
 export const FilterProvider = ({
     children,

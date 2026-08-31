@@ -29,7 +29,6 @@ export interface DataGridExpandable<Row extends RowDefinition> {
         collapse: string;
     };
 }
-export declare const detailRowFor: <Row extends RowDefinition>(row: Row) => Row;
 export declare const detailParent: <Row extends RowDefinition>(row: Row) => Row | undefined;
 export declare const isDetailRow: <Row extends RowDefinition>(row: Row) => boolean;
 /** Each open row followed by its detail. Parents keep the order they arrived in. */

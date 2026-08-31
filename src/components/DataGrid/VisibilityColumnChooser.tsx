@@ -187,6 +187,7 @@ export const VisibilityMenu = () => {
     const order = preview ?? columnKeys
     const byKey = useMemo(() => new Map(columns.map((column) => [column.key, column])), [columns])
     const rows = useRef(new Map<string, HTMLElement>())
+    const rowRefs = useRef(new Map<string, (element: HTMLElement | null) => void>())
     /** The order the pointer is arranging RIGHT NOW — a drag moves faster than React commits. */
     const dragOrder = useRef<string[]>([])
     const dragging = useRef<{
@@ -276,21 +277,25 @@ export const VisibilityMenu = () => {
              * ANYWHERE: on the grip while capture held, on whatever row slid under the pointer, or
              * outside the menu entirely when the drag ended past its edge, in which case it lands on
              * nothing of ours at all. So no handler of ours can be trusted to see it: it is eaten at
-             * the WINDOW, capture phase, and the suppressor is disarmed by the next pointerdown —
-             * the terminal click is the only click that can ever arrive without a fresh pointerdown
-             * of its own before it (a sticky flag cleared by our handlers ate the NEXT genuine
-             * toggle whenever the terminal click missed them).
+             * the WINDOW, capture phase, and the suppressor is disarmed by the next input the reader
+             * gives — the terminal click is the only click that can ever arrive without one of its
+             * own before it (a sticky flag cleared by our handlers ate the NEXT genuine toggle
+             * whenever the terminal click missed them). The keydown counts too: Enter or Space on a
+             * focused row dispatches a click with no pointerdown at all, and the reader must not
+             * lose that activation to a suppressor still waiting for a pointer.
              */
             disarmSuppressor.current?.()
             const suppress = (event: MouseEvent) => event.stopPropagation()
             const disarm = () => {
                 window.removeEventListener('click', suppress, true)
                 window.removeEventListener('pointerdown', disarm, true)
+                window.removeEventListener('keydown', disarm, true)
                 disarmSuppressor.current = null
             }
             disarmSuppressor.current = disarm
             window.addEventListener('click', suppress, true)
             window.addEventListener('pointerdown', disarm, true)
+            window.addEventListener('keydown', disarm, true)
         }
     }, [announce, reorderColumns])
 
@@ -377,16 +382,25 @@ export const VisibilityMenu = () => {
         [announce, order, reorderColumns]
     )
 
-    const setRow = useCallback(
-        (key: string) => (element: HTMLElement | null) => {
+    /**
+     * One ref callback per key, kept for as long as the menu lives: a fresh function makes React
+     * detach and re-attach every row on every commit, and a drag commits once per frame.
+     */
+    const setRow = useCallback((key: string) => {
+        const known = rowRefs.current.get(key)
+        if (known) {
+            return known
+        }
+        const attach = (element: HTMLElement | null): void => {
             if (element) {
                 rows.current.set(key, element)
             } else {
                 rows.current.delete(key)
             }
-        },
-        []
-    )
+        }
+        rowRefs.current.set(key, attach)
+        return attach
+    }, [])
 
     return (
         <>

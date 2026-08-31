@@ -21,4 +21,4 @@ export type Props = {
      */
     rowsPerPageOptions?: number[];
 };
-export declare const Pagination: React.MemoExoticComponent<({ currentPage, setCurrentPage, setPageSize, pageSize, totalCount, labels, totalLabel, rowsPerPageOptions }: Props) => React.JSX.Element>;
+export declare const Pagination: ({ currentPage, setCurrentPage, setPageSize, pageSize, totalCount, labels, totalLabel, rowsPerPageOptions }: Props) => React.JSX.Element;
