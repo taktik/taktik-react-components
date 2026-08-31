@@ -9,31 +9,29 @@ import { taktikTheme } from '../theme'
  * nothing sees what it always did.
  */
 export const Input = styled(TextField)`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  color: var(--rdg-color, ${taktikTheme.gray800});
-  padding: 0 !important;
-
-  .MuiInputBase-root {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: var(--rdg-color, ${taktikTheme.gray800});
     padding: 0 !important;
-  }
 
-  & input {
-    padding: 0.5rem !important;
-    border: solid 1px var(--rdg-border-color, ${taktikTheme.gray400});
-    border-radius: 4px;
-    color: var(--rdg-color, ${taktikTheme.gray800});
-  }
+    .MuiInputBase-root {
+        padding: 0 !important;
+    }
 
-  & label,
-  & label.Mui-focused {
-    color: var(--rdg-color, ${taktikTheme.gray800});
-  }
+    & input {
+        padding: 0.5rem !important;
+        border: solid 1px var(--rdg-border-color, ${taktikTheme.gray400});
+        border-radius: 4px;
+        color: var(--rdg-color, ${taktikTheme.gray800});
+    }
 
-  fieldset {
-    display: none;
-  }
+    & label,
+    & label.Mui-focused {
+        color: var(--rdg-color, ${taktikTheme.gray800});
+    }
 
-}
+    fieldset {
+        display: none;
+    }
 `

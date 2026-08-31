@@ -39,8 +39,11 @@ export interface DataGridExpandable<Row extends RowDefinition> {
     labels: { expand: string; collapse: string }
 }
 
-export const detailRowFor = <Row extends RowDefinition>(row: Row): Row =>
-    ({ id: `rdg-detail:${row.id}`, [DETAIL_PARENT]: row }) as unknown as Row
+/** Start of a detail row's own id; {@link withDetailRows} extends it until no real row wears it. */
+const DETAIL_ID_PREFIX = 'rdg-detail:'
+
+const detailRowFor = <Row extends RowDefinition>(row: Row, idPrefix: string): Row =>
+    ({ id: `${idPrefix}${row.id}`, [DETAIL_PARENT]: row }) as unknown as Row
 
 export const detailParent = <Row extends RowDefinition>(row: Row): Row | undefined =>
     (row as Row & { [DETAIL_PARENT]?: Row })[DETAIL_PARENT]
@@ -57,7 +60,12 @@ export const withDetailRows = <Row extends RowDefinition>(
         return rows
     }
     const open = new Set(expandedIds)
-    return rows.flatMap((row) => (open.has(row.id) ? [row, detailRowFor(row)] : [row]))
+    // a synthetic id a real row already carries would give the grid two rows under one key
+    let idPrefix = DETAIL_ID_PREFIX
+    while (rows.some((row) => row.id.startsWith(idPrefix))) {
+        idPrefix += '-'
+    }
+    return rows.flatMap((row) => (open.has(row.id) ? [row, detailRowFor(row, idPrefix)] : [row]))
 }
 
 const ToggleButton = styled.button<{ $open: boolean }>`

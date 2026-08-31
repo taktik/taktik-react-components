@@ -45,7 +45,7 @@ export const useLocalFiltering = <R extends RowDefinition = RowDefinition>({
         if (!enabled) {
             return rows
         }
-        return [...rows].filter((row) =>
+        return rows.filter((row) =>
             Object.entries(filters).every(([key, value]) => {
                 if (value === undefined || (typeof value === 'string' && value === '')) {
                     // if not defined => no filtered by this field

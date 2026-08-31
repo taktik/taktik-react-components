@@ -1,5 +1,5 @@
 export interface ITheme {
-    mainToolBarColor: 'hsl(214, 74%, 17%)'
+    mainToolBarColor: string
     /* Gray */
     gray900: string
     gray800: string
