@@ -113,9 +113,21 @@ export type DataGridRenderers<Row> = Omit<Renderers<Row, unknown>, 'renderRow'> 
     renderRow?: (key: Key, props: DataGridRenderRowProps<Row>) => ReactNode
 }
 
+/**
+ * ⚠ `onColumnsReorder` is omitted deliberately: react-data-grid's own drag-a-header reorder is NOT
+ * supported here. Column order is the column chooser's, reported as an array of keys
+ * (`visibilityColumnFeature.onColumnOrderChange`) — two vocabularies for one idea, and letting both
+ * through would mean two gestures writing an order neither knows about.
+ */
 export type DataGridProps<Row extends RowDefinition> = Omit<
     DataGridPropsFromLib<Row>,
-    'columns' | 'rows' | 'selectedRows' | 'onSelectedRowsChange' | 'onColumnResize' | 'renderers'
+    | 'columns'
+    | 'rows'
+    | 'selectedRows'
+    | 'onSelectedRowsChange'
+    | 'onColumnResize'
+    | 'onColumnsReorder'
+    | 'renderers'
 > & {
     /** See {@link DataGridRenderRowProps} for what `renderRow` is handed on top of the library's own props. */
     renderers?: DataGridRenderers<Row>
@@ -144,6 +156,10 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
      * language, or to say what is being selected ("Select all devices").
      */
     selectAllLabel?: string
+    /**
+     * The order a grid that holds its own sort opens on, and comes back to: its header cycles
+     * ascending → descending → this, so the third click is the way back rather than a dead end.
+     */
     defaultSortColumns?: SortColumn[]
     /**
      * Whether the GRID orders the rows — a different question from where the sort VALUE lives, and
@@ -366,6 +382,10 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     // the added/removed columns' width. Remount the grid whenever the column set changes —
     // the same idiom the visibility feature uses through gridKey.
     //
+    // ⚠ This clears rdg's OWN cache and nothing else. The stale measurements a CONSUMER stores and
+    // hands back survive a remount and would be re-applied to the fresh grid, which is what the
+    // measured-width reset further down drops. Neither replaces the other: one owner each.
+    //
     // ⚠ WHICH columns, not in which order: the keys are sorted before they are joined. rdg holds
     // its measured widths BY KEY, so a reorder leaves every one of them right and needs no fresh
     // measurement — and an order-sensitive key would throw the grid away and rebuild it on each
@@ -463,6 +483,10 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
      * up wider or narrower than its container by exactly the columns that came or went. Dropping the
      * measurements and keeping only what the user DRAGGED is what asks for a fresh measurement;
      * a dragged width is the user's answer and survives.
+     *
+     * ⚠ The remount above is the other half and covers the other owner: it throws away the cache
+     * rdg keeps internally, while this drops the copy the CONSUMER stores. A grid remounted around a
+     * width map still holding measurements would simply be handed them again.
      */
     const measuredFor = useRef(columnsKey)
     useLayoutEffect(() => {

@@ -1,5 +1,5 @@
 import { ColumnDefinition, ColumnType, RowDefinition } from '../types'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { SortColumn } from 'react-data-grid'
 
 export type Comparator<R = RowDefinition> = (a: R, b: R) => number
@@ -83,7 +83,23 @@ export const useLocalSorting = <R extends RowDefinition = RowDefinition>({
     /** Whether the grid orders the rows at all — off for a grid whose rows arrive already ordered. */
     enabled?: boolean
 }) => {
-    const [sortColumns, setSortedColumns] = useState<SortColumn[]>(defaultSortColumns ?? [])
+    const [sortColumns, setSorted] = useState<SortColumn[]>(defaultSortColumns ?? [])
+
+    /**
+     * The order the page opened on, read through a ref: a consumer usually writes it inline, and the
+     * setter below would otherwise change identity on every render.
+     */
+    const openingOrder = useRef(defaultSortColumns)
+    openingOrder.current = defaultSortColumns
+
+    /**
+     * ⚠ An EMPTY array is react-data-grid reporting the third click on a header, and the rows go
+     * back to the order the page opened on — ascending → descending → the page's own order, the
+     * same third state a consumer holding its own sort reaches by clearing its value.
+     */
+    const setSortedColumns = useCallback((next: SortColumn[]): void => {
+        setSorted(next.length ? next : (openingOrder.current ?? []))
+    }, [])
     /** The sort the ROWS are put in: the consumer's where it holds one, this hook's own otherwise. */
     const ordering = controlledSortColumns ?? sortColumns
 
@@ -130,27 +146,9 @@ export const useLocalSorting = <R extends RowDefinition = RowDefinition>({
         })
     }, [rows, stableOrdering, enabled, columns])
 
-    const setSortedColumnsFn = useCallback((sort: SortColumn[]) => {
-        if (sort.length !== 0) {
-            setSortedColumns(sort)
-        } else {
-            setSortedColumns((prev) => {
-                if (prev.length === 1) {
-                    return [
-                        {
-                            columnKey: prev[0].columnKey,
-                            direction: prev[0].direction === 'ASC' ? 'DESC' : 'ASC'
-                        }
-                    ]
-                }
-                return prev
-            })
-        }
-    }, [])
-
     return {
         sortedRows,
         sortColumns,
-        setSortedColumns: setSortedColumnsFn
+        setSortedColumns
     }
 }

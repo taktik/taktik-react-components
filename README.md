@@ -1,69 +1,36 @@
-# taktik-react-components
+# TAKTIK REACT COMPONENTS
 
-Shared React components used by Taktik front-ends (flowr-admin-react, studio-frontend, flowr-studio-admin).
+## The package is BUNDLED
 
-- `DataGrid`: wrapper around [react-data-grid](https://github.com/adazzle/react-data-grid) with MUI-styled header
-  filters, pagination, column visibility chooser, local sorting/filtering hooks.
-- `theme` / `dataGridTheme`: MUI theme helpers.
-- `utils`: misc helpers (dates, ...).
-
-Published on Taktik's Nexus npm registry as `@taktik/taktik-react-components` (same registry as
-`@taktik/flowr-common-js`). `react` and `react-dom` are externals: the consumer provides them (React 18).
-
-## Usage
-
-The consumer needs the `@taktik` scope mapped to the Nexus registry (already the case in projects using
-`@taktik/flowr-common-js`), in its `.npmrc` or `~/.npmrc`:
-
-```
-@taktik:registry=https://npm.taktik.be/repository/npm/
-```
-
-(reads are anonymous, no login needed to install). Then:
-
-```bash
-yarn add @taktik/taktik-react-components@<exact version>
-```
+`react-data-grid` is compiled INTO `dist/`, which is why it sits in `devDependencies` beside the
+three other bundled packages (`react-spinners`, `date-fns`, `date-fns-tz`) and is not a runtime
+dependency of this one. `DataGrid` re-exports it whole, so a consumer reaches react-data-grid's own
+exports — `SortColumn`, `RenderCellProps`, `useRowSelection` — **through this package**:
 
 ```ts
-import { DataGrid } from '@taktik/taktik-react-components'
-import '@taktik/taktik-react-components/dist/assets/styles/datagrid.css'
+import { DataGrid, SortColumn } from 'taktik-react-components'
 ```
 
-## Develop
+⚠ Never write `from 'react-data-grid'` in a consumer. Installing it there gives you a SECOND
+instance of the grid: the shared constants are plain strings and still match, so nothing fails until
+a context is involved and a cell renderer throws `useRowSelection must be used within renderCell`
+from a cell that visibly is inside one.
 
-Node version is pinned in `.nvmrc` (`nvm use`). Yarn 1 (classic) lockfile.
+Everything the library uses at RUNTIME rather than bundling — React, `@mui/material`, `@emotion/*` —
+is external, so the copy that runs is the consumer's own and the consumer's `ThemeProvider` is the
+one the grid reads.
 
-```bash
-yarn                # install (also installs the husky pre-commit hook: prettier via lint-staged)
-yarn build          # vite build (ES + UMD bundles in dist/) + tsc (type declarations)
-yarn format         # prettier on src/
-```
+## Peer ranges
 
-To test a local change in a consumer, `yarn link` this repo (or `yarn add file:../taktik-react-components`).
+- **`react` / `react-dom`: `^19.2`, and it must not be loosened.** It looks over-tight next to the
+  others and it is the honest one: the bundled react-data-grid imports `useEffectEvent`, which does
+  not exist before React 19.2, so a consumer on 19.1 fails at import time.
+- **`@mui/material`: `>=9 <10`.** The library is built, typed and only ever run against 9.2, and it
+  passes `slotProps.input`, which has moved between MUI majors before.
 
-## Build & publish (CI)
-
-Publishing is done by the Taktik CI (Cloud Build, driven by the build-manager), see [`ci/cloudbuild.yaml`](ci/cloudbuild.yaml):
-
-1. the version is computed by [git-version](https://github.com/taktik/git-version) from the last git tag, e.g. tag
-   `0.1` + 12 commits → `0.1.12-g<hash>` (feature branches get a branch identifier, e.g. `0.1.12-feature.xyz.g<hash>`);
-2. `yarn install --frozen-lockfile && yarn build`, then `npm version` is set to the computed version (the `version`
-   field in `package.json` is never bumped by hand);
-3. `npm publish` on the Nexus (registry taken from `publishConfig`, credentials from the CI Nexus account): `main`
-   publishes under the `latest` dist-tag, any other built branch under a dist-tag named after the branch (so it never
-   shadows `latest`).
-
-Because the version carries a `-g<hash>` pre-release suffix, consumers should pin exact versions
-(`"@taktik/taktik-react-components": "0.1.12-g3f2a9c1b7e"`), `^` ranges won't pick up new builds.
-
-To bump the major/minor version, push a new tag on `main` (`git tag 0.2 && git push origin 0.2`).
-
-### Manual publish (fallback only)
+## Working on the library
 
 ```bash
-yarn && yarn build
-npm version <version> --no-git-tag-version
-npm login --registry=https://npm.taktik.be/repository/npm/ --scope=@taktik   # your Nexus account
-npm publish
+npm run lint      # react-hooks only, by hand — there is no CI and no pre-commit hook
+npm run build     # dist/ is committed, so rebuild it in the same commit as the source
 ```
