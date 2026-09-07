@@ -165,9 +165,11 @@ export const Container = styled.div<{ $pagination?: boolean }>`
     /* The gradient rdg paints beside each pinned column is shown deliberately, and provisionally.
        Restyling it has no API either:
        the shadow elements carry no stable class, custom property or prop (upstream PR #3969), and
-       the only handle is their shape — the sole children of .rdg with neither a role nor a
-       measuring key — ⚠ the one selector here written against rdg's DOM rather than against a
-       stable rdg-* name, so it wants a re-check on every react-data-grid bump. ⚠ Only Chromium
+       the only handle is their shape — children of .rdg with neither a role nor a measuring key,
+       which the no-rows box (.rdg-no-data, this component's own) also is and is therefore named
+       out: dialled to zero, this rule once took the empty state with it — ⚠ the one selector here
+       written against rdg's DOM rather than against a stable rdg-* name, so it wants a re-check on
+       every react-data-grid bump. ⚠ Only Chromium
        hides the gradient while the grid cannot scroll (a scroll-state container query); other
        browsers paint it permanently.
 
@@ -181,7 +183,7 @@ export const Container = styled.div<{ $pagination?: boolean }>`
        mask can span the grid. The first stop sits at the header's own height, which is the whole
        of the header element: the header row carries no shadow at all, and the band eases in over
        the body's first rows and out again above its last, instead of ending square at both. */
-    .rdg > div:not([role]):not([data-measuring-cell-key]) {
+    .rdg > div:not([role]):not([data-measuring-cell-key]):not(.rdg-no-data) {
         filter: opacity(var(--rdg-frozen-shadow-opacity, 0.45));
         mask-image: linear-gradient(
             to bottom,
@@ -209,11 +211,34 @@ export const Container = styled.div<{ $pagination?: boolean }>`
     }
 
     /* A row holds nothing but .rdg-cell divs — the selection and expander cells among them — so
-       :first-of-type names the row's leading cell. */
+       :first-of-type names the row's leading cell.
+
+       The row is a grid box of its own (the header row is display: contents, the data rows are
+       not), and rdg paints the plane ON THAT BOX with the cells inheriting it. The first and last
+       rows' corner cells are rounded, so the row's square plane showed through behind every rounded
+       corner of every table — a square of row colour around a rounded border. The row therefore
+       paints nothing, and its CELLS carry the plane in every state rdg gives a row: resting, hovered,
+       selected, selected and hovered. A pinned cell stays opaque over the columns scrolling under it,
+       since it is painted rather than transparent. */
     .rdg-row {
+        background-color: transparent;
+
+        .rdg-cell {
+            background-color: var(--rdg-background-color);
+        }
+
+        &:hover .rdg-cell {
+            background-color: var(--rdg-row-hover-background-color);
+        }
+
         &[aria-selected='true'] {
             .rdg-cell {
                 color: var(--rdg-row-selected-color);
+                background-color: var(--rdg-row-selected-background-color);
+            }
+
+            &:hover .rdg-cell {
+                background-color: var(--rdg-row-selected-hover-background-color);
             }
         }
 

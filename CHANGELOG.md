@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **A row paints nothing; its cells carry the plane.** A data row is a grid box of its own and rdg
+  painted the row colour on it, the cells inheriting — so behind the rounded corner cells of the
+  first and last rows the row's square plane showed as a square of row colour around every rounded
+  corner of every table. The cells now carry the plane in every state (resting, hovered, selected,
+  selected and hovered) and the row box is transparent. A consumer painting rows itself paints the
+  cells: `.rdg-row > .rdg-cell`, not `.rdg-row`.
+- **The empty state no longer fades with the pinned-column shadows.** The rule dimming rdg's shadow
+  elements matched every role-less child of `.rdg`, and the `.rdg-no-data` box is one: a consumer
+  setting `--rdg-frozen-shadow-opacity` to `0` lost its "no rows" message and icon entirely. The box
+  is named out of that rule.
+
 ## 1.0.0-alpha.0 — 2026-08-31
 
 Everything since 0.0.33, which is the whole of the `feature/ImproveAdmin` branch. Driven by the
