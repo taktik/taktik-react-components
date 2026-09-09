@@ -10,6 +10,12 @@
   corner of every table. The cells now carry the plane in every state (resting, hovered, selected,
   selected and hovered) and the row box is transparent. A consumer painting rows itself paints the
   cells: `.rdg-row > .rdg-cell`, not `.rdg-row`.
+- **A grid ends where its rows end.** rdg painted the grid BOX from `--rdg-background-color`, the
+  same variable its rows take, so a table with opaque rows reached a plane of its own all the way
+  down to the pager — and the only way out was to blank the variable and repaint the rows from
+  outside, which every host box then had to remember. The grid's own ground is transparent now and
+  shows whatever the grid stands on; `--rdg-background-color` answers what a ROW is painted and
+  nothing else. A consumer wanting a filled box puts the grid inside one.
 - **The empty state no longer fades with the pinned-column shadows.** The rule dimming rdg's shadow
   elements matched every role-less child of `.rdg`, and the `.rdg-no-data` box is one: a consumer
   setting `--rdg-frozen-shadow-opacity` to `0` lost its "no rows" message and icon entirely. The box

@@ -49,6 +49,13 @@ export const Container = styled.div<{ $pagination?: boolean }>`
         font-weight: var(--rdg-font-weight);
         line-height: var(--rdg-line-height);
         font-family: var(--rdg-font-family);
+
+        /* A GRID ENDS WHERE ITS ROWS END. rdg paints the grid BOX from --rdg-background-color, the
+           same variable its rows take, so a table with opaque rows reached a plane of its own all
+           the way down to the pager. Those are two different questions: the variable says what a
+           ROW is painted, and the ground under the last row shows whatever the grid stands on — the
+           page, a dialog's paper. A consumer that wants a filled box puts the grid inside one. */
+        background-color: transparent;
     }
 
     /* Bare form controls a consumer puts in a cell: the grid draws the cell's own edges, so a UA
