@@ -37,5 +37,5 @@ one the grid reads.
 npm test          # Vitest + jsdom + Testing Library; a module moves in WITH its tests
 npm run typecheck # tsc over src including the tests, which the build's tsc excludes
 npm run lint      # react-hooks only, by hand — there is no CI and no pre-commit hook
-npm run build     # dist/ is committed, so rebuild it in the same commit as the source
+npm run build     # dist/ is NOT tracked: build before linking locally; prepublishOnly (and CI) build for publish
 ```

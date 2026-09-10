@@ -9,6 +9,11 @@
   (MUI still needs it for itself, as before). A consumer on emotion alone must add
   `styled-components`.
 
+### Changed
+
+- **`dist/` is no longer tracked.** The package is built by `prepublishOnly` (and by CI) at publish
+  time; a local consumer builds before linking.
+
 ### Added
 
 - **The Taktik admin theme.** `ITheme`, `lightTheme`, `darkTheme`, `colorPalette`/`withAlpha` and the
