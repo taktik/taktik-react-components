@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, RenderResult, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { ThemeProvider } from 'styled-components'
 import { defaultTableTheme as lightTheme } from '../../../theme/tableTheme'
@@ -7,10 +7,11 @@ import {
     ChipColors,
     ChipListCell,
     ChipListCellProps,
+    ChipListItem,
     chipListLines
 } from './ChipListCell'
 
-const renderCell = (props: ChipListCellProps) =>
+const renderCell = (props: ChipListCellProps): RenderResult =>
     render(
         <ThemeProvider theme={lightTheme}>
             <ChipListCell {...props} />
@@ -25,7 +26,7 @@ const colors: ChipColors = {
     color: 'rgb(10, 11, 12)'
 }
 
-const items = (count: number) =>
+const items = (count: number): ChipListItem[] =>
     Array.from({ length: count }, (_, index) => ({
         key: `n${index}`,
         label: `Network ${index}`
@@ -138,7 +139,7 @@ describe('ChipListCell', () => {
                 { key: 'plain', label: 'Untoned' }
             ]
         })
-        const colourOf = (label: string) =>
+        const colourOf = (label: string): string =>
             getComputedStyle(screen.getByText(label).parentElement as Element).backgroundColor
         expect(colourOf('Signage 3/20')).not.toBe(colourOf('Browser 10/10'))
         expect(colourOf('Untoned')).not.toBe(colourOf('Signage 3/20'))

@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react'
+import { JSX, memo, useCallback } from 'react'
 import type { RenderCheckboxProps } from 'react-data-grid'
 import { useTableSlots } from '../../slots'
 
@@ -41,4 +41,6 @@ export const GridCheckbox = memo(
 )
 
 /** Handed to every grid through `useGridPresentation`, so no consumer wires it. */
-export const renderGridCheckbox = (props: RenderCheckboxProps) => <GridCheckbox {...props} />
+export const renderGridCheckbox = (props: RenderCheckboxProps): JSX.Element => (
+    <GridCheckbox {...props} />
+)

@@ -2,15 +2,55 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { VisibilityContext } from './VisibilityProvider'
 import { IconButtonProps } from '@mui/material/IconButton'
 import Menu from '@mui/material/Menu'
-import MenuItem from '@mui/material/MenuItem'
 import Divider from '@mui/material/Divider'
-import { DataGridCheckbox } from './DataGridCheckbox'
 import styled from 'styled-components'
+import { useTableSlots, type TableMenuItemProps } from '../../slots'
+import {
+    floatingShadow,
+    fontSizeNormal,
+    radiusMedium,
+    tableFont,
+    visuallyHidden
+} from '../../theme/tableStyles'
 
 type Props = {
     IconComponent: (props: IconButtonProps) => React.ReactNode
 }
-const Container = styled(MenuItem)`
+
+/**
+ * The menu's paper. A portalled surface is outside the grid, so it inherits neither the grid's own
+ * custom properties nor the host's typography: the raised-paper token is what makes it the same
+ * plane as the rest of the app rather than MUI's stock white in a dark one.
+ */
+const ChooserMenu = styled(Menu)`
+    .MuiPaper-root {
+        ${radiusMedium};
+        ${tableFont};
+        ${fontSizeNormal};
+        color: ${({ theme }) => theme.surface.text};
+        background: ${({ theme }) => theme.dialog.background};
+    }
+`
+
+/** The rule before the reset item, in the app's own line rather than MUI's stock grey. */
+const MenuRule = styled(Divider)`
+    border-color: ${({ theme }) => theme.surface.border};
+`
+
+/** The consumer's own menu row, so a chooser reads like every other menu in the app. */
+const SlotMenuItem = (props: TableMenuItemProps): React.JSX.Element => {
+    const { MenuItem } = useTableSlots()
+    return <MenuItem {...props} />
+}
+
+/**
+ * The class the row being dragged carries. A class rather than a data attribute because the row is
+ * now the CONSUMER's component, and `className` is the one styling hook its contract declares;
+ * namespaced so a host's own `.dragging` rule cannot reach these rows.
+ */
+const DRAGGING = 'tk-dragging'
+
+const Container = styled(SlotMenuItem)`
     width: 100%;
     display: flex;
     align-items: center;
@@ -24,18 +64,15 @@ const Container = styled(MenuItem)`
      * The row being moved is LIFTED, not faded. The rows reflow live under the pointer, so THIS row
      * is the one travelling — fading it makes the thing the reader is moving the faintest item in
      * the list, which is the payload-drag idiom (the source stays put and a ghost flies) applied
-     * where the source does not stay put. A neutral alpha rather than a palette colour because this
-     * menu is portalled out of the grid, so the grid's own custom properties do not reach it; a mid
-     * grey at low alpha lifts over a light paper and a dark one alike.
+     * where the source does not stay put. The plane and the lift are the host's own tokens: this
+     * menu is portalled out of the grid, so the grid's custom properties do not reach it, and a
+     * theme is the only thing that knows what lifts over its own paper.
      */
-    &[data-dragging='true'] {
+    &.${DRAGGING} {
         position: relative;
         z-index: 1;
-        background-color: rgba(128, 128, 128, 0.16);
-        box-shadow:
-            rgba(0, 0, 0, 0.2) 0 3px 5px -1px,
-            rgba(0, 0, 0, 0.14) 0 6px 10px 0,
-            rgba(0, 0, 0, 0.12) 0 1px 18px 0;
+        background-color: ${({ theme }) => theme.surface.dragged};
+        ${floatingShadow};
     }
 `
 
@@ -67,18 +104,10 @@ const Grip = styled.span`
 
 /** Off screen, still read out: where a moved column landed. */
 const LiveRegion = styled.span`
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
+    ${visuallyHidden};
 `
 
-const GripIcon = () => (
+const GripIcon = (): React.JSX.Element => (
     <svg width='10' height='16' viewBox='0 0 10 16' aria-hidden='true' focusable='false'>
         {[3, 8, 13].map((cy) => (
             <g key={cy}>
@@ -134,7 +163,7 @@ const rowUnderPointer = (
  * `DataGrid` OUTSIDE the remounted grid, anchored to that captured point) is what stays up while
  * several columns are toggled in one visit.
  */
-export const VisibilityColumnChooser = ({ IconComponent }: Props) => {
+export const VisibilityColumnChooser = ({ IconComponent }: Props): React.JSX.Element => {
     const { setChooserAnchor } = useContext(VisibilityContext)
     const containerRef = React.useRef<HTMLDivElement>(null)
 
@@ -166,7 +195,7 @@ export const VisibilityColumnChooser = ({ IconComponent }: Props) => {
  * rows follow the pointer immediately and hold the arrangement until columns arrive saying the same
  * thing, which is also what keeps them still when nobody applies it.
  */
-export const VisibilityMenu = () => {
+export const VisibilityMenu = (): React.JSX.Element => {
     const {
         columns,
         hiddenColumn,
@@ -178,6 +207,7 @@ export const VisibilityMenu = () => {
         reorderColumns,
         reorderAnnouncement
     } = useContext(VisibilityContext)
+    const { Checkbox, MenuItem } = useTableSlots()
 
     const [preview, setPreview] = useState<string[] | null>(null)
     const [draggingKey, setDraggingKey] = useState<string | null>(null)
@@ -285,8 +315,8 @@ export const VisibilityMenu = () => {
              * lose that activation to a suppressor still waiting for a pointer.
              */
             disarmSuppressor.current?.()
-            const suppress = (event: MouseEvent) => event.stopPropagation()
-            const disarm = () => {
+            const suppress = (event: MouseEvent): void => event.stopPropagation()
+            const disarm = (): void => {
                 window.removeEventListener('click', suppress, true)
                 window.removeEventListener('pointerdown', disarm, true)
                 window.removeEventListener('keydown', disarm, true)
@@ -316,7 +346,7 @@ export const VisibilityMenu = () => {
         if (!draggingKey) {
             return undefined
         }
-        const onMove = (event: PointerEvent) => {
+        const onMove = (event: PointerEvent): void => {
             const drag = dragging.current
             if (!drag || event.pointerId !== drag.pointerId) {
                 return
@@ -337,7 +367,7 @@ export const VisibilityMenu = () => {
             dragOrder.current = withKeyMoved(dragOrder.current, from, to)
             setPreview(dragOrder.current)
         }
-        const onEnd = (event: PointerEvent) => {
+        const onEnd = (event: PointerEvent): void => {
             if (event.pointerId === dragging.current?.pointerId) {
                 endDrag()
             }
@@ -404,7 +434,7 @@ export const VisibilityMenu = () => {
 
     return (
         <>
-            <Menu
+            <ChooserMenu
                 id='column-visibility-menu'
                 anchorReference='anchorPosition'
                 anchorPosition={chooserAnchor ?? undefined}
@@ -417,13 +447,13 @@ export const VisibilityMenu = () => {
                         <Container
                             key={key}
                             ref={setRow(key)}
-                            data-dragging={draggingKey === key}
+                            className={draggingKey === key ? DRAGGING : undefined}
                             aria-keyshortcuts={
                                 reorderColumns ? 'Alt+ArrowUp Alt+ArrowDown' : undefined
                             }
                             onKeyDown={onRowKeyDown(key)}
                             onClick={toggle(key)}>
-                            <DataGridCheckbox checked={!hiddenColumn.includes(key)} />
+                            <Checkbox checked={!hiddenColumn.includes(key)} />
                             {column.name}
                             {reorderColumns && (
                                 <Grip
@@ -440,9 +470,9 @@ export const VisibilityMenu = () => {
                 {/* The way back, next to the control that broke the layout. It closes the menu, unlike
                 a toggle: the reader is done, and leaving it open over columns that all just moved
                 reads as though nothing happened. */}
-                {resetLabel && <Divider />}
+                {resetLabel && <MenuRule />}
                 {resetLabel && <MenuItem onClick={handleReset}>{resetLabel}</MenuItem>}
-            </Menu>
+            </ChooserMenu>
             {/* Outside the Menu on purpose: it is a `MenuList`, which walks its children looking for
                 the item to focus, and a bare span among them is not one. It lives exactly as long as
                 the menu does — mounted EMPTY when the menu opens, which is what a live region needs

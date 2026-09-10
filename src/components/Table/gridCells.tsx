@@ -1,4 +1,4 @@
-import { DragEvent, ReactNode } from 'react'
+import { DragEvent, JSX, ReactNode } from 'react'
 import { renderHeaderCell, type RenderCellProps, type RenderHeaderCellProps } from 'react-data-grid'
 import styled from 'styled-components'
 import { columnResizeFloor } from '../DataGrid/layout/columnWidths'
@@ -64,7 +64,13 @@ export const ActionCell = styled.div`
 
 /** A control in a row-action cell is a fixed 32px square and does not shrink — a short column clips it. */
 const ACTION_ICON_SIZE = 32
-/** The grid's `--rdg-cell-padding` is `8px 12px`, and a row's last cell adds a 1px right border. */
+/**
+ * A cell's horizontal padding on both sides, plus the 1px right border a row's last cell adds.
+ *
+ * ⚠ It restates `theme.table.cellPaddingInline`, and has to: this is a module constant a column
+ * definition is built from, where no theme is in reach. A host authoring a different inline cell
+ * padding has to revisit this number.
+ */
 const ACTION_CELL_CHROME = 12 * 2 + 1
 
 /**
@@ -92,7 +98,7 @@ const SELECT_COLUMN_WIDTH = 50
 export const FROZEN_COLUMNS_WIDTH = SELECT_COLUMN_WIDTH + actionColumnSizing(1).width
 
 /** Render a string cell truncated with an ellipsis + full-value hover tooltip. */
-export const truncated = (value?: string) => (
+export const truncated = (value?: string): JSX.Element => (
     <TruncatingCell title={value ?? ''}>{value}</TruncatingCell>
 )
 

@@ -25,7 +25,7 @@ export const convertDate = (
     value: unknown,
     format: string = DATE_FORMAT.UTC_FORMAT,
     timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
-) => {
+): string => {
     if (!value) {
         return ''
     }
@@ -36,4 +36,4 @@ export const convertDate = (
     return formatInTimeZone(value as string | number | Date, timeZone, format)
 }
 
-export const getStringToCompare = (value: string) => value.trim().toLowerCase()
+export const getStringToCompare = (value: string): string => value.trim().toLowerCase()

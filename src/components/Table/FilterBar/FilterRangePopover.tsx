@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { useLabels } from '../../../labels'
 import { useTableSlots } from '../../../slots'
 import { fontSizeNormal } from '../../../theme/tableStyles'
+import type { JSX } from 'react'
 import type { RangeValue } from '../../../filterValue'
 import type { FilterDefinition } from './FilterBar'
 
@@ -45,7 +46,7 @@ export const FilterRangePopover = ({
     value,
     onChange,
     onClose
-}: FilterRangePopoverProps) => {
+}: FilterRangePopoverProps): JSX.Element => {
     const labels = useLabels()
     const { DatePicker, TextInput } = useTableSlots()
     const bounds =
@@ -53,7 +54,7 @@ export const FilterRangePopover = ({
             ? { from: labels.from, to: labels.to }
             : { from: labels.min, to: labels.max }
 
-    const setBound = (bound: 'from' | 'to', next: number | string | undefined) =>
+    const setBound = (bound: 'from' | 'to', next: number | string | undefined): void =>
         onChange({ ...value, [bound]: next })
 
     const isEmpty = value.from === undefined && value.to === undefined

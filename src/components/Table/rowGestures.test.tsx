@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ThemeProvider } from 'styled-components'
 import EditRoundedIcon from '@mui/icons-material/EditRounded'
 import { DataGrid } from '../DataGrid/DataGrid'
+import type { ColumnDefinition } from '../DataGrid/types'
 import { defaultTableTheme as lightTheme } from '../../theme/tableTheme'
 import { CrudTable } from './CrudTable'
-import { rowActionsColumn } from './rowActions'
+import { rowActionsColumn, type RowActionsColumnDefinition } from './rowActions'
 import { COPY_DWELL_MS, useRowGestures } from './useRowGestures'
 
 /**
@@ -51,7 +52,7 @@ const rows: Row[] = [
     { id: 'b', name: 'Bravo' }
 ]
 
-const actionsColumn = (onEdit = vi.fn()) =>
+const actionsColumn = (onEdit = vi.fn()): RowActionsColumnDefinition<Row> =>
     rowActionsColumn<Row>({
         label: (row) => `Actions for ${row.name}`,
         items: () => [
@@ -60,7 +61,7 @@ const actionsColumn = (onEdit = vi.fn()) =>
         ]
     })
 
-const columns = (withActions: boolean) => [
+const columns = (withActions: boolean): ColumnDefinition<Row>[] => [
     { key: 'name', name: 'Name' },
     {
         key: 'link',
@@ -78,7 +79,12 @@ interface HostProps {
     onRowPrimaryAction?: (row: Row) => void
 }
 
-const Host = ({ selectable, expandable, withActions = true, onRowPrimaryAction }: HostProps) => {
+const Host = ({
+    selectable,
+    expandable,
+    withActions = true,
+    onRowPrimaryAction
+}: HostProps): ReactNode => {
     const [selectedIds, setSelectedIds] = useState<string[]>([])
     const [expandedIds, setExpandedIds] = useState<string[]>([])
     return (
@@ -108,7 +114,7 @@ const Host = ({ selectable, expandable, withActions = true, onRowPrimaryAction }
 }
 
 /** A drawer-style table: the click opens the record instead of expanding the row (recordings). */
-const DrawerHost = () => {
+const DrawerHost = (): ReactNode => {
     const [selectedIds, setSelectedIds] = useState<string[]>([])
     const [openedId, setOpenedId] = useState('')
     const cols = columns(true)
@@ -131,11 +137,11 @@ const DrawerHost = () => {
     )
 }
 
-const firstRow = () => screen.getAllByRole('row')[1] as HTMLElement
-const cellsOfFirstRow = () => within(firstRow()).getAllByRole('gridcell')
-const selection = () => screen.getByTestId('selection').textContent
-const expansion = () => screen.getByTestId('expansion').textContent
-const opened = () => screen.getByTestId('opened').textContent
+const firstRow = (): HTMLElement => screen.getAllByRole('row')[1] as HTMLElement
+const cellsOfFirstRow = (): HTMLElement[] => within(firstRow()).getAllByRole('gridcell')
+const selection = (): string | null => screen.getByTestId('selection').textContent
+const expansion = (): string | null => screen.getByTestId('expansion').textContent
+const opened = (): string | null => screen.getByTestId('opened').textContent
 
 const rightClick = async (target: HTMLElement): Promise<void> => {
     await userEvent.pointer({ keys: '[MouseRight]', target })
@@ -239,7 +245,7 @@ describe('resting on a row’s text', () => {
         vi.useRealTimers()
     })
 
-    const cue = () => screen.queryByText('Click to copy')
+    const cue = (): HTMLElement | null => screen.queryByText('Click to copy')
     /** Bring the pointer to rest on `target` and let the dwell run out. */
     const rest = (target: HTMLElement): void => {
         lastHovered.element = target

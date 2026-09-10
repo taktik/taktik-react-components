@@ -1,18 +1,17 @@
-import { ReactNode } from 'react'
+import { JSX, ReactNode } from 'react'
 import Skeleton from '@mui/material/Skeleton'
 import styled from 'styled-components'
 import { useTableSlots } from '../../../slots'
 import { fontSizeSmall, fontSizeSmaller, tableFont } from '../../../theme/tableStyles'
-import { capacityPercent, capacityTone } from './capacity'
-import { statusToneColors, StatusTone } from './statusTone'
+import { capacityPercent } from './capacity'
+import { statusToneColors, StatusTone } from '../../../status/statusTone'
 
 /**
  * What the bar is measuring.
  *
- * `capacity` — `used` out of a limit: the cell prints `used/total` and tones itself as it fills.
- * `share` — `used` as a part of a whole: the cell prints `used` alone and stays neutral, because a
- * type making up all of a package's contents is information, not a problem. Repeating the same whole
- * in four side-by-side columns would be noise too.
+ * `capacity` — `used` out of a limit: the cell prints `used/total`.
+ * `share` — `used` as a part of a whole: the cell prints `used` alone, because repeating the same
+ * whole in four side-by-side columns would be noise.
  */
 export type CountBarVariant = 'capacity' | 'share'
 
@@ -23,6 +22,14 @@ export interface CountBarCellProps {
     total?: number
     /** Defaults to `capacity`. */
     variant?: CountBarVariant
+    /**
+     * How the count and its bar READ — quiet by default.
+     *
+     * The consumer's, because "too full" is a product rule and not a fraction: a licence at its
+     * limit is already in trouble (the next device asking for a seat is refused) while a package
+     * type making up all of its contents is information. A share simply leaves this alone.
+     */
+    tone?: StatusTone
     /**
      * Explicit colours for the count and its bar, overriding the tone.
      *
@@ -111,29 +118,28 @@ const Suffix = styled.span`
 `
 
 /**
- * A `used/total` count over the capacity bar that says how close to full it is — a license's grants,
- * a package's contents.
+ * A `used/total` count over the bar that says how much of a whole it is — a license's grants, a
+ * package's contents.
  *
- * The tone carries the reading: quiet while there is room, `warning` past
- * `CAPACITY_WARNING_RATIO`, `danger` once the capacity is reached. The bar is clamped, so being
- * over capacity shows as a full bar plus a count that says by how much.
+ * The bar is CLAMPED, so a count over its total shows as a full bar plus a count that says by how
+ * much. What that means is the consumer's, and arrives as `tone`.
  *
  * `variant="share"` measures a part of a whole instead — the same count and bar, printed as a bare
- * number and always neutral (see `CountBarVariant`).
+ * number (see `CountBarVariant`).
  */
 export const CountBarCell = ({
     used,
     total,
     variant = 'capacity',
+    tone = 'neutral',
     color,
     label,
     emptyLabel = EMPTY_LABEL,
     tooltipText,
     loading,
     suffix
-}: CountBarCellProps) => {
+}: CountBarCellProps): JSX.Element => {
     const { Tooltip } = useTableSlots()
-    const tone = variant === 'share' ? 'neutral' : capacityTone(used, total)
     const percent = capacityPercent(used, total)
     const granted = total !== undefined
 

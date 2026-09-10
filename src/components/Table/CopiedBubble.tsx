@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { ReactPortal, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import styled from 'styled-components'
 import { floatingLabel } from './floatingLabel'
@@ -33,7 +33,7 @@ export interface CopiedBubbleProps {
  * The "copied" confirmation over the pointer. Mounted per copy — the caller keys it on the copy, so
  * a second copy restarts the countdown instead of inheriting the first one's.
  */
-export const CopiedBubble = ({ label, top, left, onDone }: CopiedBubbleProps) => {
+export const CopiedBubble = ({ label, top, left, onDone }: CopiedBubbleProps): ReactPortal => {
     useEffect(() => {
         const timer = window.setTimeout(onDone, VISIBLE_MS)
         return () => window.clearTimeout(timer)

@@ -1,3 +1,4 @@
+import type { JSX } from 'react'
 import styled, { css } from 'styled-components'
 import { useLabels } from '../../labels'
 import type { RowDefinition } from '../DataGrid/types'
@@ -110,7 +111,7 @@ export const GridInDialog = <R extends RowDefinition>({
     className,
     totalLabel,
     ...table
-}: GridInDialogProps<R>) => {
+}: GridInDialogProps<R>): JSX.Element => {
     const labels = useLabels()
     return (
         <Body $height={height} $minHeight={minHeight} className={className}>

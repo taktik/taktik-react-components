@@ -1,10 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, type RenderResult } from '@testing-library/react'
 import { ThemeProvider } from 'styled-components'
 import { describe, expect, it } from 'vitest'
 import { defaultTableTheme as lightTheme } from '../../theme/tableTheme'
 import { GridEmptyState } from './GridEmptyState'
 
-const renderState = (props: Partial<Parameters<typeof GridEmptyState>[0]> = {}) =>
+const renderState = (props: Partial<Parameters<typeof GridEmptyState>[0]> = {}): RenderResult =>
     render(
         <ThemeProvider theme={lightTheme}>
             <GridEmptyState icon={<svg data-testid='icon' />} title='No items' {...props} />

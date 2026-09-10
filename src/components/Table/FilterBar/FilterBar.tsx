@@ -5,11 +5,11 @@ import FilterAltOffRoundedIcon from '@mui/icons-material/FilterAltOffRounded'
 import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded'
 import Menu from '@mui/material/Menu'
 import Paper from '@mui/material/Paper'
-import { KeyboardEvent, ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { JSX, KeyboardEvent, ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { useLabels, type Labels } from '../../../labels'
 import { useTableSlots } from '../../../slots'
-import { useSlashFocus } from '../../../useSlashFocus'
+import { useTableRuntime } from '../../../TableProvider'
 import {
     focusRing,
     fontSizeNormal,
@@ -42,8 +42,11 @@ import {
 } from '../../../filterValue'
 import { FilterRangePopover } from './FilterRangePopover'
 
-/** How long the bar waits after the last keystroke before reporting what was typed. */
-export const FILTER_DEBOUNCE_MS = 300
+/**
+ * How long the bar waits after the last keystroke before reporting what was typed, where the host
+ * has no pause of its own to share (`TableProvider`'s `filterDebounceMs`).
+ */
+const DEFAULT_DEBOUNCE_MS = 300
 
 /**
  * Whether a chip carries a value the query actually filters on. A just-added chip is seeded empty
@@ -141,7 +144,7 @@ export const emptyValue = (kind: FilterKind): FilterValue => {
 }
 
 /**
- * Initial `values` for the chips a table shows by default, so a common filter is one click away
+ * Initial `rawValues` for the chips a table shows by default, so a common filter is one click away
  * instead of three. Reserve it for select-style toggles: seeding the primary column only adds
  * clutter, since typing into the bar already commits there on Enter. The definitions say which kind
  * each key is, so every seeded chip starts at the empty value its editor understands; a key with no
@@ -157,8 +160,15 @@ export const seedFilters = (
 
 export interface FilterBarProps {
     definitions: FilterDefinition[]
-    /** current values by key; a key with a defined value renders an active chip */
-    values: Record<string, FilterValue | undefined>
+    /**
+     * The LIVE values by key — what the chips render from, so typing stays responsive. A key with a
+     * defined value renders an active chip.
+     *
+     * Named as `TableFilterState.rawValues` is, and deliberately not `values`: a consumer's filter
+     * state usually carries a PARSED map under that name (debounced, coerced to what its query
+     * wants), and two maps of different things sharing one name is a mix-up that would compile.
+     */
+    rawValues: Record<string, FilterValue | undefined>
     onChange: (key: string, value: FilterValue | undefined) => void
     /** the column the type-ahead offers first, so "type then Enter" hits the obvious one */
     primaryKey?: string
@@ -474,7 +484,7 @@ const SuggestionList = ({
     onPick,
     loading,
     loadingLabel
-}: SuggestionListProps) => {
+}: SuggestionListProps): JSX.Element => {
     const { MenuItem, SuggestionListBox, SuggestionPopper } = useTableSlots()
     return (
         <SuggestionPopper open={open} anchorEl={anchorEl}>
@@ -524,7 +534,8 @@ const Trailing = styled.div`
     min-height: 36px;
 `
 
-const isRangeEmpty = (range: RangeValue) => range.from === undefined && range.to === undefined
+const isRangeEmpty = (range: RangeValue): boolean =>
+    range.from === undefined && range.to === undefined
 
 const selectedOptionLabel = (entry: PinnedFilter): string | undefined =>
     entry.options.find((option) => option.value === entry.value)?.label
@@ -569,7 +580,7 @@ const MAX_SUGGESTIONS = 10
 // fill the whole list and leave no room for the columns the user is far more likely to want.
 const MAX_OPTION_SUGGESTIONS = 3
 
-const matches = (haystack: string, needle: string) =>
+const matches = (haystack: string, needle: string): boolean =>
     haystack.toLowerCase().includes(needle.toLowerCase())
 
 /**
@@ -745,7 +756,7 @@ const useSettled = <T,>(value: T, delayMs: number): T => {
  */
 export const FilterBar = ({
     definitions,
-    values,
+    rawValues,
     onChange,
     primaryKey,
     pinned,
@@ -753,9 +764,10 @@ export const FilterBar = ({
     trailing,
     suggestions: valueSuggestions,
     onDraftChange
-}: FilterBarProps) => {
+}: FilterBarProps): JSX.Element => {
     const labels = useLabels()
     const { Button, IconButton, MenuItem } = useTableSlots()
+    const { registerSearchField, filterDebounceMs = DEFAULT_DEBOUNCE_MS } = useTableRuntime()
     const [editingKey, setEditingKey] = useState<string | null>(null)
     const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
     const [pinnedKey, setPinnedKey] = useState<string | null>(null)
@@ -774,17 +786,17 @@ export const FilterBar = ({
 
     const byKey = useMemo(() => new Map(definitions.map((def) => [def.key, def])), [definitions])
 
-    const activeDefinitions = definitions.filter((def) => values[def.key] !== undefined)
+    const activeDefinitions = definitions.filter((def) => rawValues[def.key] !== undefined)
     const inactiveDefinitions = definitions.filter(
-        (def) => values[def.key] === undefined && isOfferable(def)
+        (def) => rawValues[def.key] === undefined && isOfferable(def)
     )
     // What the reset would actually undo: chips carrying a value, not chips merely present
-    const activeCount = Object.values(values).filter(isFilterValueActive).length
+    const activeCount = Object.values(rawValues).filter(isFilterValueActive).length
 
     const editingDef = editingKey ? byKey.get(editingKey) : undefined
     const editingKind = editingDef?.kind ?? 'text'
     // what the open select editor currently narrows to — empty means it matches everything
-    const selectedValues = editingDef ? asValues(values[editingDef.key]) : []
+    const selectedValues = editingDef ? asValues(rawValues[editingDef.key]) : []
 
     /**
      * The values offered for what is being typed, and where they belong.
@@ -843,18 +855,18 @@ export const FilterBar = ({
      */
     const draftKey =
         editingDef && editingKind === 'text' && editingDef.suggestable ? editingDef.key : undefined
-    const draftTerm = draftKey ? (asTextTerm(values[draftKey]) ?? '') : query
+    const draftTerm = draftKey ? (asTextTerm(rawValues[draftKey]) ?? '') : query
     const draft = useMemo(() => ({ key: draftKey, term: draftTerm }), [draftKey, draftTerm])
-    const settledDraft = useSettled(draft, FILTER_DEBOUNCE_MS)
+    const settledDraft = useSettled(draft, filterDebounceMs)
     useEffect(() => {
         onDraftChange?.(settledDraft)
     }, [settledDraft, onDraftChange])
 
-    const commitSuggestion = (suggestion: Suggestion) => {
+    const commitSuggestion = (suggestion: Suggestion): void => {
         setQuery('')
         if (suggestion.commit === 'open') {
             // the chip may already be on the bar with a value — reopening it must not clear one
-            const current = values[suggestion.def.key]
+            const current = rawValues[suggestion.def.key]
             onChange(suggestion.def.key, current ?? emptyValue(suggestion.def.kind ?? 'text'))
             setEditingKey(suggestion.def.key)
             return
@@ -862,7 +874,7 @@ export const FilterBar = ({
         if (suggestion.commit === 'option') {
             // a matched option joins whatever the chip already narrows to, so typing two of them in
             // a row reads as "either", not as the second replacing the first
-            const chosen = asValues(values[suggestion.def.key])
+            const chosen = asValues(rawValues[suggestion.def.key])
             const next = chosen.includes(suggestion.value) ? chosen : [...chosen, suggestion.value]
             onChange(suggestion.def.key, next)
             return
@@ -870,9 +882,18 @@ export const FilterBar = ({
         onChange(suggestion.def.key, suggestion.value)
     }
 
-    const onTypeAheadKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    const onTypeAheadKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
         if (event.key === 'Escape') {
             setQuery('')
+            return
+        }
+        // Enter is the FIELD's whatever it holds, offered lines or none. A table inside a dialog
+        // stands inside that dialog's form, whose accept button is the submit, so an Enter left
+        // unprevented in an empty field is the dialog saving itself.
+        if (event.key === 'Enter') {
+            event.preventDefault()
+            const chosen = suggestions[activeIndex]
+            if (chosen) commitSuggestion(chosen)
             return
         }
         if (!suggestions.length) return
@@ -882,17 +903,13 @@ export const FilterBar = ({
         } else if (event.key === 'ArrowUp') {
             event.preventDefault()
             setHighlight(Math.max(activeIndex - 1, 0))
-        } else if (event.key === 'Enter') {
-            event.preventDefault()
-            const chosen = suggestions[activeIndex]
-            if (chosen) commitSuggestion(chosen)
         }
     }
 
-    // "/" from anywhere on the page lands in the type-ahead, the way it does on GitHub. The stack
-    // the hook keeps is shared with every other field that claims the key, so the
-    // last-mounted-wins rule holds across all of them.
-    useSlashFocus(typeAheadRef)
+    // The type-ahead offers itself as a landing place for the host's search shortcut ("/", the way
+    // GitHub does it) and withdraws on unmount. The host owns the key and the one stack of
+    // candidate fields, so the same rule holds between a bar and a field that is not a table's.
+    useEffect(() => registerSearchField?.(typeAheadRef), [registerSearchField])
 
     useEffect(() => {
         if (editingKey && editingKind === 'text') inputRef.current?.focus()
@@ -906,7 +923,7 @@ export const FilterBar = ({
         setChipHighlight(-1)
     }, [editingKey, editingKind])
 
-    const addFilter = (def: FilterDefinition) => {
+    const addFilter = (def: FilterDefinition): void => {
         setMenuAnchor(null)
         // seed an "active but empty" value so the chip renders, then open its editor
         onChange(def.key, emptyValue(def.kind ?? 'text'))
@@ -919,13 +936,13 @@ export const FilterBar = ({
     // Chips that survive an empty value: the ones the consumer seeded, plus any the user
     // deliberately parked at "Any".
     const keepWhenEmpty = useRef(
-        new Set(Object.keys(values).filter((key) => values[key] !== undefined))
+        new Set(Object.keys(rawValues).filter((key) => rawValues[key] !== undefined))
     )
 
-    const removeIfEmpty = (key: string) => {
+    const removeIfEmpty = (key: string): void => {
         if (keepWhenEmpty.current.has(key)) return
         const def = byKey.get(key)
-        const value = values[key]
+        const value = rawValues[key]
         const kind = def?.kind ?? 'text'
         const empty =
             kind === 'range'
@@ -936,7 +953,7 @@ export const FilterBar = ({
         if (empty) onChange(key, undefined)
     }
 
-    const closeEditor = (key: string) => {
+    const closeEditor = (key: string): void => {
         removeIfEmpty(key)
         setEditingKey(null)
     }
@@ -945,11 +962,11 @@ export const FilterBar = ({
      * Put one of the offered values into the open chip, keeping the operator the reader set. Exact
      * only where the chip can carry it (`canBeExact`) — the same rule the suggestion rows commit by.
      */
-    const commitChipValue = (def: FilterDefinition, suggestion: ValueSuggestion) => {
+    const commitChipValue = (def: FilterDefinition, suggestion: ValueSuggestion): void => {
         onChange(
             def.key,
             textValue(suggestion.value, {
-                negated: isNegatedText(values[def.key]),
+                negated: isNegatedText(rawValues[def.key]),
                 exact: canBeExact(def)
             })
         )
@@ -957,7 +974,7 @@ export const FilterBar = ({
         setEditingKey(null)
     }
 
-    const onTextKeyDown = (event: KeyboardEvent<HTMLInputElement>, key: string) => {
+    const onTextKeyDown = (event: KeyboardEvent<HTMLInputElement>, key: string): void => {
         if (chipValues.length) {
             if (event.key === 'ArrowDown') {
                 event.preventDefault()
@@ -982,15 +999,15 @@ export const FilterBar = ({
         if (event.key === 'Enter' || event.key === 'Escape') closeEditor(key)
     }
 
-    const onChipKeyDown = (event: KeyboardEvent<HTMLDivElement>, key: string) => {
+    const onChipKeyDown = (event: KeyboardEvent<HTMLDivElement>, key: string): void => {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault()
             setEditingKey(key)
         }
     }
 
-    const renderChipBody = (def: FilterDefinition) => {
-        const value = values[def.key]
+    const renderChipBody = (def: FilterDefinition): JSX.Element => {
+        const value = rawValues[def.key]
         const editing = editingKey === def.key
         const kind = def.kind ?? 'text'
 
@@ -1210,7 +1227,7 @@ export const FilterBar = ({
                     </>
                 )}
 
-                {onReset && anyFilterActive(values) && (
+                {onReset && anyFilterActive(rawValues) && (
                     <IconButton
                         tone='default'
                         tooltipText={labels.clearFilters(activeCount)}
@@ -1263,7 +1280,7 @@ export const FilterBar = ({
                     <FilterRangePopover
                         anchorEl={editingAnchor}
                         def={editingDef}
-                        value={asRange(values[editingDef.key])}
+                        value={asRange(rawValues[editingDef.key])}
                         onChange={(range) => onChange(editingDef.key, range)}
                         onClose={() => closeEditor(editingDef.key)}
                     />
@@ -1305,7 +1322,7 @@ const formatRange = (def: FilterDefinition, range: RangeValue): string => {
     if (isRangeEmpty(range)) return ''
     if (def.rangeType === 'date') {
         // the compact date form, so the chip reads like the column it narrows
-        const fmt = (iso?: string) => (iso ? convertDate(iso, DATE_FORMAT.DATE_SHORT) : '…')
+        const fmt = (iso?: string): string => (iso ? convertDate(iso, DATE_FORMAT.DATE_SHORT) : '…')
         return `${fmt(range.from as string | undefined)} – ${fmt(range.to as string | undefined)}`
     }
     const unit = def.unit ? ` ${def.unit}` : ''

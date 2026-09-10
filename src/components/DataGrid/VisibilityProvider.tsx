@@ -64,7 +64,7 @@ const readStoredHiddenColumns = (key: string): string[] | null => {
 }
 
 /** Storage that refuses the write — Safari private mode, a full quota — costs the grid nothing. */
-const writeStoredHiddenColumns = (key: string, columns: string[]) => {
+const writeStoredHiddenColumns = (key: string, columns: string[]): void => {
     try {
         localStorage.setItem(key, JSON.stringify(columns))
     } catch {
@@ -112,7 +112,7 @@ export const VisibilityProvider = ({
     reorderAnnouncement?: (column: string, position: number, total: number) => string
     /** Already translated; passing it is what puts the reset item in the chooser's menu. */
     resetLabel?: string
-}) => {
+}): ReactNode => {
     const [gridKey, setGridKey] = React.useState(0)
     const [chooserAnchor, setChooserAnchor] = React.useState<{ top: number; left: number } | null>(
         null

@@ -22,7 +22,13 @@ const darkTheme: TableTheme = {
  * The dialog a grid sits in, stood in for by what the grid can actually see of it: a labelled
  * dialog box, and the FORM whose submit a control inside the grid must never fire.
  */
-const DialogHost = ({ children, onSave }: { children: ReactNode; onSave?: () => void }) => (
+const DialogHost = ({
+    children,
+    onSave
+}: {
+    children: ReactNode
+    onSave?: () => void
+}): ReactNode => (
     <div role='dialog' aria-label='Package contents'>
         <form
             onSubmit={(event) => {
@@ -48,7 +54,7 @@ const rows: Row[] = Array.from({ length: GRID_PAGE_SIZE + 5 }, (_, index) => ({
     name: `Row ${index}`
 }))
 
-const Host = ({ height }: { height?: string } = {}) => {
+const Host = ({ height }: { height?: string } = {}): ReactNode => {
     const [selectedIds, setSelectedIds] = useState<string[]>([])
     return (
         <ThemeProvider theme={lightTheme}>

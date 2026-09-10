@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { JSX, ReactNode } from 'react'
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded'
 import styled from 'styled-components'
@@ -8,7 +8,6 @@ import type { FilterValue } from '../../filterValue'
 import type { FilterDraft, ValueSuggestions } from '../../valueSuggestions'
 import { FilterBar, type FilterDefinition, type PinnedFilter } from './FilterBar/FilterBar'
 import { DeleteSelectedButton, DeleteSelectedButtonProps } from './DeleteSelectedButton'
-import { TableMenu, TableMenuActions } from './TableMenu/TableMenu'
 
 /**
  * What the toolbar needs from whatever holds the chip state — the LIVE values it renders, the way to
@@ -76,10 +75,16 @@ export interface GridToolbarProps {
     summary?: ReactNode
     refresh?: GridToolbarRefresh
     /**
-     * Moving records in and out of a FILE — import, export, the template — behind the table's own
-     * kebab, drawn last. See `TableMenu`.
+     * The page's own kebab, drawn at the very END of the row — after `children` — whatever it holds
+     * (import, export, a template).
+     *
+     * A node rather than a declaration: WHICH acts a kebab offers, and under which marks, is the
+     * application's to decide and to keep consistent across its own surfaces — a calendar owes the
+     * reader the same menu a grid does. What the toolbar owns is the PLACE, which is why this is a
+     * slot of its own instead of more `children`: convention alone had already let a kebab drift
+     * into the middle of a toolbar.
      */
-    tableMenu?: TableMenuActions
+    trailingMenu?: ReactNode
     /**
      * The values the consumer's own fields hold for what is being typed — the type-ahead's value
      * rows. A consumer opts in by declaring which of its chips are `suggestable` and answering with
@@ -106,10 +111,10 @@ export interface GridToolbarProps {
  * only thing holding the order and it had already drifted: four sibling grids showed refresh in
  * three different places, and export was a labelled button on one page and a bare icon on another.
  *
- * Import and export are no longer buttons at all. They open a conversation about a FILE rather than
- * acting on the table, which is what makes them a menu, so they ride the kebab and it ends the
- * toolbar the way a row's kebab ends a row. Refresh stays a bare icon: it is the one trailing
- * control that acts on what the reader is looking at.
+ * The consumer's kebab (`trailingMenu`) is the one trailing thing handed in as a node, because what
+ * it offers is the consumer's own vocabulary. Only its PLACE is the toolbar's: last, the way a row's
+ * kebab ends a row. Refresh stays a bare icon — it is the one trailing control that acts on what the
+ * reader is looking at, rather than opening a conversation about something else.
  */
 export const GridToolbar = ({
     filters,
@@ -118,16 +123,16 @@ export const GridToolbar = ({
     pinned,
     summary,
     refresh,
-    tableMenu,
+    trailingMenu,
     suggestions,
     onDraftChange,
     children
-}: GridToolbarProps) => {
+}: GridToolbarProps): JSX.Element => {
     const { Button, IconButton } = useTableSlots()
     return (
         <FilterBar
             definitions={filters.definitions}
-            values={filters.rawValues}
+            rawValues={filters.rawValues}
             onChange={filters.onChange}
             primaryKey={filters.primaryKey}
             pinned={pinned}
@@ -159,7 +164,7 @@ export const GridToolbar = ({
                         </IconButton>
                     )}
                     {children}
-                    {tableMenu && <TableMenu {...tableMenu} />}
+                    {trailingMenu}
                 </>
             }
         />

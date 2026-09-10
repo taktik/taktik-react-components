@@ -1,10 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { render, RenderResult, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { ThemeProvider } from 'styled-components'
 import { defaultTableTheme as lightTheme } from '../../../theme/tableTheme'
 import { TwoLineCell, TwoLineCellProps } from './TwoLineCell'
 
-const renderCell = (props: TwoLineCellProps) =>
+const renderCell = (props: TwoLineCellProps): RenderResult =>
     render(
         <ThemeProvider theme={lightTheme}>
             <TwoLineCell {...props} />

@@ -1,5 +1,12 @@
-import { ComponentType, MouseEvent, ReactElement, ReactNode } from 'react'
-import type { StatusTone } from '../components/Table/cells/statusTone'
+import {
+    ComponentType,
+    KeyboardEvent,
+    MouseEvent,
+    ReactElement,
+    ReactNode,
+    RefCallback
+} from 'react'
+import type { StatusTone } from '../status/statusTone'
 
 /**
  * The consumer's own controls, as the library's tables render them.
@@ -115,11 +122,23 @@ export interface TableMenuItemProps {
     role?: string
     'aria-selected'?: boolean
     'aria-checked'?: boolean
+    /** The keystrokes this row answers, where it answers any — "Alt+ArrowUp Alt+ArrowDown". */
+    'aria-keyshortcuts'?: string
     selected?: boolean
     disabled?: boolean
     onClick?: (event: MouseEvent<HTMLElement>) => void
     onMouseMove?: (event: MouseEvent<HTMLElement>) => void
     onMouseDown?: (event: MouseEvent<HTMLElement>) => void
+    /** A row that is ARRANGED as well as picked reads its own modifier keys — see `VisibilityMenu`. */
+    onKeyDown?: (event: KeyboardEvent<HTMLElement>) => void
+    /**
+     * Handed the row's own element. A menu whose rows can be dragged into another order measures
+     * them by their boxes, so it needs the element each row actually rendered as.
+     *
+     * A callback rather than a `RefObject` on purpose: it stays assignable however narrowly the
+     * consumer's own control types its ref.
+     */
+    ref?: RefCallback<HTMLElement>
     children?: ReactNode
     className?: string
 }

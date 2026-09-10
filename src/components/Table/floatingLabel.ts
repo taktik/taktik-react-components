@@ -16,9 +16,9 @@ import { floatingShadow, fontSizeSmall, radiusSmall, tableFont } from '../../the
  */
 export const floatingLabel = css`
     position: fixed;
-    z-index: 1500;
-    transform: translate(-50%, calc(-100% - 8px));
-    padding: 4px 8px;
+    z-index: ${({ theme }) => theme.table.floatingZIndex};
+    transform: translate(-50%, calc(-100% - ${({ theme }) => theme.table.floatingOffset}));
+    padding: ${({ theme }) => theme.table.floatingPadding};
     white-space: nowrap;
     background-color: ${({ theme }) => theme.tooltipBackground};
     color: ${({ theme }) => theme.tooltipColor};

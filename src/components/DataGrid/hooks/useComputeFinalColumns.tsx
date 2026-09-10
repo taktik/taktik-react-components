@@ -39,7 +39,7 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
 }): ColumnDefinition<R>[] => {
     const { enabled: visibilityFeatureEnabled, hiddenColumn } = useContext(VisibilityContext)
     const adaptColumn = useCallback((col: ColumnDefinition<R>) => {
-        const getRenderCell = () => {
+        const getRenderCell = (): ColumnDefinition<R>['renderCell'] => {
             if (col.renderCell) {
                 return col.renderCell
             }
@@ -52,7 +52,7 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
                     )
             }
         }
-        const getRenderHeaderCell = () => {
+        const getRenderHeaderCell = (): NonNullable<ColumnDefinition<R>['renderHeaderCell']> => {
             if (col.renderHeaderCell) {
                 return col.renderHeaderCell
             }

@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { radiusLarge } from '../../theme/tableStyles'
 
 export const Container = styled.div<{ $pagination?: boolean }>`
     width: 100%;
@@ -15,13 +16,13 @@ export const Container = styled.div<{ $pagination?: boolean }>`
 
     *::-webkit-scrollbar-thumb {
         background-color: var(--rdg-scrollbar-thumb-background) !important;
-        border-radius: 8px;
+        ${radiusLarge};
         border: none;
     }
 
     *::-webkit-scrollbar-track {
         background-color: var(--rdg-scrollbar-track-background) !important;
-        border-radius: 8px;
+        ${radiusLarge};
     }
 
     *::-webkit-scrollbar-thumb:hover {
@@ -74,16 +75,6 @@ export const Container = styled.div<{ $pagination?: boolean }>`
        .rdg above, and can now answer it. */
     .rdg-header-row,
     .rdg-row:not(.rdg-detail-row) > .rdg-cell {
-        font-weight: var(--rdg-font-weight) !important;
-        line-height: var(--rdg-line-height) !important;
-        font-family: var(--rdg-font-family) !important;
-    }
-
-    /* The pager is the library's OWN chrome rather than consumer content, so it wears the grid's
-       face and not the UI kit's, whose typography it carries by itself. The consumer's own
-       totalLabel node is a sibling of this and keeps its type. */
-    .MuiTablePagination-root,
-    .MuiTablePagination-root * {
         font-weight: var(--rdg-font-weight) !important;
         line-height: var(--rdg-line-height) !important;
         font-family: var(--rdg-font-family) !important;

@@ -1,8 +1,9 @@
 import { useCallback, useMemo } from 'react'
-import { DefaultTheme, useTheme } from 'styled-components'
+import { useTheme } from 'styled-components'
 import type { CellKeyboardEvent } from 'react-data-grid'
 import { useLabels, useTranslate } from '../../labels'
-import { defaultTheme } from '../DataGrid/dataGridTheme'
+import type { TableTheme } from '../../theme/tableTheme'
+import { defaultTheme, type DataGridTheme } from '../DataGrid/dataGridTheme'
 import { renderGridCheckbox } from './GridCheckbox'
 
 /**
@@ -14,14 +15,14 @@ import { renderGridCheckbox } from './GridCheckbox'
  * gets the page's canvas from the fallback — so no page has a prop to remember, and a new kind of
  * host is one declaration rather than a thread through `CrudTable`.
  */
-export const GRID_HEADER_GROUND_VAR = '--flowr-grid-header-ground'
+export const GRID_HEADER_GROUND_VAR = '--tk-grid-header-ground'
 
 /**
  * ⚠ Not purely declarative: the grid READS `--rdg-loading-color` out of this object in JS and hands
  * it to the spinner, so a `var()` expression is safe only for a value nothing but CSS resolves. The
  * header background is one; check before making a second.
  */
-const buildDataGridTheme = (theme: DefaultTheme) => ({
+const buildDataGridTheme = (theme: TableTheme): DataGridTheme => ({
     ...defaultTheme,
     // What a ROW is painted, and only that: the grid box paints nothing of its own, so under the
     // last row the reader sees what the grid stands on — the page's canvas, a dialog's paper —
@@ -56,6 +57,22 @@ const buildDataGridTheme = (theme: DefaultTheme) => ({
     // left the header and the first row bare and the middle of the grid with the full strength, and
     // nothing drawn per cell reads as one smooth band. Nothing else can turn those strips off.
     '--rdg-frozen-shadow-opacity': '0',
+    // The bar down an open row and its detail: the host's accent, not a fixed blue.
+    '--rdg-expanded-accent-color': theme.primaryMain,
+    // The grid's own face and rhythm. They are the HOST's design system rather than the library's:
+    // a table has to read at the same size, in the same family and on the same rhythm as everything
+    // standing beside it, and a scale restated here is one that drifts from the app's in silence.
+    '--rdg-font-family': theme.table.fontFamily,
+    '--rdg-font-size': theme.table.fontSizeSmall,
+    // The column names read at the size the rows do — the header is a band of the same table, and
+    // what separates it is its ground and its ink, not a step of type.
+    '--rdg-header-font-size': theme.table.fontSizeSmall,
+    '--rdg-line-height': theme.table.lineHeight,
+    '--rdg-cell-padding': `${theme.table.cellPaddingBlock} ${theme.table.cellPaddingInline}`,
+    '--rdg-border-size': theme.table.borderWidth,
+    '--rdg-border-radius-container': theme.table.radiusLarge,
+    '--rdg-scrollbar-width': theme.scrollbar.size,
+    '--rdg-scrollbar-height': theme.scrollbar.size,
     // The selection checkbox and the loading veil: both default to a palette blue, which is a
     // light-blue wash over a dark grid.
     '--rdg-checkbox-color': theme.primaryMain,
@@ -91,7 +108,8 @@ const releaseTabFromGrid = (_args: unknown, event: CellKeyboardEvent): void => {
 }
 
 export interface GridPresentation {
-    theme: ReturnType<typeof buildDataGridTheme>
+    /** The rdg custom properties every grid is spread with — see `DataGridTheme`. */
+    theme: DataGridTheme
     headerRowHeight: number
     rowHeight: number
     /** the consumer's checkbox for the selection column — see `GridCheckbox` */

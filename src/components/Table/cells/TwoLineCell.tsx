@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { JSX, ReactNode } from 'react'
 import styled from 'styled-components'
 import { fontSizeSmall, fontSizeSmaller, tableFont } from '../../../theme/tableStyles'
 
@@ -53,7 +53,7 @@ export const TwoLineCell = ({
     primaryTitle,
     secondaryTitle,
     className
-}: TwoLineCellProps) => (
+}: TwoLineCellProps): JSX.Element => (
     <Lines className={className}>
         <Primary title={primaryTitle}>{primary}</Primary>
         {secondary !== undefined && secondary !== '' && (

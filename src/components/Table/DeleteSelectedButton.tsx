@@ -1,4 +1,5 @@
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded'
+import type { JSX } from 'react'
 import { useTableSlots } from '../../slots'
 
 export interface DeleteSelectedButtonProps {
@@ -33,7 +34,7 @@ export const DeleteSelectedButton = ({
     onClick,
     disabled,
     tooltipText
-}: DeleteSelectedButtonProps) => {
+}: DeleteSelectedButtonProps): JSX.Element => {
     const { Button } = useTableSlots()
     return (
         <Button

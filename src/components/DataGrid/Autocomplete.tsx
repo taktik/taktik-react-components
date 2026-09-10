@@ -3,7 +3,8 @@ import { TextFieldProps } from '@mui/material/TextField'
 import React, { useMemo } from 'react'
 import { Input } from './Input'
 
-const stopPropagation = (event: React.MouseEvent | React.KeyboardEvent) => event.stopPropagation()
+const stopPropagation = (event: React.MouseEvent | React.KeyboardEvent): void =>
+    event.stopPropagation()
 
 type Props = Omit<TextFieldProps, 'onChange' | 'value'> & {
     options: { label: string; value: string }[]
@@ -11,7 +12,7 @@ type Props = Omit<TextFieldProps, 'onChange' | 'value'> & {
     value?: string
     renderInput?: (props: TextFieldProps) => React.ReactNode
 }
-export const Autocomplete = ({ options, renderInput, ...props }: Props) => {
+export const Autocomplete = ({ options, renderInput, ...props }: Props): React.JSX.Element => {
     const selected = useMemo(
         () => options.find((option) => option.value === props.value),
         [options, props.value]

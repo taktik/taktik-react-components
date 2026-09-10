@@ -4,10 +4,11 @@ import { flexTrack, isFlexibleWidth, trackFloor } from './columnWidths'
 /**
  * A column that may become the one absorbing the table's leftover width.
  *
- * A `frozenRight` column may not: it is pinned to the right edge (a row-actions kebab, a flag), so
- * widening it would put the leftover between the last value and the edge instead of at the end of
- * the row. The checkbox column cannot appear here at all — the grid injects it, so it never reaches
- * a consumer's column array.
+ * What disqualifies a column is the right EDGE, not what it holds: a `frozenRight` column is pinned
+ * there (a row-actions kebab, a flag), so widening it would put the leftover between the last value
+ * and the edge instead of at the end of the row. A column of actions that is NOT pinned is an
+ * ordinary column here, and becomes the filling one whenever it ends the visible row. The checkbox
+ * column cannot appear at all — the grid injects it, so it never reaches a consumer's column array.
  */
 const absorbable = <R extends RowDefinition>(column: ColumnDefinition<R>): boolean =>
     !column.frozenRight

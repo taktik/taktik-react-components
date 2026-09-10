@@ -1,9 +1,9 @@
-import { taktikPalette } from '../taktikPalette'
-
 export type DataGridTheme = {
     '--rdg-color'?: string
     '--rdg-header-color'?: string
     '--rdg-border-color'?: string
+    /** The column-resize seam under the pointer; the border colour where none is named. */
+    '--rdg-resize-handle-color'?: string
     '--rdg-summary-border-color'?: string
     '--rdg-background-color'?: string
     '--rdg-header-background-color'?: string
@@ -46,32 +46,41 @@ export type DataGridTheme = {
     '--rdg-scrollbar-track-hover-background'?: string
 }
 
+/**
+ * What a grid draws with before a host has said anything — NEUTRAL, and nobody's design system:
+ * generic greys, a system font stack, plain steps.
+ *
+ * ⚠ Every value here is LIVE for the keys `buildDataGridTheme` (`useGridPresentation`) does not
+ * name, since that hook spreads this object and overrides part of it. So a value left here is a
+ * value the host cannot answer for: anything belonging to a design system goes THERE, read off the
+ * theme, and only the fallback stays behind.
+ */
 export const defaultTheme: DataGridTheme = {
-    '--rdg-color': taktikPalette.gray800,
-    '--rdg-header-color': taktikPalette.gray700,
-    '--rdg-border-color': taktikPalette.gray400,
-    '--rdg-background-color': taktikPalette.forcewhite,
-    '--rdg-header-background-color': taktikPalette.forcewhite,
-    '--rdg-row-hover-background-color': taktikPalette.forcewhite,
-    '--rdg-row-selected-hover-background-color': taktikPalette.primary400,
+    '--rdg-color': '#212121',
+    '--rdg-header-color': '#616161',
+    '--rdg-border-color': '#E0E0E0',
+    '--rdg-background-color': '#FFFFFF',
+    '--rdg-header-background-color': '#FFFFFF',
+    '--rdg-row-hover-background-color': '#F5F5F5',
+    '--rdg-row-selected-hover-background-color': '#E3F2FD',
     '--rdg-selection-color': 'transparent',
     '--rdg-border-size': '1px',
     '--rdg-font-size': '14px',
     '--rdg-header-font-size': '14px',
-    '--rdg-line-height': '16.94px',
+    '--rdg-line-height': '1.4',
     '--rdg-font-weight': '400',
-    '--rdg-font-family': 'Inter, Helvetica, sans-serif',
+    '--rdg-font-family': 'system-ui, -apple-system, sans-serif',
     '--rdg-cell-padding': '8px 12px',
     '--rdg-border-radius-container': '8px',
-    '--rdg-row-selected-background-color': taktikPalette.primary400,
-    '--rdg-expanded-accent-color': taktikPalette.primary400,
-    '--rdg-row-selected-color': taktikPalette.forcewhite,
+    '--rdg-row-selected-background-color': '#E3F2FD',
+    '--rdg-expanded-accent-color': '#1976D2',
+    '--rdg-row-selected-color': '#212121',
     '--rdg-scrollbar-width': '8px',
     '--rdg-scrollbar-height': '8px',
-    '--rdg-scrollbar-thumb-background': taktikPalette.primary500,
-    '--rdg-scrollbar-track-background': taktikPalette.gray100,
-    '--rdg-scrollbar-thumb-hover-background': taktikPalette.primary500,
-    '--rdg-scrollbar-track-hover-background': taktikPalette.gray200,
-    '--rdg-checkbox-color': taktikPalette.primary500,
-    '--rdg-loading-color': taktikPalette.primary500
+    '--rdg-scrollbar-thumb-background': '#BDBDBD',
+    '--rdg-scrollbar-track-background': 'transparent',
+    '--rdg-scrollbar-thumb-hover-background': '#9E9E9E',
+    '--rdg-scrollbar-track-hover-background': 'transparent',
+    '--rdg-checkbox-color': '#1976D2',
+    '--rdg-loading-color': '#1976D2'
 }

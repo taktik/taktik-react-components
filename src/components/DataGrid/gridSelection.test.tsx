@@ -1,6 +1,8 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactElement } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+import { renderWithTable } from '../../testUtils/renderWithTable'
 import { DataGrid } from './DataGrid'
 import type { ColumnDefinition } from './types'
 
@@ -25,7 +27,7 @@ const grid = (
     selectedRows: string[],
     onSelectedRowsChange: (ids: string[]) => void,
     remote: boolean
-) => {
+): ReactElement => {
     const remotePagination = {
         currentPage: 0,
         setCurrentPage: vi.fn(),
@@ -52,26 +54,26 @@ describe('selection under server pagination', () => {
      */
     it('keeps ids belonging to rows on other pages', () => {
         const onSelectedRowsChange = vi.fn()
-        render(grid(['a', 'z'], onSelectedRowsChange, true))
+        renderWithTable(grid(['a', 'z'], onSelectedRowsChange, true))
         expect(onSelectedRowsChange).not.toHaveBeenCalled()
     })
 
     it('still drops ids of rows that are gone when the grid holds them all', () => {
         const onSelectedRowsChange = vi.fn()
-        render(grid(['a', 'z'], onSelectedRowsChange, false))
+        renderWithTable(grid(['a', 'z'], onSelectedRowsChange, false))
         expect(onSelectedRowsChange).toHaveBeenCalledWith(['a'])
     })
 
     it('select-all adds this page without disturbing the rest of the selection', async () => {
         const onSelectedRowsChange = vi.fn()
-        render(grid(['z'], onSelectedRowsChange, true))
+        renderWithTable(grid(['z'], onSelectedRowsChange, true))
         await userEvent.click(screen.getAllByRole('checkbox')[0] as HTMLElement)
         expect(onSelectedRowsChange).toHaveBeenCalledWith(['z', 'a', 'b'])
     })
 
     it('unchecking select-all removes this page and nothing else', async () => {
         const onSelectedRowsChange = vi.fn()
-        render(grid(['z', 'a', 'b'], onSelectedRowsChange, true))
+        renderWithTable(grid(['z', 'a', 'b'], onSelectedRowsChange, true))
         await userEvent.click(screen.getAllByRole('checkbox')[0] as HTMLElement)
         expect(onSelectedRowsChange).toHaveBeenCalledWith(['z'])
     })

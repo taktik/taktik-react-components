@@ -1,7 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { ThemeProvider } from 'styled-components'
 import { describe, expect, it, vi } from 'vitest'
 import { defaultTableTheme as lightTheme } from '../../theme/tableTheme'
+import { required } from '../../testUtils/required'
+import type { ColumnDefinition } from '../DataGrid/types'
 import { withAlignedColumn } from './gridCells'
 import { rowActionsColumn, rowMenuItems, unhideableColumns } from './rowActions'
 
@@ -62,6 +65,44 @@ describe('rowActionsColumn', () => {
         it('keeps its disabled state', () => {
             renderCellClosed({ items: () => [{ id: 'edit', name: 'app.edit', disabled: true }] })
             expect(screen.getByRole('button', { name: 'app.edit' })).toBeDisabled()
+        })
+
+        /** The tooltip of the lone action, read where it is drawn: on hover, over its wrapper. */
+        const hoverTooltip = async (): Promise<HTMLElement> => {
+            const button = screen.getByRole('button', { name: 'Edit location zone' })
+            await userEvent.hover(required(button.parentElement, 'the tooltip wrapper'))
+            return screen.findByRole('tooltip')
+        }
+
+        // A bare icon has no second line to put a reason on — the menu form shows one under the
+        // label — so the verb and the reason share this button's one tooltip.
+        it('joins the verb and the reason it is off into one tooltip', async () => {
+            renderCellClosed({
+                items: () => [
+                    {
+                        id: 'edit',
+                        label: 'Edit location zone',
+                        disabled: true,
+                        disabledReason: 'Inherited from Region North'
+                    }
+                ]
+            })
+            expect(await hoverTooltip()).toHaveTextContent(
+                'Edit location zone — Inherited from Region North'
+            )
+        })
+
+        it('says only the verb while the action is enabled', async () => {
+            renderCellClosed({
+                items: () => [
+                    {
+                        id: 'edit',
+                        label: 'Edit location zone',
+                        disabledReason: 'Inherited from Region North'
+                    }
+                ]
+            })
+            expect(await hoverTooltip()).toHaveTextContent(/^Edit location zone$/)
         })
 
         // the page's delete counts towards the total: one item plus a delete is still a menu
@@ -172,10 +213,9 @@ describe('unhideableColumns', () => {
  * already declared, so the two entry points cannot offer different actions on one row.
  */
 describe('rowMenuItems', () => {
-    const columnsWith = (options: Parameters<typeof rowActionsColumn<Row>>[0]) => [
-        { key: 'name', name: 'Name' },
-        rowActionsColumn<Row>(options)
-    ]
+    const columnsWith = (
+        options: Parameters<typeof rowActionsColumn<Row>>[0]
+    ): ColumnDefinition<Row>[] => [{ key: 'name', name: 'Name' }, rowActionsColumn<Row>(options)]
 
     it('reads the row’s items off the actions column', () => {
         const columns = columnsWith({ items: (row) => [{ id: 'edit', label: `Edit ${row.name}` }] })

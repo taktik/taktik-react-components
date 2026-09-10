@@ -1,5 +1,5 @@
 import { render, type RenderOptions, type RenderResult } from '@testing-library/react'
-import { ReactElement, ReactNode } from 'react'
+import { ReactElement, ReactNode, RefObject } from 'react'
 import { ThemeProvider } from 'styled-components'
 import { TableProvider } from '../TableProvider'
 import { defaultTableTheme, type TableTheme } from '../theme/tableTheme'
@@ -12,6 +12,8 @@ export interface RenderWithTableOptions extends Omit<RenderOptions, 'wrapper'> {
     slots?: Partial<TableSlots>
     /** The window event after which a table drops its measured widths. */
     remeasureEvent?: string
+    /** Takes a filter bar's search field into the host's keyboard shortcut, as an application does. */
+    registerSearchField?: (field: RefObject<HTMLInputElement | null>) => () => void
 }
 
 /**
@@ -21,11 +23,20 @@ export interface RenderWithTableOptions extends Omit<RenderOptions, 'wrapper'> {
  */
 export const renderWithTable = (
     ui: ReactElement,
-    { theme = defaultTableTheme, slots, remeasureEvent, ...options }: RenderWithTableOptions = {}
+    {
+        theme = defaultTableTheme,
+        slots,
+        remeasureEvent,
+        registerSearchField,
+        ...options
+    }: RenderWithTableOptions = {}
 ): RenderResult => {
-    const Wrapper = ({ children }: { children: ReactNode }) => (
+    const Wrapper = ({ children }: { children: ReactNode }): ReactNode => (
         <ThemeProvider theme={theme}>
-            <TableProvider slots={slots} remeasureEvent={remeasureEvent}>
+            <TableProvider
+                slots={slots}
+                remeasureEvent={remeasureEvent}
+                registerSearchField={registerSearchField}>
                 {children}
             </TableProvider>
         </ThemeProvider>

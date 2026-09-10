@@ -98,7 +98,7 @@ describe('useColumnWidths', () => {
      * measurements is what asks for the measurement.
      */
     describe('a settled layout change', () => {
-        const settle = (result: { current: { remeasure: () => void } }) =>
+        const settle = (result: { current: { remeasure: () => void } }): void =>
             act(() => result.current.remeasure())
 
         it('drops what the grid measured and keeps what the reader dragged', () => {

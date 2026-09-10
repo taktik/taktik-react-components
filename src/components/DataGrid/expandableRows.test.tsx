@@ -1,7 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { screen, type RenderResult } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactElement, ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import type { RenderCellProps } from 'react-data-grid'
+import { renderWithTable } from '../../testUtils/renderWithTable'
+import type { DataGridExpandable } from './DataGrid'
 import {
     clickBelongsToRow,
     DataGrid,
@@ -59,8 +62,8 @@ const frozenRightColumn: ColumnDefinition<Row> = {
     renderCell: () => <button type='button'>Actions</button>
 }
 
-const renderCellOf = (column: ColumnDefinition<Row>, row: Row) =>
-    render(<>{column.renderCell?.({ row } as unknown as RenderCellProps<Row>)}</>)
+const renderCellOf = (column: ColumnDefinition<Row>, row: Row): RenderResult =>
+    renderWithTable(<>{column.renderCell?.({ row } as unknown as RenderCellProps<Row>)}</>)
 
 describe('withDetailRows', () => {
     it('follows each open row with a detail row of its own', () => {
@@ -90,7 +93,7 @@ describe('withDetailRows', () => {
 describe('ExpanderToggle', () => {
     const config = (
         over: Partial<Parameters<typeof ExpanderToggle<Row>>[0]['expandable']> = {}
-    ) => ({
+    ): DataGridExpandable<Row> => ({
         expandedIds: [],
         onExpandedChange: vi.fn(),
         renderDetail: () => null,
@@ -100,14 +103,14 @@ describe('ExpanderToggle', () => {
 
     it('reports the row it toggles, adding it when closed', async () => {
         const expandable = config()
-        render(<ExpanderToggle row={rows[0] as Row} expandable={expandable} />)
+        renderWithTable(<ExpanderToggle row={rows[0] as Row} expandable={expandable} />)
         await userEvent.click(screen.getByRole('button', { name: 'Show details' }))
         expect(expandable.onExpandedChange).toHaveBeenCalledWith(['a'])
     })
 
     it('removes the row again when it is already open', async () => {
         const expandable = config({ expandedIds: ['a', 'b'] })
-        render(<ExpanderToggle row={rows[0] as Row} expandable={expandable} />)
+        renderWithTable(<ExpanderToggle row={rows[0] as Row} expandable={expandable} />)
         const toggle = screen.getByRole('button', { name: 'Hide details' })
         expect(toggle).toHaveAttribute('aria-expanded', 'true')
         await userEvent.click(toggle)
@@ -134,7 +137,7 @@ describe('clickBelongsToRow', () => {
     })
 
     it('leaves a click on a control to that control', () => {
-        const { container } = render(
+        const { container } = renderWithTable(
             <div>
                 <button type='button'>
                     <span>label</span>
@@ -165,7 +168,7 @@ describe('detailRowClass', () => {
 })
 
 describe('withDetailRendering', () => {
-    const detail = (row: Row) => <span>details of {row.name}</span>
+    const detail = (row: Row): ReactNode => <span>details of {row.name}</span>
 
     it('spans the detail across every column from the first one that can span', () => {
         const columns = withDetailRendering([frozenColumn, nameColumn, nameColumn], detail)
@@ -235,7 +238,7 @@ describe('detailAwareRowHeight', () => {
 })
 
 describe('DataGrid with expandable rows', () => {
-    const grid = (expandedIds: string[], onExpandedChange = vi.fn()) => (
+    const grid = (expandedIds: string[], onExpandedChange = vi.fn()): ReactElement => (
         <DataGrid<Row>
             rows={rows}
             columns={[nameColumn]}
@@ -250,14 +253,14 @@ describe('DataGrid with expandable rows', () => {
     )
 
     it("offers a toggle per row and renders the open row's detail", () => {
-        render(grid(['b']))
+        renderWithTable(grid(['b']))
         expect(screen.getByText('detail-b')).toBeInTheDocument()
         expect(screen.queryByText('detail-a')).not.toBeInTheDocument()
     })
 
     it('reports a toggle without changing the expansion itself', async () => {
         const onExpandedChange = vi.fn()
-        render(grid([], onExpandedChange))
+        renderWithTable(grid([], onExpandedChange))
         await userEvent.click(
             screen.getAllByRole('button', { name: 'Show details' })[0] as HTMLElement
         )
@@ -267,14 +270,14 @@ describe('DataGrid with expandable rows', () => {
 
     it('expands from a click anywhere on the row, not just on the chevron', async () => {
         const onExpandedChange = vi.fn()
-        render(grid([], onExpandedChange))
+        renderWithTable(grid([], onExpandedChange))
         await userEvent.click(screen.getByText('Bravo'))
         expect(onExpandedChange).toHaveBeenCalledWith(['b'])
     })
 
     it('collapses an open row the same way', async () => {
         const onExpandedChange = vi.fn()
-        render(grid(['b'], onExpandedChange))
+        renderWithTable(grid(['b'], onExpandedChange))
         await userEvent.click(screen.getByText('Bravo'))
         expect(onExpandedChange).toHaveBeenCalledWith([])
     })
@@ -282,7 +285,7 @@ describe('DataGrid with expandable rows', () => {
     // The detail is the result of expanding, not another handle on it
     it('ignores a click inside the detail itself', async () => {
         const onExpandedChange = vi.fn()
-        render(grid(['b'], onExpandedChange))
+        renderWithTable(grid(['b'], onExpandedChange))
         await userEvent.click(screen.getByText('detail-b'))
         expect(onExpandedChange).not.toHaveBeenCalled()
     })
@@ -295,8 +298,8 @@ describe('DataGrid with expandable rows', () => {
  */
 describe('withDetailRendering with a frozen column declared last', () => {
     const columns = [frozenColumn, nameColumn, frozenLastColumn]
-    const detail = (row: Row) => <span>{`detail-${row.id}`}</span>
-    const prepared = () => withDetailRendering(columns, detail)
+    const detail = (row: Row): ReactNode => <span>{`detail-${row.id}`}</span>
+    const prepared = (): ColumnDefinition<Row>[] => withDetailRendering(columns, detail)
     const detailRow = withDetailRows(rows, ['a'])[1] as Row
 
     it('blanks a frozen column on a detail row wherever it was declared', () => {
@@ -331,8 +334,8 @@ describe('withDetailRendering with a frozen column declared last', () => {
  */
 describe('withDetailRendering with a frozenRight column declared last', () => {
     const columns = [frozenColumn, nameColumn, frozenRightColumn]
-    const detail = (row: Row) => <span>{`detail-${row.id}`}</span>
-    const prepared = () => withDetailRendering(columns, detail)
+    const detail = (row: Row): ReactNode => <span>{`detail-${row.id}`}</span>
+    const prepared = (): ColumnDefinition<Row>[] => withDetailRendering(columns, detail)
     const detailRow = withDetailRows(rows, ['a'])[1] as Row
 
     it('spans the unfrozen band only, stopping at the pinned actions track', () => {

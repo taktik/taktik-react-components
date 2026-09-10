@@ -1,5 +1,6 @@
 import {
     DragEvent,
+    JSX,
     Key,
     ReactNode,
     useCallback,
@@ -10,7 +11,6 @@ import {
 } from 'react'
 import { Row as GridRow, type SortColumn } from 'react-data-grid'
 import styled from 'styled-components'
-import { useTableRuntime } from '../../TableProvider'
 import {
     ALL_MATCHING_SELECTED,
     idsSelection,
@@ -26,6 +26,7 @@ import { withFillingColumn } from '../DataGrid/layout/columnFill'
 import { withColumnOrder } from '../DataGrid/layout/withColumnOrder'
 import { useColumnOrder } from '../DataGrid/layout/useColumnOrder'
 import { useColumnWidths } from '../DataGrid/layout/useColumnWidths'
+import { useRemeasureOnHostEvent } from '../DataGrid/layout/useRemeasureOnHostEvent'
 import { useHiddenColumns } from '../DataGrid/layout/useHiddenColumns'
 import type { ColumnDefinition, RowDefinition } from '../DataGrid/types'
 import { withAlignedColumn } from './gridCells'
@@ -284,7 +285,7 @@ export const CrudTable = <R extends RowDefinition>({
     totalLabel,
     expandable,
     rowDrag
-}: CrudTableProps<R>) => {
+}: CrudTableProps<R>): JSX.Element => {
     const [internalSelected, setInternalSelected] = useState<string[]>([])
     // The union is taken apart here rather than passed around whole: a consumer writes its selection
     // as an object literal, so every derivation below would get a fresh identity each render — and
@@ -348,18 +349,8 @@ export const CrudTable = <R extends RowDefinition>({
      * the remount a column toggle causes and a hidden column comes back the width it was left at.
      */
     const columnWidths = useColumnWidths(columnVisibilityKey)
-    /**
-     * The chrome around the table settled at a new width — a pane seam was released, a column
-     * collapsed, the window was resized — so every table is measured again at the width it actually
-     * has now. Wired here for every table, off the event name the consumer named once.
-     */
-    const { remeasureEvent } = useTableRuntime()
-    const remeasure = columnWidths.remeasure
-    useEffect(() => {
-        if (!remeasureEvent) return
-        window.addEventListener(remeasureEvent, remeasure)
-        return () => window.removeEventListener(remeasureEvent, remeasure)
-    }, [remeasureEvent, remeasure])
+    // Wired here for every table, so no page listens for the host's own event itself
+    useRemeasureOnHostEvent(columnWidths.remeasure)
     const storedWidths = columnWidths.widths
     /**
      * The order this reader arranged this table's columns into, from the column chooser. It is

@@ -1,25 +1,58 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import React, { ReactNode, useCallback, useMemo } from 'react'
 import TablePagination from '@mui/material/TablePagination'
+import { englishLabels } from '../../labels/labels'
+import { fontSizeNormal, tableFont } from '../../theme/tableStyles'
+
+/**
+ * The house family and the line the footer reads on. Safe on every node the pager holds — a family
+ * and a line say nothing about a glyph's size — so it is handed to the whole subtree, unlike the
+ * type step below.
+ */
+const footerFace = css`
+    ${tableFont};
+    line-height: ${({ theme }) => theme.table.lineHeight};
+`
 
 /**
  * The footer is a ROW with two ends: what the table holds on the left, the pager's own controls on
  * the right. The pager keeps the right end to itself when the left one says nothing, so a grid that
  * passes no `totalLabel` looks exactly as it did.
+ *
+ * Both ends read as ONE thing. The right one is MUI's `TablePagination`, which sizes its parts from
+ * its own `body2` — a step no host theme ever named — so a footer stating a token on the left and
+ * MUI's stock size on the right showed two type sizes in the same row. The rules below are what
+ * hand the pager the very tokens the left end reads; two classes deep, so they out-specify MUI's
+ * own single-class styles whatever order the two stylesheets land in.
  */
 const Container = styled.div`
-    height: 80px;
+    height: ${({ theme }) => theme.table.footerHeight};
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: ${({ theme }) => theme.table.footerGap};
+
+    .MuiTablePagination-root,
+    .MuiTablePagination-root * {
+        ${footerFace};
+    }
+
+    /* ⚠ The SIZE reaches the text-bearing parts and NOT the subtree: font-size is what sizes an MUI
+       SvgIcon, so a step handed to every node would shrink the pager's chevrons to the height of a
+       word. The Select needs no rule of its own — MUI gives it font-size: inherit. */
+    .MuiTablePagination-root,
+    .MuiTablePagination-selectLabel,
+    .MuiTablePagination-displayedRows {
+        ${fontSizeNormal};
+    }
 `
 
 /** The left end of the footer. Its colour is the footer's, which the host theme paints. */
 const TotalLabel = styled.div`
     margin-right: auto;
-    font-size: 0.875rem;
+    ${footerFace};
+    ${fontSizeNormal};
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -59,7 +92,7 @@ export const Pagination = ({
     labels,
     totalLabel,
     rowsPerPageOptions = DEFAULT_ROWS_PER_PAGE_OPTIONS
-}: Props) => {
+}: Props): React.JSX.Element => {
     /**
      * ⚠ The setters ARE dependencies. A controlled consumer's own handler is part of them, so they
      * change identity while the grid lives — and a closure frozen on the first render would call a
@@ -102,7 +135,7 @@ export const Pagination = ({
                     labels?.rowsPerPageLabel ? <span>{labels?.rowsPerPageLabel}</span> : undefined
                 }
                 labelDisplayedRows={({ from, to, count }) => {
-                    return `${from}-${to} ${labels?.ofLabel ? labels.ofLabel : 'of'} ${count}`
+                    return `${from}-${to} ${labels?.ofLabel || englishLabels.of} ${count}`
                 }}
                 component='div'
                 count={totalCount}

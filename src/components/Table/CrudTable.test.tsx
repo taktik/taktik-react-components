@@ -1,5 +1,5 @@
-import { ReactNode } from 'react'
-import { act, render, screen } from '@testing-library/react'
+import { ReactElement, ReactNode } from 'react'
+import { act, render, RenderResult, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ThemeProvider } from 'styled-components'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -11,7 +11,7 @@ import {
     writeColumnOrder,
     writeColumnWidths
 } from '../DataGrid/layout'
-import { CrudTable, CrudTableProps } from './CrudTable'
+import { CrudTable, CrudTablePaging, CrudTableProps } from './CrudTable'
 import { GRID_HEADER_GROUND_VAR, GRID_PAGE_SIZE } from './useGridPresentation'
 
 // The DataGrid is tested upstream; mock it to capture the props the wrapper feeds it and test
@@ -79,7 +79,7 @@ const livingRoom: DeviceRow = { id: 'd1', nameWithExtraInfos: 'Living room AABB'
 const kitchen: DeviceRow = { id: 'd2', nameWithExtraInfos: 'Kitchen CCDD' }
 const devices: DeviceRow[] = [livingRoom, kitchen]
 
-const table = (props: Partial<CrudTableProps<DeviceRow>> = {}) => (
+const table = (props: Partial<CrudTableProps<DeviceRow>> = {}): ReactElement => (
     <ThemeProvider theme={lightTheme}>
         <CrudTable<DeviceRow>
             columnVisibilityKey='crudTableTest'
@@ -90,7 +90,8 @@ const table = (props: Partial<CrudTableProps<DeviceRow>> = {}) => (
     </ThemeProvider>
 )
 
-const renderTable = (props: Partial<CrudTableProps<DeviceRow>> = {}) => render(table(props))
+const renderTable = (props: Partial<CrudTableProps<DeviceRow>> = {}): RenderResult =>
+    render(table(props))
 
 // the stored per-table layouts (hidden columns, widths, order) must not leak between tests
 beforeEach(() => localStorage.clear())
@@ -156,7 +157,7 @@ describe('CrudTable', () => {
     // The count at the footer's left end rides the pager, so it reaches BOTH paging shapes — and a
     // table that turns the pager off has nowhere to put it.
     it('hands the footer count to the grid, server-paged and locally paged alike', () => {
-        const totalLabel = (count: number) => `${count} devices`
+        const totalLabel = (count: number): string => `${count} devices`
         renderTable({ totalLabel })
         expect(lastGrid.pagination?.totalLabel).toBe(totalLabel)
 
@@ -197,7 +198,7 @@ describe('CrudTable', () => {
     // The one table whose rows are not all the same height is the license page, whose cells grow
     // with the grants they show
     it('lets a table size its own rows, and keeps the shared rhythm for every other', () => {
-        const rowHeight = (row: DeviceRow) => (row.id === 'd1' ? 88 : 50)
+        const rowHeight = (row: DeviceRow): number => (row.id === 'd1' ? 88 : 50)
         renderTable({ rowHeight })
         expect(lastGrid.rowHeight).toBe(rowHeight)
     })
@@ -485,7 +486,7 @@ describe('CrudTable', () => {
  * still ticks the page; the band above the grid is what offers the whole set.
  */
 describe('CrudTable, all-matching selection', () => {
-    const serverPaged = (total: number) => ({
+    const serverPaged = (total: number): CrudTablePaging => ({
         mode: 'server' as const,
         total,
         pageSize: 2,
@@ -601,7 +602,7 @@ describe('CrudTable, all-matching selection', () => {
  * statement: a selection reaching past the rows on screen is otherwise invisible.
  */
 describe('CrudTable, a plain-ids selection that outgrows the page', () => {
-    const urlPaged = (pageSize: number) => ({
+    const urlPaged = (pageSize: number): CrudTablePaging => ({
         mode: 'url' as const,
         page: 0,
         onPageChange: vi.fn(),

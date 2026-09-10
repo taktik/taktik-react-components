@@ -64,8 +64,9 @@ export const floatingShadow = css`
 export const focusRing = css`
     &:focus-visible,
     &.Mui-focusVisible {
-        outline: 2px solid ${({ theme }) => theme.primaryMain};
-        outline-offset: 2px;
+        outline: ${({ theme }) => theme.table.focusRingWidth} solid
+            ${({ theme }) => theme.primaryMain};
+        outline-offset: ${({ theme }) => theme.table.focusRingOffset};
     }
 `
 
@@ -76,8 +77,9 @@ export const focusRing = css`
 export const focusRingInset = css`
     &:focus-visible,
     &.Mui-focusVisible {
-        outline: 2px solid ${({ theme }) => theme.primaryMain};
-        outline-offset: -2px;
+        outline: ${({ theme }) => theme.table.focusRingWidth} solid
+            ${({ theme }) => theme.primaryMain};
+        outline-offset: calc(-1 * ${({ theme }) => theme.table.focusRingOffset});
     }
 `
 

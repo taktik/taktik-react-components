@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { JSX, ReactNode } from 'react'
 import styled from 'styled-components'
 import { fontSizeBig, fontSizeNormal, tableFont } from '../../theme/tableStyles'
 
@@ -11,8 +11,8 @@ const Layout = styled.div`
     color: ${({ theme }) => theme.textLight};
 
     svg {
-        /* deliberately off the icon scale: this one is an illustration, not a control's icon */
-        font-size: 44px;
+        /* an illustration rather than a control's icon, so it takes its own step of the scale */
+        font-size: ${({ theme }) => theme.table.iconSizeIllustration};
         opacity: 0.5;
     }
 `
@@ -44,7 +44,7 @@ export interface GridEmptyStateProps {
  * whatever renders it does the centering, whether that is the grid's `noDataMessage` slot or a
  * consumer's own empty branch. Strings arrive already translated.
  */
-export const GridEmptyState = ({ icon, title, hint }: GridEmptyStateProps) => (
+export const GridEmptyState = ({ icon, title, hint }: GridEmptyStateProps): JSX.Element => (
     <Layout>
         {icon}
         <Title>{title}</Title>

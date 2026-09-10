@@ -1,0 +1,39 @@
+# Everything `npm run` can check, on every push and every pull request.
+#
+# The last step is the one that cannot be checked from inside this repository: every bundled
+# dependency is also a devDependency here, so a `dist/index.d.ts` that names `react-data-grid` or
+# `date-fns` resolves locally and breaks only in a consumer. `verify:consumer` packs the library and
+# typechecks a probe against the tarball with the peers alone — see examples/consumer-typecheck.
+name: verify
+
+on:
+    push:
+    pull_request:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: verify-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    verify:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            # The repository's Node version lives in .nvmrc, and yarn is classic, run through corepack —
+            # the same `corepack yarn@1.22.22` a developer types locally.
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: yarn
+
+            - run: corepack yarn@1.22.22 install --frozen-lockfile
+
+            - run: corepack yarn@1.22.22 typecheck
+            - run: corepack yarn@1.22.22 lint
+            - run: corepack yarn@1.22.22 test
+            - run: corepack yarn@1.22.22 build
+            - run: corepack yarn@1.22.22 verify:consumer

@@ -82,7 +82,11 @@ export const useLocalSorting = <R extends RowDefinition = RowDefinition>({
     sortColumns?: readonly SortColumn[] | null
     /** Whether the grid orders the rows at all — off for a grid whose rows arrive already ordered. */
     enabled?: boolean
-}) => {
+}): {
+    sortedRows: R[]
+    sortColumns: SortColumn[]
+    setSortedColumns: (next: SortColumn[]) => void
+} => {
     const [sortColumns, setSorted] = useState<SortColumn[]>(defaultSortColumns ?? [])
 
     /**

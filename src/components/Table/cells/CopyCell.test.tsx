@@ -1,11 +1,11 @@
-import { render, screen } from '@testing-library/react'
+import { render, RenderResult, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { ThemeProvider } from 'styled-components'
 import { defaultTableTheme as lightTheme } from '../../../theme/tableTheme'
 import { CopyCell, CopyCellProps } from './CopyCell'
 
-const renderCell = (props: CopyCellProps) =>
+const renderCell = (props: CopyCellProps): RenderResult =>
     render(
         <ThemeProvider theme={lightTheme}>
             <CopyCell {...props} />

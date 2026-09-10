@@ -11,10 +11,12 @@ import TextField from '@mui/material/TextField'
 import Tooltip from '@mui/material/Tooltip'
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded'
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded'
-import { MouseEvent, useId, useState } from 'react'
+import { type JSX, MouseEvent, useId, useState } from 'react'
+import { format } from 'date-fns'
 import styled from 'styled-components'
 import { useLabels, useTranslate } from '../labels'
-import { statusToneColors } from '../components/Table/cells/statusTone'
+import { asDate } from '../utils'
+import { statusToneColors } from '../status/statusTone'
 import { fontSizeSmall, iconSizeSmall, radiusMedium, tableFont } from '../theme/tableStyles'
 import type {
     TableButtonTone,
@@ -35,11 +37,12 @@ import type {
  * has a house answer for; these are the fallback, never the recommendation.
  */
 
-const muiButtonColor = (tone: TableButtonTone | undefined) =>
+const muiButtonColor = (tone: TableButtonTone | undefined): 'error' | 'secondary' | 'primary' =>
     tone === 'error' ? 'error' : tone === 'secondary' ? 'secondary' : 'primary'
 
 const DefaultButton: TableSlots['Button'] = ({
     tone,
+    iconLeft,
     disabled,
     tooltipText,
     onClick,
@@ -52,6 +55,9 @@ const DefaultButton: TableSlots['Button'] = ({
             variant={tone === undefined ? 'text' : tone === 'secondary' ? 'outlined' : 'contained'}
             color={muiButtonColor(tone)}
             disabled={disabled}
+            // The icon arrives as a CHILD rather than through MUI's `startIcon`, which is what
+            // would otherwise carry the tightened left padding and the gap before the words.
+            sx={iconLeft ? { pl: 1, gap: 0.5 } : undefined}
             onClick={onClick}
             className={className}>
             {children}
@@ -71,6 +77,7 @@ const DefaultButton: TableSlots['Button'] = ({
 const DefaultIconButton: TableSlots['IconButton'] = ({
     tone,
     tooltipText,
+    loading,
     disabled,
     tabIndex,
     'aria-label': ariaLabel,
@@ -84,6 +91,7 @@ const DefaultIconButton: TableSlots['IconButton'] = ({
         <IconButton
             size='small'
             color={tone === 'error' ? 'error' : 'default'}
+            loading={loading}
             disabled={disabled}
             tabIndex={tabIndex}
             aria-label={named}
@@ -111,7 +119,7 @@ const MenuEntries = ({
 }: {
     menuItems: TableMenuItem[]
     onClose: (event: MouseEvent) => void
-}) => {
+}): JSX.Element => {
     const translate = useTranslate()
     return (
         <>
@@ -140,11 +148,13 @@ const DefaultMenuSurface = ({
     open,
     onClose,
     anchorPosition
-}: TableMenuSurfaceProps) => (
+}: TableMenuSurfaceProps): JSX.Element => (
     <Menu
         open={open}
         onClose={onClose}
-        anchorReference={anchorPosition ? 'anchorPosition' : 'anchorEl'}
+        // No point given means nothing to hang on: `'none'` leaves the surface where its own box
+        // lands, where `'anchorEl'` with no element would put it in the window's top-left corner.
+        anchorReference={anchorPosition ? 'anchorPosition' : 'none'}
         anchorPosition={anchorPosition}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}>
         <MenuEntries menuItems={menuItems} onClose={onClose} />
@@ -157,7 +167,7 @@ const DefaultContextMenu = ({
     menuIcon,
     tabIndex,
     loading
-}: TableContextMenuProps) => {
+}: TableContextMenuProps): JSX.Element => {
     const labels = useLabels()
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
     const menuId = useId()
@@ -213,28 +223,44 @@ const DefaultTextInput: TableSlots['TextInput'] = ({
 )
 
 /**
+ * The day a native date field speaks, which is the LOCAL calendar day — the one the reader sees on
+ * the row and picks in the field. `toISOString` answers the UTC day instead, so east of Greenwich a
+ * bound of local midnight would name the day before and the field would offer a day the caller
+ * excluded.
+ */
+const asLocalDay = (value?: string | Date): string | undefined => {
+    const date = value === undefined ? undefined : asDate(value)
+    return date && format(date, 'yyyy-MM-dd')
+}
+
+/**
  * A native date field rather than a calendar widget: `@mui/x-date-pickers` is not a dependency of
  * this library, and a consumer with a house picker injects it.
  */
-const DefaultDatePicker = ({ label, value, onChange, minDate, maxDate }: TableDatePickerProps) => {
+const DefaultDatePicker = ({
+    label,
+    value,
+    onChange,
+    minDate,
+    maxDate
+}: TableDatePickerProps): JSX.Element => {
     const labels = useLabels()
-    const asDay = (iso?: string) => (iso ? iso.slice(0, 10) : '')
     return (
         <TextField
             size='small'
             type='date'
             label={label}
-            value={asDay(value)}
+            value={asLocalDay(value) ?? ''}
             slotProps={{
                 htmlInput: {
-                    min: minDate ? minDate.toISOString().slice(0, 10) : undefined,
-                    max: maxDate ? maxDate.toISOString().slice(0, 10) : undefined,
+                    min: asLocalDay(minDate),
+                    max: asLocalDay(maxDate),
                     'aria-label': label ?? labels.chooseDate
                 }
             }}
-            onChange={(event) =>
-                onChange?.(event.target.value ? new Date(event.target.value) : undefined)
-            }
+            // A day read back as local midnight, so the instant that leaves is the one the bound
+            // arrived as: `new Date('2026-09-10')` would be UTC midnight instead.
+            onChange={(event) => onChange?.(asDate(event.target.value))}
         />
     )
 }
@@ -259,7 +285,13 @@ const CalloutBox = styled.div<{ $tone: TableCalloutProps['tone'] }>`
     }
 `
 
-const DefaultCallout = ({ tone, icon, live, ariaLabel, children }: TableCalloutProps) => (
+const DefaultCallout = ({
+    tone,
+    icon,
+    live,
+    ariaLabel,
+    children
+}: TableCalloutProps): JSX.Element => (
     <CalloutBox $tone={tone} role={live ? 'status' : undefined} aria-label={ariaLabel}>
         {icon}
         {children}
@@ -278,7 +310,7 @@ const DefaultCheckbox = ({
     onChange,
     'aria-label': ariaLabel,
     tabIndex
-}: TableCheckboxProps) => (
+}: TableCheckboxProps): JSX.Element => (
     <GridCheckbox
         checked={checked}
         indeterminate={indeterminate}
@@ -296,7 +328,7 @@ const DefaultCopyButton = ({
     onCopy,
     disabled,
     dense
-}: TableCopyButtonProps) => (
+}: TableCopyButtonProps): JSX.Element => (
     <Tooltip title={tooltipText}>
         <span aria-label={undefined}>
             <IconButton
@@ -318,7 +350,11 @@ const DefaultCopyButton = ({
  */
 const SUGGESTION_Z_INDEX = 1301
 
-const DefaultSuggestionPopper = ({ open, anchorEl, children }: TableSuggestionPopperProps) => (
+const DefaultSuggestionPopper = ({
+    open,
+    anchorEl,
+    children
+}: TableSuggestionPopperProps): JSX.Element => (
     <Popper
         open={open}
         anchorEl={anchorEl}

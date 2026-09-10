@@ -23,7 +23,7 @@ export const FilterProvider = ({
     children: ReactNode
     filters?: Filters
     setFilters?: (filters: Filters) => void
-}) => {
+}): ReactNode => {
     const [filters, setFilters] = React.useState<Filters>({})
 
     return (

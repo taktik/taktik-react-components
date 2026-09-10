@@ -8,14 +8,14 @@
     "url": "git+https://github.com/taktik/taktik-react-components.git"
   },
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "types": "dist/index.d.ts",
   "style": "dist/style.css",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.umd.cjs"
+      "require": "./dist/index.cjs"
     },
     "./style.css": "./dist/style.css",
     "./package.json": "./package.json"
@@ -28,14 +28,18 @@
   "publishConfig": {
     "registry": "https://npm.taktik.be/repository/npm/"
   },
+  "sideEffects": [
+    "dist/style.css"
+  ],
   "scripts": {
-    "build": "rm -rf dist && vite build && tsc",
+    "build": "rm -rf dist && vite build",
     "lint": "eslint src",
     "format": "prettier --write 'src/**/*.{ts,tsx,js,jsx}'",
     "prepare": "husky",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.check.json"
+    "typecheck": "tsc -p tsconfig.check.json",
+    "verify:consumer": "node scripts/verify-consumer.mjs"
   },
   "keywords": [
     "react",
@@ -70,6 +74,8 @@
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "eslint": "10.7.0",
+    "eslint-config-prettier": "^10.0.0",
+    "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-react-hooks": "7.1.1",
     "husky": "9.1.7",
     "jsdom": "29.1.1",
@@ -81,7 +87,9 @@
     "react-spinners": "^0.14.1",
     "styled-components": "6.4.3",
     "typescript": "5.7.2",
+    "typescript-eslint": "8.64.0",
     "vite": "6.4.3",
+    "vite-plugin-dts": "^4.5.4",
     "vitest": "4.1.9"
   }
 }

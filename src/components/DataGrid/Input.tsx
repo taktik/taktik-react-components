@@ -1,18 +1,17 @@
 import styled from 'styled-components'
 import TextField from '@mui/material/TextField'
-import { taktikPalette } from '../taktikPalette'
+import { radiusSmall } from '../../theme/tableStyles'
 
 /**
- * The header filter's field. Its ink and its edge come from the grid's OWN custom properties rather
- * than from `taktikPalette` at module scope: a consumer theming the grid dark got a light-grey box
- * with near-black text in it. The palette values stay as the fallback, so a consumer that sets
- * nothing sees what it always did.
+ * The header filter's field. Its ink and its edge come from the grid's OWN custom properties, so a
+ * consumer theming one grid darker than another is followed per grid rather than per theme; the
+ * host theme's own field tokens are the fallback for a grid that sets none.
  */
 export const Input = styled(TextField)`
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    color: var(--rdg-color, ${taktikPalette.gray800});
+    color: var(--rdg-color, ${({ theme }) => theme.surface.text});
     padding: 0 !important;
 
     .MuiInputBase-root {
@@ -20,15 +19,16 @@ export const Input = styled(TextField)`
     }
 
     & input {
-        padding: 0.5rem !important;
-        border: solid 1px var(--rdg-border-color, ${taktikPalette.gray400});
-        border-radius: 4px;
-        color: var(--rdg-color, ${taktikPalette.gray800});
+        padding: ${({ theme }) => theme.input.padding} !important;
+        border: solid ${({ theme }) => theme.table.borderWidth}
+            var(--rdg-border-color, ${({ theme }) => theme.input.borderColor});
+        ${radiusSmall};
+        color: var(--rdg-color, ${({ theme }) => theme.surface.text});
     }
 
     & label,
     & label.Mui-focused {
-        color: var(--rdg-color, ${taktikPalette.gray800});
+        color: var(--rdg-color, ${({ theme }) => theme.surface.text});
     }
 
     fieldset {

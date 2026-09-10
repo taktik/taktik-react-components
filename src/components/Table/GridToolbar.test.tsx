@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, type RenderResult } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { ThemeProvider } from 'styled-components'
@@ -13,17 +13,24 @@ const filters: TableFilterState = {
     primaryKey: 'name'
 }
 
-const renderToolbar = (props: Partial<GridToolbarProps> = {}) =>
+const renderToolbar = (props: Partial<GridToolbarProps> = {}): RenderResult =>
     render(
         <ThemeProvider theme={lightTheme}>
             <GridToolbar filters={filters} {...props} />
         </ThemeProvider>
     )
 
+/** Stands in for whatever kebab the page hands in — the toolbar answers for its PLACE, not for it. */
+const KEBAB = (
+    <button type='button' aria-label='Import and export devices'>
+        ⋮
+    </button>
+)
+
 /**
  * Ruling R-d (amended 2026-08-21): the toolbar owns the order, so the order is pinned here rather
  * than in each of the eighteen pages that would otherwise be free to disagree about it — and the
- * table's kebab ends the row, after refresh AND after whatever the page hands in as children.
+ * page's kebab ends the row, after refresh AND after whatever the page hands in as children.
  */
 describe('GridToolbar', () => {
     it('puts the acts first — delete, create, refresh — and the kebab last', () => {
@@ -31,11 +38,7 @@ describe('GridToolbar', () => {
             remove: { hasSelection: true, label: 'Delete device', onClick: vi.fn() },
             create: { label: 'Add device', onClick: vi.fn() },
             refresh: { tooltipText: 'Refresh', onClick: vi.fn() },
-            tableMenu: {
-                label: 'Import and export devices',
-                importEntry: { label: 'Import', onClick: vi.fn() },
-                exportEntry: { label: 'Export', onClick: vi.fn() }
-            }
+            trailingMenu: KEBAB
         })
 
         const names = screen
@@ -52,10 +55,7 @@ describe('GridToolbar', () => {
     it("renders the kebab after the page's own controls, not before them", () => {
         renderToolbar({
             refresh: { tooltipText: 'Refresh', onClick: vi.fn() },
-            tableMenu: {
-                label: 'Import and export devices',
-                exportEntry: { label: 'Export', onClick: vi.fn() }
-            },
+            trailingMenu: KEBAB,
             children: <button type='button'>Settings</button>
         })
 
@@ -68,34 +68,9 @@ describe('GridToolbar', () => {
         )
     })
 
-    it('offers import and export inside the kebab, never as toolbar buttons', async () => {
-        const importEntry = vi.fn()
-        const exportEntry = vi.fn()
-        renderToolbar({
-            tableMenu: {
-                label: 'Import and export devices',
-                importEntry: { label: 'Import', onClick: importEntry },
-                exportEntry: { label: 'Export', onClick: exportEntry }
-            }
-        })
-
-        expect(screen.queryByRole('button', { name: 'Import' })).toBeNull()
-        expect(screen.queryByRole('button', { name: 'Export' })).toBeNull()
-
-        await userEvent.click(screen.getByRole('button', { name: 'Import and export devices' }))
-        await userEvent.click(screen.getByRole('menuitem', { name: 'Import' }))
-        expect(importEntry).toHaveBeenCalledTimes(1)
-
-        await userEvent.click(screen.getByRole('button', { name: 'Import and export devices' }))
-        await userEvent.click(screen.getByRole('menuitem', { name: 'Export' }))
-        expect(exportEntry).toHaveBeenCalledTimes(1)
-    })
-
-    it('draws no kebab for a table that declares no file acts', () => {
-        renderToolbar({
-            refresh: { tooltipText: 'Refresh', onClick: vi.fn() },
-            tableMenu: { label: 'Import and export devices' }
-        })
+    // Whether there is a kebab at all is the page's call; the toolbar adds no chrome around one
+    it('leaves the end of the row empty for a page that hands in no kebab', () => {
+        renderToolbar({ refresh: { tooltipText: 'Refresh', onClick: vi.fn() } })
         expect(screen.queryByRole('button', { name: 'Import and export devices' })).toBeNull()
     })
 
@@ -107,19 +82,8 @@ describe('GridToolbar', () => {
         expect(refresh).toHaveBeenCalledTimes(1)
     })
 
-    it('disables a control the page cannot offer yet', async () => {
-        renderToolbar({
-            refresh: { tooltipText: 'Refresh', onClick: vi.fn(), disabled: true },
-            tableMenu: {
-                label: 'Import and export devices',
-                importEntry: { label: 'Import', onClick: vi.fn(), disabled: true }
-            }
-        })
+    it('disables a control the page cannot offer yet', () => {
+        renderToolbar({ refresh: { tooltipText: 'Refresh', onClick: vi.fn(), disabled: true } })
         expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled()
-        await userEvent.click(screen.getByRole('button', { name: 'Import and export devices' }))
-        expect(screen.getByRole('menuitem', { name: 'Import' })).toHaveAttribute(
-            'aria-disabled',
-            'true'
-        )
     })
 })

@@ -1,3 +1,4 @@
+import type { JSX } from 'react'
 import { useLabelsContext } from '../../../labels'
 import { useTableSlots } from '../../../slots'
 import { asDate, convertDate, DATE_FORMAT } from '../../../utils'
@@ -27,7 +28,7 @@ export const RelativeTimeCell = ({
     value,
     fallback = '-',
     absoluteAfterDays = RELATIVE_TIME_MAX_DAYS
-}: RelativeTimeCellProps) => {
+}: RelativeTimeCellProps): JSX.Element => {
     const { formatRelativeTime } = useLabelsContext()
     const { Tooltip } = useTableSlots()
     const date = value === null || value === undefined ? undefined : asDate(value)

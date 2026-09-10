@@ -41,14 +41,14 @@ describe('withFillingColumn', () => {
         expect(widthOf(filled, 'activeMac')).toBe('minmax(150px, 1fr)')
     })
 
-    it('never promotes the actions column, whose place is the right edge', () => {
+    it('never promotes a column pinned to the right edge, such as the actions one', () => {
         const columns = [column('device', 240), actions]
         const filled = withFillingColumn(columns, [])
         expect(widthOf(filled, ACTIONS_COLUMN_KEY)).toBe(57)
         expect(widthOf(filled, 'device')).toBe('minmax(240px, 1fr)')
     })
 
-    it('never promotes any other column pinned to the right edge', () => {
+    it('never promotes a pinned column that holds a value either', () => {
         const columns = [column('device', 240), column('flag', 80, { frozenRight: true }), actions]
         expect(widthOf(withFillingColumn(columns, []), 'device')).toBe('minmax(240px, 1fr)')
     })

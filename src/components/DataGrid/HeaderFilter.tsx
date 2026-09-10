@@ -14,12 +14,16 @@ const Container = styled(Box)`
     justify-content: space-between;
 `
 
-const stopPropagation = (event: React.MouseEvent | React.KeyboardEvent) => event.stopPropagation()
+const stopPropagation = (event: React.MouseEvent | React.KeyboardEvent): void =>
+    event.stopPropagation()
 
 type BaseProps<R extends RowDefinition = RowDefinition> = RenderHeaderCellProps<R> & {
     children?: React.ReactNode
 }
-const Base = <R extends RowDefinition = RowDefinition>({ children, ...props }: BaseProps<R>) => (
+const Base = <R extends RowDefinition = RowDefinition>({
+    children,
+    ...props
+}: BaseProps<R>): React.JSX.Element => (
     <Container>
         {renderHeaderCell(props)}
         {children}
@@ -41,7 +45,7 @@ type FilterHeaderProps<R extends RowDefinition = RowDefinition> = RenderHeaderCe
 const FilterHeader = <R extends RowDefinition = RowDefinition>({
     col,
     ...props
-}: FilterHeaderProps<R>) => {
+}: FilterHeaderProps<R>): React.JSX.Element => {
     const { filters, setFilters } = useContext(FilterContext)
     const value = filters[col.key]
     const onChange = useCallback(

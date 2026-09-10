@@ -1,3 +1,4 @@
+import type { JSX } from 'react'
 import styled from 'styled-components'
 import { useTableSlots } from '../../../slots'
 import { TruncatingCell } from '../gridCells'
@@ -26,7 +27,13 @@ export interface CopyCellProps {
 }
 
 /** A value too long for its column, with a button that puts the whole of it on the clipboard. */
-export const CopyCell = ({ value, display, tooltipText, onCopy, disabled }: CopyCellProps) => {
+export const CopyCell = ({
+    value,
+    display,
+    tooltipText,
+    onCopy,
+    disabled
+}: CopyCellProps): JSX.Element => {
     const { CopyButton } = useTableSlots()
     const shown = display ?? value ?? ''
     return (

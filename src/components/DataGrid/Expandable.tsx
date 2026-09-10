@@ -86,7 +86,7 @@ const ToggleButton = styled.button<{ $open: boolean }>`
     }
 `
 
-const Chevron = () => (
+const Chevron = (): React.JSX.Element => (
     <svg width='16' height='16' viewBox='0 0 24 24' aria-hidden='true' focusable='false'>
         <path d='M9 6l6 6-6 6' fill='none' stroke='currentColor' strokeWidth='2' />
     </svg>
@@ -106,7 +106,7 @@ export const ExpanderToggle = <Row extends RowDefinition>({
 }: {
     row: Row
     expandable: DataGridExpandable<Row>
-}) => {
+}): React.JSX.Element => {
     const { expandedIds, labels } = expandable
     const open = expandedIds.includes(row.id)
     return (

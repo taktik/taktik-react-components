@@ -1,47 +1,17 @@
-import { render, screen } from '@testing-library/react'
+import { render, RenderResult, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { ThemeProvider } from 'styled-components'
 import { defaultTableTheme as lightTheme } from '../../../theme/tableTheme'
-import { CAPACITY_WARNING_RATIO, capacityPercent, capacityTone } from './capacity'
+import { capacityPercent } from './capacity'
 import { CountBarCell, CountBarCellProps } from './CountBarCell'
-import { statusToneColors } from './statusTone'
+import { statusToneColors } from '../../../status/statusTone'
 
-const renderCell = (props: CountBarCellProps) =>
+const renderCell = (props: CountBarCellProps): RenderResult =>
     render(
         <ThemeProvider theme={lightTheme}>
             <CountBarCell {...props} />
         </ThemeProvider>
     )
-
-describe('capacityTone', () => {
-    it('stays quiet while there is room', () => {
-        expect(capacityTone(0, 20)).toBe('neutral')
-        expect(capacityTone(12, 20)).toBe('neutral')
-    })
-
-    it('warns only PAST the threshold, not at it', () => {
-        expect(capacityTone(CAPACITY_WARNING_RATIO * 20, 20)).toBe('neutral')
-        expect(capacityTone(CAPACITY_WARNING_RATIO * 20 + 1, 20)).toBe('warning')
-        expect(capacityTone(19, 20)).toBe('warning')
-    })
-
-    // A capacity reached refuses the next device, which is the same problem as being over it
-    it('is danger at the capacity as well as over it', () => {
-        expect(capacityTone(20, 20)).toBe('danger')
-        expect(capacityTone(24, 20)).toBe('danger')
-    })
-
-    it('has no tone to give without a capacity', () => {
-        expect(capacityTone(0, undefined)).toBe('neutral')
-        expect(capacityTone(7, undefined)).toBe('neutral')
-    })
-
-    // quirk: a usage backed by a capacity of zero is unbacked, which is a danger, not an empty cell
-    it('reads usage against a zero capacity as over capacity', () => {
-        expect(capacityTone(0, 0)).toBe('neutral')
-        expect(capacityTone(1, 0)).toBe('danger')
-    })
-})
 
 describe('capacityPercent', () => {
     it('is the share of the capacity in use', () => {
@@ -88,11 +58,17 @@ describe('CountBarCell', () => {
         expect(bar).toHaveAttribute('aria-valuemax', '20')
     })
 
-    it('colours the count by how full the capacity is', () => {
-        const { container } = renderCell({ used: 20, total: 20 })
+    // WHEN a count is in trouble is the page's rule; the cell paints the answer it is handed
+    it('colours the count in the tone the page gives it', () => {
+        const { container } = renderCell({ used: 20, total: 20, tone: 'danger' })
         expect(container.querySelector('span')).toHaveStyle({
             color: statusToneColors('danger', lightTheme).text
         })
+    })
+
+    it('stays quiet for a count the page says nothing about', () => {
+        const { container } = renderCell({ used: 20, total: 20 })
+        expect(container.querySelector('span')).toHaveStyle({ color: lightTheme.textMain })
     })
 
     // Nothing granted is not "0 of 0 in use" — there is no capacity to draw a bar against
@@ -138,12 +114,14 @@ describe('CountBarCell', () => {
         })
 
         // a type making up ALL of a package is not "over capacity" — it is just the whole package
-        it('stays neutral where the capacity variant would warn or alarm', () => {
-            const { container: full } = renderCell({ used: 40, total: 40, variant: 'share' })
-            const { container: capacity } = renderCell({ used: 40, total: 40 })
-            const toneOf = (root: HTMLElement) =>
-                getComputedStyle(root.querySelectorAll('span')[0] as Element).color
-            expect(toneOf(full)).not.toBe(toneOf(capacity))
+        it('prints its own colour rather than a tone', () => {
+            const { container } = renderCell({
+                used: 40,
+                total: 40,
+                variant: 'share',
+                color: { mark: 'rgb(1, 2, 3)', track: 'rgb(4, 5, 6)' }
+            })
+            expect(container.querySelector('span')).toHaveStyle({ color: 'rgb(1, 2, 3)' })
         })
     })
 })

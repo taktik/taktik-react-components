@@ -1,4 +1,4 @@
-import { MouseEventHandler } from 'react'
+import { JSX, MouseEventHandler } from 'react'
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded'
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded'
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
@@ -26,7 +26,9 @@ export const unhideableColumns = <R extends RowDefinition>(
         .filter((column) => column.key === ACTIONS_COLUMN_KEY || !column.name)
         .map((column) => column.key)
 
-const VisibilityTrigger = (props: { onClick?: MouseEventHandler<HTMLButtonElement> }) => {
+const VisibilityTrigger = (props: {
+    onClick?: MouseEventHandler<HTMLButtonElement>
+}): JSX.Element => {
     const labels = useLabels()
     const { IconButton } = useTableSlots()
     return (
@@ -37,7 +39,7 @@ const VisibilityTrigger = (props: { onClick?: MouseEventHandler<HTMLButtonElemen
 }
 
 /** The header of the actions column: which columns this table shows. */
-export const ColumnVisibilityHeader = () => (
+export const ColumnVisibilityHeader = (): JSX.Element => (
     <VisibilityColumnChooser IconComponent={VisibilityTrigger} />
 )
 
@@ -173,7 +175,7 @@ const RowActionsMenu = ({
     label?: string
     tabIndex?: number
     loading?: boolean
-}) => {
+}): JSX.Element => {
     const { ContextMenu } = useTableSlots()
     return (
         <ContextMenu
@@ -187,12 +189,12 @@ const RowActionsMenu = ({
 }
 
 /**
- * The tooltip of a LONE control — a row's single action: the verb, and the reason it is off.
+ * The tooltip of a row's LONE action: the verb, and the reason it is off.
  *
- * A menu entry puts its `disabledReason` on a second line under the label; a bare button has no
+ * A menu entry puts its `disabledReason` on a second line under the label; a bare icon button has no
  * second line, so the two share one string.
  */
-export const loneActionTooltip = (label?: string, disabledReason?: string): string =>
+const loneActionTooltip = (label?: string, disabledReason?: string): string =>
     [label, disabledReason].filter(Boolean).join(' — ')
 
 /**
@@ -213,7 +215,7 @@ const SingleAction = ({
     rowLabel?: string
     tabIndex?: number
     loading?: boolean
-}) => {
+}): JSX.Element => {
     const translate = useTranslate()
     const { IconButton } = useTableSlots()
     // `name` is a translation key (the menu resolves it); `label` is already translated

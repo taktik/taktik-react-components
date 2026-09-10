@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { JSX, ReactNode } from 'react'
 import styled from 'styled-components'
 
 export interface InheritedCellProps {
@@ -21,5 +21,5 @@ const Dimmed = styled.span`
  * "borrowed" at a glance. Marks the CELL rather than the row: the actions column and the checkbox
  * stay at full contrast, because what they offer is unchanged.
  */
-export const InheritedCell = ({ inherited, children }: InheritedCellProps) =>
+export const InheritedCell = ({ inherited, children }: InheritedCellProps): JSX.Element =>
     inherited ? <Dimmed>{children}</Dimmed> : <>{children}</>

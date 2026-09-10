@@ -1,9 +1,9 @@
 import Chip from '@mui/material/Chip'
-import { ReactElement } from 'react'
+import { JSX, ReactElement } from 'react'
 import styled from 'styled-components'
 import { useTableSlots } from '../../../slots'
 import { fontSizeSmaller, iconSizeSmall, radiusSmall, tableFont } from '../../../theme/tableStyles'
-import { statusToneColors, StatusTone } from './statusTone'
+import { statusToneColors, StatusTone } from '../../../status/statusTone'
 
 /**
  * A chip's own colours, overriding the tone.
@@ -238,13 +238,13 @@ export const ChipListCell = ({
     emptyLabel = '-',
     wrap = false,
     columns
-}: ChipListCellProps) => {
+}: ChipListCellProps): JSX.Element => {
     const { Tooltip } = useTableSlots()
 
     const chip = (
         { key, label, trailing, tone, tooltipText, icon, colors, fillPercent }: ChipListItem,
         stretch: boolean
-    ) => {
+    ): JSX.Element => {
         const rendered = (
             <ChipStyled
                 key={key}

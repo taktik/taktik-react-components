@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { useState } from 'react'
+import userEvent, { type UserEvent } from '@testing-library/user-event'
+import { useState, type ReactNode, type RefObject } from 'react'
 import { ThemeProvider } from 'styled-components'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi, type Mock } from 'vitest'
 import { defaultTableTheme as lightTheme } from '../../../theme/tableTheme'
+import { renderWithTable } from '../../../testUtils/renderWithTable'
 import { required } from '../../../testUtils/required'
 import { asTextFilter, asTextTerm, QUICK_SEARCH_KEY, type FilterValue } from '../../../filterValue'
 import type { FilterDraft, ValueSuggestions } from '../../../valueSuggestions'
@@ -23,7 +24,7 @@ import {
  * The open chip's own text field. It is a `combobox` rather than a bare textbox: it drives the list
  * of values offered under it, exactly as the cross-column type-ahead above does.
  */
-const chipEditor = () => screen.getByRole('combobox', { name: /^Edit the .+ filter$/ })
+const chipEditor = (): HTMLElement => screen.getByRole('combobox', { name: /^Edit the .+ filter$/ })
 
 const DEFINITIONS: FilterDefinition[] = [
     { key: 'name', label: 'Name' },
@@ -57,13 +58,13 @@ const Host = ({
     resettable?: boolean
     suggestions?: ValueSuggestions
     onDraftChange?: (draft: FilterDraft) => void
-}) => {
+}): ReactNode => {
     const [values, setValues] = useState<Record<string, FilterValue | undefined>>(initial)
     return (
         <ThemeProvider theme={lightTheme}>
             <FilterBar
                 definitions={definitions}
-                values={values}
+                rawValues={values}
                 onChange={(key, value) => setValues((prev) => ({ ...prev, [key]: value }))}
                 primaryKey={primaryKey}
                 pinned={pinned}
@@ -300,7 +301,7 @@ describe('FilterBar', () => {
 // A just-added chip is seeded empty ('' / {}) and stays rendered, but must not count as an active
 // filter — otherwise an empty table wrongly reads "no results match your filters".
 describe('type-ahead', () => {
-    const typeAhead = () => screen.getByRole('combobox')
+    const typeAhead = (): HTMLElement => screen.getByRole('combobox')
 
     it('ranks a matching select option above the text columns, which a plain cap would bury', async () => {
         const user = userEvent.setup()
@@ -497,7 +498,7 @@ describe('type-ahead', () => {
  * The bar renders what the page hands it and asks for nothing itself — the page owns the request.
  */
 describe('value suggestions', () => {
-    const typeAhead = () => screen.getByRole('combobox')
+    const typeAhead = (): HTMLElement => screen.getByRole('combobox')
 
     it('offers the values under the primary column, naming the field each belongs to', async () => {
         const user = userEvent.setup()
@@ -641,7 +642,9 @@ describe('value suggestions', () => {
     })
 
     describe('under an open chip', () => {
-        const chipDraft = async (initial: Record<string, FilterValue>) => {
+        const chipDraft = async (
+            initial: Record<string, FilterValue>
+        ): Promise<{ user: UserEvent; drafts: FilterDraft[] }> => {
             const user = userEvent.setup()
             const drafts: FilterDraft[] = []
             render(
@@ -788,9 +791,9 @@ describe('value suggestions', () => {
 // Negation is the chip's own state — visible, editable and removable like any other — and the typed
 // `!` is only the accelerant that commits it (B-5 S2).
 describe('exclusion', () => {
-    const typeAhead = () => screen.getByRole('combobox')
-    const operator = () => screen.getByRole('button', { name: 'is' })
-    const notOperator = () => screen.getByRole('button', { name: 'is not' })
+    const typeAhead = (): HTMLElement => screen.getByRole('combobox')
+    const operator = (): HTMLElement => screen.getByRole('button', { name: 'is' })
+    const notOperator = (): HTMLElement => screen.getByRole('button', { name: 'is not' })
 
     it('writes "is not" on an excluding chip, and nothing on a matching one', () => {
         render(<Host initial={{ name: { text: 'news', negated: true } }} />)
@@ -966,73 +969,43 @@ describe('exclusion', () => {
     })
 })
 
-// GitHub's shortcut: the filter box is the thing you reach for on a table, so it gets the one key
-describe('the "/" shortcut', () => {
-    /** Returns false when the handler called preventDefault, i.e. when it took the keystroke. */
-    const pressSlash = (target: Element = document.body, init: object = {}) =>
+/**
+ * The bar offers its type-ahead as a landing place for the host's search shortcut ("/", the way
+ * GitHub does it) and takes the offer back when it goes. The KEY is the host's: a page may also hold
+ * a command palette and a picker dialog's own bar, only one of them may answer a press, and a stack
+ * kept in here could not see the two that are not tables. So what is pinned below is the offer.
+ */
+describe('the host’s search field', () => {
+    /** Returns false when a handler called preventDefault, i.e. when it took the keystroke. */
+    const pressSlash = (target: Element = document.body, init: object = {}): boolean =>
         fireEvent.keyDown(target, { key: '/', ...init })
 
-    it('focuses the type-ahead from anywhere on the page, and swallows the keystroke', () => {
-        render(<Host />)
-        expect(pressSlash()).toBe(false)
-        expect(screen.getByRole('combobox')).toHaveFocus()
-    })
-
-    it('does not fire while the user is typing in a field', () => {
-        render(
-            <>
-                <Host />
-                <input aria-label='outside' />
-            </>
+    it('offers its type-ahead to the host, and withdraws it on unmount', () => {
+        const offered: RefObject<HTMLInputElement | null>[] = []
+        const unregister = vi.fn()
+        const { unmount } = renderWithTable(
+            <FilterBar definitions={DEFINITIONS} rawValues={{}} onChange={vi.fn()} />,
+            {
+                registerSearchField: (field) => {
+                    offered.push(field)
+                    return unregister
+                }
+            }
         )
-        const outside = screen.getByRole('textbox', { name: 'outside' })
-        outside.focus()
 
-        // the keystroke is left alone, so a "/" lands in the field the user is actually in
-        expect(pressSlash(outside)).toBe(true)
-        expect(outside).toHaveFocus()
-    })
+        expect(offered).toHaveLength(1)
+        expect(required(offered[0]).current).toBe(screen.getByRole('combobox'))
 
-    it('leaves a chip editor alone while it has focus', async () => {
-        const user = userEvent.setup()
-        render(<Host />)
-        await user.click(screen.getByRole('button', { name: 'Add filter' }))
-        await user.click(screen.getByRole('menuitem', { name: 'Channel' }))
-
-        const chipInput = chipEditor()
-        expect(pressSlash(chipInput)).toBe(true)
-        expect(chipInput).toHaveFocus()
-    })
-
-    it('ignores a "/" pressed with a modifier, which belongs to the browser', () => {
-        render(<Host />)
-        expect(pressSlash(document.body, { ctrlKey: true })).toBe(true)
-        expect(pressSlash(document.body, { metaKey: true })).toBe(true)
-        expect(screen.getByRole('combobox')).not.toHaveFocus()
-    })
-
-    // "/" is a SHIFTED key on the AZERTY and QWERTZ layouts our admins use, so refusing it while
-    // Shift is down would put the shortcut out of their reach entirely
-    it('still fires when Shift is held, because of the keyboard layouts we ship to', () => {
-        render(<Host />)
-        expect(pressSlash(document.body, { shiftKey: true })).toBe(false)
-        expect(screen.getByRole('combobox')).toHaveFocus()
-    })
-
-    // A picker dialog carries its own bar over the page's: the one the user is looking at is the
-    // one that just mounted, and the page's takes the shortcut back when the dialog closes
-    it('the last bar to mount wins the shortcut', () => {
-        const { unmount } = render(<Host />)
-        const second = render(<Host />)
-
-        pressSlash()
-        const [pageBar, dialogBar] = screen.getAllByRole('combobox')
-        expect(dialogBar).toHaveFocus()
-
-        second.unmount()
-        pressSlash()
-        expect(pageBar).toHaveFocus()
         unmount()
+        expect(unregister).toHaveBeenCalledTimes(1)
+    })
+
+    // A host with no such shortcut must not find one taken: a table claiming a global key of its
+    // own would fight the application's own field for it, and neither would win predictably.
+    it('claims no key at all where the host offers no registration', () => {
+        render(<Host />)
+        expect(pressSlash()).toBe(true)
+        expect(screen.getByRole('combobox')).not.toHaveFocus()
     })
 })
 
@@ -1208,5 +1181,131 @@ describe('FilterBar reset', () => {
     it('renders nothing extra when a page does not offer a reset', () => {
         render(<Host initial={{ name: 'news' }} />)
         expect(screen.queryByRole('button', { name: RESET })).not.toBeInTheDocument()
+    })
+})
+
+/**
+ * The other half of a range chip: two DATE bounds rather than two numbers, edited through whatever
+ * date field the consumer injected — the MUI-based native one here.
+ *
+ * The day is the LOCAL one at every step: what the reader picks, what the chip reads, and what the
+ * bound leaves as. A bound read as UTC would name the day before east of Greenwich.
+ */
+describe('a date range chip', () => {
+    const DATE_DEFINITIONS: FilterDefinition[] = [
+        { key: 'lastSeen', label: 'Last seen', kind: 'range', rangeType: 'date' }
+    ]
+
+    const FROM = new Date(2026, 8, 10).toISOString()
+    const TO = new Date(2026, 8, 20).toISOString()
+
+    /** Adds the chip from the menu, or reopens the one the bar was rendered with. */
+    const openTheChip = async (
+        initial?: Record<string, FilterValue | undefined>
+    ): Promise<UserEvent> => {
+        const user = userEvent.setup()
+        render(<Host definitions={DATE_DEFINITIONS} initial={initial} />)
+        if (initial) {
+            await user.click(screen.getByRole('button', { name: /^Edit the .+ filter$/ }))
+        } else {
+            await user.click(screen.getByRole('button', { name: 'Add filter' }))
+            await user.click(screen.getByRole('menuitem', { name: 'Last seen' }))
+        }
+        return user
+    }
+
+    it('edits its bounds as dates — From and To, not Min and Max', async () => {
+        await openTheChip()
+        expect(screen.getByLabelText('From')).toHaveAttribute('type', 'date')
+        expect(screen.getByLabelText('To')).toHaveAttribute('type', 'date')
+    })
+
+    it('reads back the day that was picked', async () => {
+        await openTheChip()
+
+        fireEvent.change(screen.getByLabelText('From'), { target: { value: '2026-09-10' } })
+
+        expect(screen.getByLabelText('From')).toHaveValue('2026-09-10')
+        // the chip's own compact form of the same day
+        expect(screen.getByText('10-09-26 – …')).toBeInTheDocument()
+    })
+
+    it('opens on the bounds the chip already carries', async () => {
+        await openTheChip({ lastSeen: { from: FROM, to: TO } })
+
+        expect(screen.getByLabelText('From')).toHaveValue('2026-09-10')
+        expect(screen.getByLabelText('To')).toHaveValue('2026-09-20')
+    })
+
+    // Either bound closes the other's range, so the pair can never cross
+    it('never offers a To before the From, nor a From after the To', async () => {
+        await openTheChip({ lastSeen: { from: FROM, to: TO } })
+
+        expect(screen.getByLabelText('From')).toHaveAttribute('max', '2026-09-20')
+        expect(screen.getByLabelText('To')).toHaveAttribute('min', '2026-09-10')
+    })
+
+    it('empties a bound the reader cleared and keeps the other', async () => {
+        await openTheChip({ lastSeen: { from: FROM, to: TO } })
+
+        fireEvent.change(screen.getByLabelText('From'), { target: { value: '' } })
+
+        expect(screen.getByLabelText('From')).toHaveValue('')
+        expect(screen.getByText('… – 20-09-26')).toBeInTheDocument()
+    })
+})
+
+/**
+ * A bar inside a dialog: the dialog's paper IS a form and its accept button is that form's submit,
+ * so an Enter no field prevented reaches it and saves the dialog. No control inside a
+ * dialog-hosted table may fire the accept.
+ */
+describe('inside a dialog form', () => {
+    const typeAhead = (): HTMLElement => screen.getByRole('combobox')
+
+    const renderInForm = (
+        props: Parameters<typeof Host>[0] = {}
+    ): { submitted: Mock; user: UserEvent } => {
+        const submitted = vi.fn()
+        render(
+            <form
+                onSubmit={(event) => {
+                    event.preventDefault()
+                    submitted()
+                }}>
+                <Host {...props} />
+                <button type='submit'>Save</button>
+            </form>
+        )
+        return { submitted, user: userEvent.setup() }
+    }
+
+    it('keeps Enter in an EMPTY type-ahead off the accept', async () => {
+        const { submitted, user } = renderInForm()
+
+        await user.type(typeAhead(), '{Enter}')
+
+        expect(submitted).not.toHaveBeenCalled()
+    })
+
+    it('keeps Enter on a TYPED type-ahead off the accept, and still commits the chip', async () => {
+        const { submitted, user } = renderInForm()
+
+        await user.type(typeAhead(), 'OTT{Enter}')
+
+        expect(submitted).not.toHaveBeenCalled()
+        expect(screen.getByText('OTT')).toBeInTheDocument()
+    })
+
+    // The chip's own field answers Enter by closing the editor, which detaches the input before
+    // anything can submit through it. Pinned so a chip that starts staying open owes the same guard
+    // the type-ahead carries.
+    it('keeps Enter in an open chip off the accept', async () => {
+        const { submitted, user } = renderInForm({ initial: { name: 'news' } })
+
+        await user.click(screen.getByRole('button', { name: /^Edit the .+ filter$/ }))
+        await user.type(chipEditor(), 'cast{Enter}')
+
+        expect(submitted).not.toHaveBeenCalled()
     })
 })

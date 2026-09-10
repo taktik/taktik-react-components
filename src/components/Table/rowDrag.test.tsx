@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { ThemeProvider } from 'styled-components'
@@ -37,7 +37,7 @@ interface HostProps {
     expandable?: boolean
 }
 
-const Host = ({ rowDrag, expandable }: HostProps) => {
+const Host = ({ rowDrag, expandable }: HostProps): ReactNode => {
     const [expandedIds, setExpandedIds] = useState<string[]>(expandable ? ['a'] : [])
     return (
         <ThemeProvider theme={lightTheme}>

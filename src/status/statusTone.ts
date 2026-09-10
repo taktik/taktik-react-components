@@ -1,4 +1,14 @@
-import { DefaultTheme } from 'styled-components'
+import { withAlpha } from '../color/withAlpha'
+import type { TableTheme } from '../theme/tableTheme'
+
+/**
+ * The four tones a table's own cells read a status in.
+ *
+ * Library-private on purpose. A consumer's other toned surfaces — a banner, a settings row, a
+ * standalone pill — are not tables, and importing a table library to colour one would be the wrong
+ * dependency; so the consumer keeps its own four tones over the same theme tokens. Two small copies,
+ * one per layer, is the intended shape here rather than a duplication to remove.
+ */
 
 /** The states a status can read as. The consumer maps its own statuses onto them. */
 export type StatusTone = 'success' | 'warning' | 'danger' | 'neutral'
@@ -22,19 +32,16 @@ export interface StatusToneColors {
 const OUTLINE_ALPHA = 0.4
 
 /**
- * A hue at a fraction of its strength.
+ * The four tones as colours, off the theme the CONSUMER supplies.
  *
- * ⚠ The three tone hues (`greenMain`, `yellowMain`, `redMain`) are read as `#rrggbb`: the outline
- * is derived from them, and a theme naming one of them any other way would produce `NaN` channels.
+ * Typed against `TableTheme` rather than styled-components' `DefaultTheme`: a consumer's
+ * `DefaultTheme` is whatever it augmented the interface to be, so naming it here would let a theme
+ * carrying none of these tokens compile and hand back `rgba(NaN, NaN, NaN, …)`.
+ *
+ * ⚠ The three tone hues (`greenMain`, `yellowMain`, `redMain`) are read as `#rrggbb`, since the
+ * outline is derived from them — see `withAlpha`.
  */
-const withAlpha = (hex: string, alpha: number): string => {
-    const r = parseInt(hex.slice(1, 3), 16)
-    const g = parseInt(hex.slice(3, 5), 16)
-    const b = parseInt(hex.slice(5, 7), 16)
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
-
-export const statusToneColors = (tone: StatusTone, theme: DefaultTheme): StatusToneColors => {
+export const statusToneColors = (tone: StatusTone, theme: TableTheme): StatusToneColors => {
     switch (tone) {
         case 'success':
             return {

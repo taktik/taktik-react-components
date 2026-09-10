@@ -1,10 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { render, RenderResult, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { ThemeProvider } from 'styled-components'
 import { defaultTableTheme as lightTheme } from '../../../theme/tableTheme'
 import { InheritedCell } from './InheritedCell'
 
-const renderCell = (inherited: boolean) =>
+const renderCell = (inherited: boolean): RenderResult =>
     render(
         <ThemeProvider theme={lightTheme}>
             <InheritedCell inherited={inherited}>Room 214</InheritedCell>

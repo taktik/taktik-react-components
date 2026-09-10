@@ -1,3 +1,4 @@
+import type { ReactPortal } from 'react'
 import { createPortal } from 'react-dom'
 import styled from 'styled-components'
 import { floatingLabel } from './floatingLabel'
@@ -29,7 +30,7 @@ export interface CopyCueProps {
     below: boolean
 }
 
-export const CopyCue = ({ label, top, left, below }: CopyCueProps) =>
+export const CopyCue = ({ label, top, left, below }: CopyCueProps): ReactPortal =>
     createPortal(
         <Cue $below={below} style={{ top, left }}>
             {label}

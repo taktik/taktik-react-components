@@ -15,10 +15,11 @@ export const GridPage = styled.div`
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: ${({ theme }) => theme.table.pageGap};
     box-sizing: border-box;
     overflow: hidden;
-    padding: 24px 24px 0;
+    /* no bottom inset: the pager's own band is what the page ends on */
+    padding: ${({ theme }) => `${theme.table.pagePadding} ${theme.table.pagePadding} 0`};
 
     ${gridPager};
 `

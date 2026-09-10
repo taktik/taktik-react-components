@@ -28,7 +28,6 @@ import { useLocalSorting } from './hooks/useLocalSorting'
 import { useComputeFinalColumns } from './hooks/useComputeFinalColumns'
 import { DataGridCheckbox } from './DataGridCheckbox'
 import 'react-data-grid/lib/styles.css'
-import { taktikPalette } from '../taktikPalette'
 import { PulseLoader } from 'react-spinners'
 import { FilterProvider, Filters } from './FilterProvider'
 import { useLocalFiltering } from './hooks/useLocalFiltering'
@@ -46,7 +45,6 @@ import {
     withDetailRows
 } from './Expandable'
 
-export * from 'react-data-grid'
 /* The expandable-rows PUBLIC surface: the composition entry points, the behaviour helpers a
    consumer's tests may pin (row classing, heights, click handling), and the two column
    identifiers. The styled fragments and remaining internals are implementation — a barrel
@@ -283,8 +281,8 @@ const ContainerLoading = styled.div`
  * The translucent veil the spinner turns over; out of flow, so the spinner stays centred.
  *
  * It sits OUTSIDE the element the grid's custom properties are set on, so the colour is handed down
- * from the merged theme rather than read with `var()` — and it is the theme's colour rather than
- * `taktikPalette`'s, which painted a light-blue wash over a dark grid.
+ * from the merged theme rather than read with `var()` — and it is the HOST's accent, since a colour
+ * of the library's own painted a light-blue wash over a dark grid.
  */
 const LoadingScrim = styled.div<{ $color: string }>`
     background-color: ${({ $color }) => $color};
@@ -315,7 +313,9 @@ const RenderCheckbox = React.memo(
     }
 )
 
-const renderDefaultCheckbox = (props: RenderCheckboxProps) => <RenderCheckbox {...props} />
+const renderDefaultCheckbox = (props: RenderCheckboxProps): React.JSX.Element => (
+    <RenderCheckbox {...props} />
+)
 
 /** What a select-all checkbox says when the consumer does not name it. */
 const DEFAULT_SELECT_ALL_LABEL = 'Select all rows'
@@ -347,7 +347,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     columnWidths,
     onColumnWidthsChange,
     ...rest
-}: DataGridProps<R>) => {
+}: DataGridProps<R>): React.JSX.Element => {
     const { gridKey } = useContext(VisibilityContext)
     const { pageSize, currentPage, setCurrentPage, setPageSize } = usePagination(
         pagination?.defaultPageSize,
@@ -361,7 +361,9 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
      * custom properties; the loader sits outside it and takes its colour from here.
      */
     const gridTheme = { ...defaultTheme, ...(theme ?? {}) }
-    const loadingColor = gridTheme['--rdg-loading-color'] ?? taktikPalette.primary500
+    // `currentColor` rather than a colour of the library's own: a consumer that blanks the variable
+    // gets the veil in the text colour it already stands in, not a brand blue from in here.
+    const loadingColor = gridTheme['--rdg-loading-color'] ?? 'currentColor'
 
     const finalColumns = useComputeFinalColumns({
         columns,
@@ -634,6 +636,9 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         }
     }, [rows, selectedRows, holdsEveryRow, onSelectedRowsChange])
 
+    // Not truthiness: an empty message is one a consumer chose, and rendering it is still its wish.
+    const hasEmptyMessage = noDataMessage !== undefined && noDataMessage !== null
+
     return (
         <Container $pagination={!!pagination?.enabled}>
             <div>
@@ -672,7 +677,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                         renderCheckbox,
                         // react-data-grid renders this only when there are no rows; suppress it
                         // while loading so the empty message never flashes under the loader.
-                        ...(noDataMessage != null && !loading
+                        ...(hasEmptyMessage && !loading
                             ? {
                                   noRowsFallback: <div className='rdg-no-data'>{noDataMessage}</div>
                               }
@@ -729,7 +734,7 @@ export const DataGrid = <R extends RowDefinition = RowDefinition>({
         resetLabel
     } = {},
     ...rest
-}: DataGridProps<R>) => (
+}: DataGridProps<R>): React.JSX.Element => (
     <FilterProvider filters={filters} setFilters={setFilters}>
         <VisibilityProvider
             columns={columns as ColumnDefinition[]}

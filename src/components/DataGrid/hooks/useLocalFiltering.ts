@@ -15,7 +15,7 @@ const matchFn = <R extends RowDefinition = RowDefinition>({
     filterType?: FilterType
     comparator?: (value: unknown, valueToMatch: unknown, row: R) => boolean
     row: R
-}) => {
+}): boolean => {
     if (comparator) {
         return comparator(value, valueToMatch, row)
     }
@@ -39,7 +39,7 @@ export const useLocalFiltering = <R extends RowDefinition = RowDefinition>({
     columns: ColumnDefinition<R>[]
     rows: R[]
     enabled: boolean
-}) => {
+}): R[] => {
     const { filters } = useContext(FilterContext)
     return useMemo(() => {
         if (!enabled) {

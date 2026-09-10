@@ -1,0 +1,16 @@
+{
+    "//": "The probe's own project, copied into the temp consumer by scripts/verify-consumer.mjs. It is deliberately NOT part of the library's tsconfig: `skipLibCheck` false is the point of it, and it only resolves 'taktik-react-components' inside that temp directory.",
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "jsx": "react-jsx",
+        "strict": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "noEmit": true,
+        "skipLibCheck": false,
+        "types": ["node"]
+    },
+    "include": ["probe.tsx"]
+}

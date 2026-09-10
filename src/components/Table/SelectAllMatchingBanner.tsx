@@ -1,4 +1,5 @@
 import DoneAllRoundedIcon from '@mui/icons-material/DoneAllRounded'
+import type { JSX } from 'react'
 import styled from 'styled-components'
 import { useLabels } from '../../labels'
 import { useTableSlots } from '../../slots'
@@ -41,7 +42,7 @@ export const SelectAllMatchingBanner = ({
     total,
     onSelectAllMatching,
     onClear
-}: SelectAllMatchingBannerProps) => {
+}: SelectAllMatchingBannerProps): JSX.Element => {
     const labels = useLabels()
     const { Button, Callout } = useTableSlots()
     const excluded = excludedCount(selection)

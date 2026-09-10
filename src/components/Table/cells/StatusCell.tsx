@@ -1,8 +1,8 @@
-import { ReactNode } from 'react'
+import { JSX, ReactNode } from 'react'
 import styled, { css } from 'styled-components'
 import { useTableSlots } from '../../../slots'
 import { iconSizeSmall, radiusPill, visuallyHidden } from '../../../theme/tableStyles'
-import { statusToneColors, StatusTone } from './statusTone'
+import { statusToneColors, StatusTone } from '../../../status/statusTone'
 import { TwoLineCell } from './TwoLineCell'
 
 export interface StatusCellProps {
@@ -98,7 +98,7 @@ export const StatusCell = ({
     variant = 'dot',
     icon,
     mark = true
-}: StatusCellProps) => {
+}: StatusCellProps): JSX.Element => {
     const { Tooltip } = useTableSlots()
     const iconOnly = variant === 'icon'
     const content = (

@@ -6,7 +6,7 @@ import type { CellKeyboardEvent } from 'react-data-grid'
 import { defaultTableTheme as lightTheme } from '../../theme/tableTheme'
 import { GRID_HEADER_GROUND_VAR, useGridPresentation } from './useGridPresentation'
 
-const wrapper = ({ children }: { children: ReactNode }) => (
+const wrapper = ({ children }: { children: ReactNode }): ReactNode => (
     <ThemeProvider theme={lightTheme}>{children}</ThemeProvider>
 )
 
