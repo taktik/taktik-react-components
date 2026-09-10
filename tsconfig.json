@@ -19,6 +19,7 @@
     "node_modules",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
-    "src/setupTests.ts"
+    "src/setupTests.ts",
+    "src/testUtils"
   ]
 }

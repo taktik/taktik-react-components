@@ -1,4 +1,4 @@
-import { taktikTheme } from '../theme'
+import { taktikPalette } from '../taktikPalette'
 
 export type DataGridTheme = {
     '--rdg-color'?: string
@@ -47,13 +47,13 @@ export type DataGridTheme = {
 }
 
 export const defaultTheme: DataGridTheme = {
-    '--rdg-color': taktikTheme.gray800,
-    '--rdg-header-color': taktikTheme.gray700,
-    '--rdg-border-color': taktikTheme.gray400,
-    '--rdg-background-color': taktikTheme.forcewhite,
-    '--rdg-header-background-color': taktikTheme.forcewhite,
-    '--rdg-row-hover-background-color': taktikTheme.forcewhite,
-    '--rdg-row-selected-hover-background-color': taktikTheme.primary400,
+    '--rdg-color': taktikPalette.gray800,
+    '--rdg-header-color': taktikPalette.gray700,
+    '--rdg-border-color': taktikPalette.gray400,
+    '--rdg-background-color': taktikPalette.forcewhite,
+    '--rdg-header-background-color': taktikPalette.forcewhite,
+    '--rdg-row-hover-background-color': taktikPalette.forcewhite,
+    '--rdg-row-selected-hover-background-color': taktikPalette.primary400,
     '--rdg-selection-color': 'transparent',
     '--rdg-border-size': '1px',
     '--rdg-font-size': '14px',
@@ -63,15 +63,15 @@ export const defaultTheme: DataGridTheme = {
     '--rdg-font-family': 'Inter, Helvetica, sans-serif',
     '--rdg-cell-padding': '8px 12px',
     '--rdg-border-radius-container': '8px',
-    '--rdg-row-selected-background-color': taktikTheme.primary400,
-    '--rdg-expanded-accent-color': taktikTheme.primary400,
-    '--rdg-row-selected-color': taktikTheme.forcewhite,
+    '--rdg-row-selected-background-color': taktikPalette.primary400,
+    '--rdg-expanded-accent-color': taktikPalette.primary400,
+    '--rdg-row-selected-color': taktikPalette.forcewhite,
     '--rdg-scrollbar-width': '8px',
     '--rdg-scrollbar-height': '8px',
-    '--rdg-scrollbar-thumb-background': taktikTheme.primary500,
-    '--rdg-scrollbar-track-background': taktikTheme.gray100,
-    '--rdg-scrollbar-thumb-hover-background': taktikTheme.primary500,
-    '--rdg-scrollbar-track-hover-background': taktikTheme.gray200,
-    '--rdg-checkbox-color': taktikTheme.primary500,
-    '--rdg-loading-color': taktikTheme.primary500
+    '--rdg-scrollbar-thumb-background': taktikPalette.primary500,
+    '--rdg-scrollbar-track-background': taktikPalette.gray100,
+    '--rdg-scrollbar-thumb-hover-background': taktikPalette.primary500,
+    '--rdg-scrollbar-track-hover-background': taktikPalette.gray200,
+    '--rdg-checkbox-color': taktikPalette.primary500,
+    '--rdg-loading-color': taktikPalette.primary500
 }

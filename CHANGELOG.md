@@ -11,6 +11,13 @@
 
 ### Added
 
+- **The Taktik admin theme.** `ITheme`, `lightTheme`, `darkTheme`, `colorPalette`/`withAlpha` and the
+  `style` scales (font sizes, radii, icon sizes, shadows) are the library's styled-components
+  `DefaultTheme`; a consumer wraps its tree in `<ThemeProvider theme={lightTheme}>`. The palette
+  scales the grid falls back to are `taktikPalette` (`TaktikPalette`), no longer `ITheme`.
+- **A labels provider.** `<LabelsProvider labels translate formatRelativeTime dateLocale>` hands
+  every component its strings — `Labels` is typed, defaults are English, a count-bearing label is
+  a function — and `useLabels`/`useTranslate` read them.
 - **A test suite.** Vitest + jsdom + Testing Library, `npm test`; `npm run typecheck` covers the
   tests the build excludes.
 - **A table's stored layout.** `useColumnWidths`, `useColumnOrder` and `useHiddenColumns` keep a

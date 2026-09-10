@@ -1,4 +1,4 @@
-export interface ITheme {
+export interface TaktikPalette {
     mainToolBarColor: string
     /* Gray */
     gray900: string
@@ -79,7 +79,7 @@ export interface ITheme {
     purple900: string
 }
 
-export const taktikTheme: ITheme = {
+export const taktikPalette: TaktikPalette = {
     mainToolBarColor: 'hsl(214, 74%, 17%)',
     /* Gray */
     gray900: '#1E252D',

@@ -28,7 +28,7 @@ import { useLocalSorting } from './hooks/useLocalSorting'
 import { useComputeFinalColumns } from './hooks/useComputeFinalColumns'
 import { DataGridCheckbox } from './DataGridCheckbox'
 import 'react-data-grid/lib/styles.css'
-import { taktikTheme } from '../theme'
+import { taktikPalette } from '../taktikPalette'
 import { PulseLoader } from 'react-spinners'
 import { FilterProvider, Filters } from './FilterProvider'
 import { useLocalFiltering } from './hooks/useLocalFiltering'
@@ -284,7 +284,7 @@ const ContainerLoading = styled.div`
  *
  * It sits OUTSIDE the element the grid's custom properties are set on, so the colour is handed down
  * from the merged theme rather than read with `var()` — and it is the theme's colour rather than
- * `taktikTheme`'s, which painted a light-blue wash over a dark grid.
+ * `taktikPalette`'s, which painted a light-blue wash over a dark grid.
  */
 const LoadingScrim = styled.div<{ $color: string }>`
     background-color: ${({ $color }) => $color};
@@ -361,7 +361,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
      * custom properties; the loader sits outside it and takes its colour from here.
      */
     const gridTheme = { ...defaultTheme, ...(theme ?? {}) }
-    const loadingColor = gridTheme['--rdg-loading-color'] ?? taktikTheme.primary500
+    const loadingColor = gridTheme['--rdg-loading-color'] ?? taktikPalette.primary500
 
     const finalColumns = useComputeFinalColumns({
         columns,
