@@ -151,3 +151,79 @@ export const asTextFilter = (value: FilterValue | undefined): TextFilter | undef
     if (isExactText(value)) filter.exact = true
     return filter
 }
+
+/**
+ * The `!` grammar — ONE parse, read by a filter bar's type-ahead, by a URL codec and by every
+ * per-word quick search.
+ *
+ * `!room 10` excludes `room 10`; `!!foo` is the literal `!foo`. The rule is PARITY: a value's own
+ * leading run of markers is written doubled, so an odd run is the flag plus a doubled run and an
+ * even run is a doubled run alone. That is what makes every string both writable and readable — a
+ * value genuinely starting with `!` is reachable, which a bare "leading bang means not" cannot do.
+ */
+
+/** The negation flag, in a chip's value and in the type-ahead alike. */
+const NEGATION = '!'
+
+/** The exact flag — "this value whole", which is what picking a suggested value commits. */
+const EXACT = '='
+
+const leadingRun = (raw: string, marker: string): number => {
+    let run = 0
+    while (raw[run] === marker) run += 1
+    return run
+}
+
+/** A marker's leading run, read by parity: the flag it may set, the run the VALUE owns, the rest. */
+const peelMarker = (raw: string, marker: string): { flag: boolean; own: string; rest: string } => {
+    const run = leadingRun(raw, marker)
+    const flag = run % 2 === 1
+    return {
+        flag,
+        own: marker.repeat(flag ? (run - 1) / 2 : run / 2),
+        rest: raw.slice(run)
+    }
+}
+
+const writeMarker = (term: string, marker: string, flag: boolean): string => {
+    const run = leadingRun(term, marker)
+    return marker.repeat(flag ? run * 2 + 1 : run * 2) + term.slice(run)
+}
+
+export const parseNegation = (raw: string): TextFilter => {
+    const { flag, own, rest } = peelMarker(raw, NEGATION)
+    return { term: own + rest, negated: flag }
+}
+
+/** The inverse of `parseNegation` — what a word, or a chip that cannot be exact, looks like. */
+export const formatNegation = ({ term, negated }: TextFilter): string =>
+    writeMarker(term, NEGATION, negated)
+
+/**
+ * The whole per-column chip grammar: the negation run, then the exact one.
+ *
+ * Two markers rather than one because a suggested value commits BOTH facts at once ("Location is
+ * not room 105"), and they are orthogonal. They are peeled in a fixed order and each is escaped by
+ * its own parity, so neither can un-escape the other — the trap a chip carrying two levels of the
+ * SAME grammar falls into. Only a chip that {@link canBeExact} is read this way.
+ */
+export const parseTextValue = (raw: string): TextFilter => {
+    const negation = peelMarker(raw, NEGATION)
+    const exact = peelMarker(negation.rest, EXACT)
+    return {
+        term: negation.own + exact.own + exact.rest,
+        negated: negation.flag,
+        exact: exact.flag
+    }
+}
+
+export const formatTextValue = ({ term, negated, exact }: TextFilter): string => {
+    const bangs = leadingRun(term, NEGATION)
+    const afterBangs = term.slice(bangs)
+    const equals = leadingRun(afterBangs, EXACT)
+    return (
+        NEGATION.repeat(negated ? bangs * 2 + 1 : bangs * 2) +
+        EXACT.repeat(exact ? equals * 2 + 1 : equals * 2) +
+        afterBangs.slice(equals)
+    )
+}

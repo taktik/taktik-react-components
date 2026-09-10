@@ -1,0 +1,109 @@
+import Popover from '@mui/material/Popover'
+import styled from 'styled-components'
+import { useLabels } from '../../../labels'
+import { useTableSlots } from '../../../slots'
+import { fontSizeNormal } from '../../../theme/tableStyles'
+import type { RangeValue } from '../../../filterValue'
+import type { FilterDefinition } from './FilterBar'
+
+export type { RangeValue }
+
+const Body = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    width: 240px;
+`
+
+const ClearButton = styled.button`
+    align-self: flex-end;
+    border: none;
+    background: transparent;
+    color: ${({ theme }) => theme.primaryMain};
+    font: inherit;
+    ${fontSizeNormal};
+    cursor: pointer;
+    padding: 0;
+`
+
+export interface FilterRangePopoverProps {
+    anchorEl: HTMLElement | null
+    def: FilterDefinition
+    value: RangeValue
+    onChange: (value: RangeValue) => void
+    onClose: () => void
+}
+
+/**
+ * The editor for a `range` filter chip: two date pickers (rangeType 'date') or two
+ * number inputs (rangeType 'number'). Emits `{from,to}`; either bound may be left open.
+ */
+export const FilterRangePopover = ({
+    anchorEl,
+    def,
+    value,
+    onChange,
+    onClose
+}: FilterRangePopoverProps) => {
+    const labels = useLabels()
+    const { DatePicker, TextInput } = useTableSlots()
+    const bounds =
+        def.rangeType === 'date'
+            ? { from: labels.from, to: labels.to }
+            : { from: labels.min, to: labels.max }
+
+    const setBound = (bound: 'from' | 'to', next: number | string | undefined) =>
+        onChange({ ...value, [bound]: next })
+
+    const isEmpty = value.from === undefined && value.to === undefined
+
+    return (
+        <Popover
+            open={!!anchorEl}
+            anchorEl={anchorEl}
+            onClose={onClose}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}>
+            <Body>
+                {def.rangeType === 'date' ? (
+                    <>
+                        <DatePicker
+                            label={bounds.from}
+                            value={value.from as string | undefined}
+                            maxDate={value.to ? new Date(value.to) : undefined}
+                            onChange={(date) => setBound('from', date?.toISOString())}
+                        />
+                        <DatePicker
+                            label={bounds.to}
+                            value={value.to as string | undefined}
+                            minDate={value.from ? new Date(value.from) : undefined}
+                            onChange={(date) => setBound('to', date?.toISOString())}
+                        />
+                    </>
+                ) : (
+                    <>
+                        <TextInput
+                            type='number'
+                            label={`${bounds.from}${def.unit ? ` (${def.unit})` : ''}`}
+                            value={value.from ?? ''}
+                            onChange={(event) => {
+                                const raw = event.target.value
+                                setBound('from', raw === '' ? undefined : Number(raw))
+                            }}
+                        />
+                        <TextInput
+                            type='number'
+                            label={`${bounds.to}${def.unit ? ` (${def.unit})` : ''}`}
+                            value={value.to ?? ''}
+                            onChange={(event) => {
+                                const raw = event.target.value
+                                setBound('to', raw === '' ? undefined : Number(raw))
+                            }}
+                        />
+                    </>
+                )}
+                {!isEmpty && <ClearButton onClick={() => onChange({})}>{labels.clear}</ClearButton>}
+            </Body>
+        </Popover>
+    )
+}

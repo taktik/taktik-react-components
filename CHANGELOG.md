@@ -16,6 +16,22 @@
 
 ### Added
 
+- **The tables themselves.** `CrudTable`, `GridToolbar`, `GridPage`, `gridInDialog`, the cells
+  (`ChipListCell`, `CopyCell`, `CountBarCell`, `InheritedCell`, `RelativeTimeCell`, `StatusCell`,
+  `TwoLineCell`), `FilterBar` with its range popover, `TableMenu`, the row actions and gestures, the
+  copy cue, the selection banner and the shared grid presentation move in from the FlowR admin with
+  their tests. Three contracts carry what the consumer owns:
+  - **`TableTheme`** — the tokens the table code reads from the styled-components theme (colours,
+    surfaces, chip/input/scrollbar groups and a `table` group for font, radius and icon scales); a
+    consumer's theme satisfies it structurally, `defaultTableTheme` is a light default.
+  - **`TableSlots`** — the consumer's own Button, IconButton, Tooltip, ContextMenu, MenuSurface,
+    MenuItem, TextInput, DatePicker, Callout, Checkbox, CopyButton and suggestion popper, injected
+    once; `defaultTableSlots` are plain MUI so nothing need be injected to start.
+  - **`TableProvider`** — one root provider for labels, translate, relative-time and date locale,
+    slots, and `remeasureEvent` (the window event after which every table re-measures).
+- **The `!`/`=` text-filter grammar** (`parseNegation`, `formatNegation`, `parseTextValue`,
+  `formatTextValue`), the type-ahead vocabulary (`ValueSuggestion`, `FilterDraft`, …) and
+  `useSlashFocus`.
 - **The palette scales the grid falls back to are `taktikPalette` (`TaktikPalette`)**, no longer
   `ITheme` — that name is reserved for a consumer's own theme.
 - **A labels provider.** `<LabelsProvider labels translate formatRelativeTime dateLocale>` hands

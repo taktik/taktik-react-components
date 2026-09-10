@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { asTextFilter, canBeExact, negationMode, QUICK_SEARCH_KEY, textValue } from './filterValue'
+import {
+    asTextFilter,
+    canBeExact,
+    formatNegation,
+    formatTextValue,
+    negationMode,
+    parseNegation,
+    parseTextValue,
+    QUICK_SEARCH_KEY,
+    textValue
+} from './filterValue'
 
 /**
  * One chip, ONE grammar. Which one a chip speaks is decided here and nowhere else — the URL codec,
@@ -80,5 +90,54 @@ describe('asTextFilter', () => {
             negated: true,
             exact: true
         })
+    })
+})
+
+/**
+ * The `!` and `=` markers, read by PARITY: a value's own leading run is written doubled, so an odd
+ * run is the flag plus a doubled run and an even run is a doubled run alone. That rule is what makes
+ * every string both writable and readable — a value genuinely starting with `!` stays reachable,
+ * which a bare "leading bang means not" cannot manage.
+ */
+describe('the text markers', () => {
+    it('reads a leading ! as the exclusion flag', () => {
+        expect(parseNegation('room 10')).toEqual({ term: 'room 10', negated: false })
+        expect(parseNegation('!room 10')).toEqual({ term: 'room 10', negated: true })
+    })
+
+    it('escapes a value that starts with a ! by doubling the run', () => {
+        expect(parseNegation('!!foo')).toEqual({ term: '!foo', negated: false })
+        expect(parseNegation('!!!foo')).toEqual({ term: '!foo', negated: true })
+        expect(parseNegation('!!!!foo')).toEqual({ term: '!!foo', negated: false })
+    })
+
+    it('round-trips every shape through formatNegation', () => {
+        for (const term of ['foo', '!foo', '!!foo', 'a!b', '']) {
+            for (const negated of [false, true]) {
+                expect(parseNegation(formatNegation({ term, negated }))).toEqual({ term, negated })
+            }
+        }
+    })
+
+    // the two flags are orthogonal and peeled in a fixed order, so neither can un-escape the other
+    it('peels the exact marker after the negation one', () => {
+        expect(parseTextValue('==foo')).toEqual({ term: '=foo', negated: false, exact: false })
+        expect(parseTextValue('=foo')).toEqual({ term: 'foo', negated: false, exact: true })
+        expect(parseTextValue('!!==foo')).toEqual({ term: '!=foo', negated: false, exact: false })
+        expect(parseTextValue('!===foo')).toEqual({ term: '=foo', negated: true, exact: true })
+    })
+
+    it('round-trips every shape through formatTextValue', () => {
+        for (const term of ['foo', '!foo', '=foo', '!=foo', '=!foo', 'a=b', '!!foo']) {
+            for (const negated of [false, true]) {
+                for (const exact of [false, true]) {
+                    expect(parseTextValue(formatTextValue({ term, negated, exact }))).toEqual({
+                        term,
+                        negated,
+                        exact
+                    })
+                }
+            }
+        }
     })
 })

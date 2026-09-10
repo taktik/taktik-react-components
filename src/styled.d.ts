@@ -1,6 +1,6 @@
 import 'styled-components'
-import { TaktikPalette } from './components/taktikPalette'
+import { TableTheme } from './theme/tableTheme'
 
 declare module 'styled-components' {
-    export interface DefaultTheme extends TaktikPalette {}
+    export interface DefaultTheme extends TableTheme {}
 }

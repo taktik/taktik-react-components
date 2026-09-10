@@ -31,6 +31,13 @@ one the grid reads.
   throughout, which is a v6 contract), and it must be the consumer's copy for the consumer's
   `ThemeProvider` to reach the grid.
 
+## Using the tables
+
+Wrap the consumer once: a styled-components `ThemeProvider` whose theme satisfies `TableTheme`
+(`defaultTableTheme` to start), then `TableProvider` with the consumer's labels (`translate` for its
+own keys), its primitives as `slots`, and the window event after which tables re-measure. Every
+`CrudTable`, `FilterBar` and cell below reads those from context; no page threads anything.
+
 ## Working on the library
 
 ```bash
