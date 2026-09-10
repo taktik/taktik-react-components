@@ -1,5 +1,0 @@
-export * from './ITheme'
-export * from './colorPalette'
-export * from './light'
-export * from './dark'
-export * from './style'

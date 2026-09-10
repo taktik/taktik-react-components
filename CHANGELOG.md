@@ -16,10 +16,8 @@
 
 ### Added
 
-- **The Taktik admin theme.** `ITheme`, `lightTheme`, `darkTheme`, `colorPalette`/`withAlpha` and the
-  `style` scales (font sizes, radii, icon sizes, shadows) are the library's styled-components
-  `DefaultTheme`; a consumer wraps its tree in `<ThemeProvider theme={lightTheme}>`. The palette
-  scales the grid falls back to are `taktikPalette` (`TaktikPalette`), no longer `ITheme`.
+- **The palette scales the grid falls back to are `taktikPalette` (`TaktikPalette`)**, no longer
+  `ITheme` — that name is reserved for a consumer's own theme.
 - **A labels provider.** `<LabelsProvider labels translate formatRelativeTime dateLocale>` hands
   every component its strings — `Labels` is typed, defaults are English, a count-bearing label is
   a function — and `useLabels`/`useTranslate` read them.

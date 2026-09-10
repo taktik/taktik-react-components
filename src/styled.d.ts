@@ -1,6 +1,6 @@
 import 'styled-components'
-import { ITheme } from './theme/ITheme'
+import { TaktikPalette } from './components/taktikPalette'
 
 declare module 'styled-components' {
-    export interface DefaultTheme extends ITheme {}
+    export interface DefaultTheme extends TaktikPalette {}
 }
