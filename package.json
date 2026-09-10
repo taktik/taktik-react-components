@@ -1,10 +1,21 @@
 {
-  "name": "taktik-react-components",
+  "name": "@taktik/taktik-react-components",
   "private": false,
   "version": "0.0.33",
+  "description": "Taktik shared React components (MUI-based DataGrid, theme, utils)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taktik/taktik-react-components.git"
+  },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.taktik.be/repository/npm/"
+  },
   "scripts": {
     "build": "vite build && tsc",
     "format": "prettier --write 'src/**/*.{ts,tsx,js,jsx}'",
