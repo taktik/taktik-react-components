@@ -10,29 +10,31 @@ export default defineConfig({
             entry: 'src/index.ts',
             name: 'ReactComponents',
             fileName: 'index',
+            cssFileName: 'style',
             formats: ['es', 'umd']
         },
         rollupOptions: {
             // react/jsx-runtime must stay external too: bundling it embeds one
             // React version's internals and breaks consumers on another (React 19
             // renamed the internals the bundled copy reaches for).
-            // @mui/* and @emotion/* are peerDependencies: externalizing them makes the
-            // consumer's single copy the one that runs (a bundled copy is a second MUI
-            // instance the consumer's ThemeProvider can never reach).
+            // @mui/* and styled-components are peerDependencies: externalizing them makes the
+            // consumer's single copy the one that runs (a bundled copy is a second MUI or
+            // styled-components instance the consumer's ThemeProvider can never reach).
             external: [
                 'react',
                 'react-dom',
                 'react/jsx-runtime',
                 'react/jsx-dev-runtime',
                 /^@mui\//,
-                /^@emotion\//
+                'styled-components'
             ],
             output: {
                 globals: {
                     react: 'React',
                     'react-dom': 'ReactDOM',
                     'react/jsx-runtime': 'ReactJsxRuntime',
-                    'react/jsx-dev-runtime': 'ReactJsxDevRuntime'
+                    'react/jsx-dev-runtime': 'ReactJsxDevRuntime',
+                    'styled-components': 'styled'
                 }
             }
         }

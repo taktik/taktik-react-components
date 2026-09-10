@@ -1,5 +1,5 @@
 import React from 'react'
-import styled from '@emotion/styled'
+import styled from 'styled-components'
 import { ColSpanArgs, SELECT_COLUMN_KEY } from 'react-data-grid'
 import { ColumnDefinition, RowDefinition } from './types'
 

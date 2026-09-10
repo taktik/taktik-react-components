@@ -16,7 +16,7 @@ instance of the grid: the shared constants are plain strings and still match, so
 a context is involved and a cell renderer throws `useRowSelection must be used within renderCell`
 from a cell that visibly is inside one.
 
-Everything the library uses at RUNTIME rather than bundling — React, `@mui/material`, `@emotion/*` —
+Everything the library uses at RUNTIME rather than bundling — React, `@mui/material`, `styled-components` —
 is external, so the copy that runs is the consumer's own and the consumer's `ThemeProvider` is the
 one the grid reads.
 
@@ -27,10 +27,15 @@ one the grid reads.
   not exist before React 19.2, so a consumer on 19.1 fails at import time.
 - **`@mui/material`: `>=9 <10`.** The library is built, typed and only ever run against 9.2, and it
   passes `slotProps.input`, which has moved between MUI majors before.
+- **`styled-components`: `>=6`.** The library's own styles are written with it (transient `$` props
+  throughout, which is a v6 contract), and it must be the consumer's copy for the consumer's
+  `ThemeProvider` to reach the grid.
 
 ## Working on the library
 
 ```bash
+npm test          # Vitest + jsdom + Testing Library; a module moves in WITH its tests
+npm run typecheck # tsc over src including the tests, which the build's tsc excludes
 npm run lint      # react-hooks only, by hand — there is no CI and no pre-commit hook
 npm run build     # dist/ is committed, so rebuild it in the same commit as the source
 ```

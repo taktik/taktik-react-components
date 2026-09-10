@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased
+
+### ⚠ Breaking
+
+- **styled-components replaces emotion.** The library's own styles are written with
+  `styled-components` 6, and it is the peer the package asks for; `@emotion/*` is no longer one
+  (MUI still needs it for itself, as before). A consumer on emotion alone must add
+  `styled-components`.
+
+### Added
+
+- **A test suite.** Vitest + jsdom + Testing Library, `npm test`; `npm run typecheck` covers the
+  tests the build excludes.
+- **A table's stored layout.** `useColumnWidths`, `useColumnOrder` and `useHiddenColumns` keep a
+  reader's dragged widths, arranged order and hidden columns in `localStorage` under keys derived
+  from the `columnVisibilityKey`, kept in step across tables sharing a key and reset together;
+  `withColumnOrder` and `withFillingColumn` shape a column array from them; the column-track
+  helpers (`flexTrack`, `cappedTrack`, `columnResizeFloor`, …) behind them.
+- **Copy-on-click state.** `nextArm`/`staysOnLine`/`cueAnchor` (the arming reducer) and
+  `hoveredLineAt` (glyph-level line hit-testing) for a cell whose value copies on click.
+- **Selection algebra.** `MatchingSelection` — picked ids, or everything matching minus a few —
+  with its toggles, counts and page helpers.
+- **Filter values.** The vocabulary a filter chip carries (`FilterValue`, `RangeValue`,
+  `TextFilterValue`, `textValue`, `negationMode`, …), shared by a bar and a URL codec.
+
 ## 1.0.0-alpha.1 — 2026-09-09
 
 ### Fixed

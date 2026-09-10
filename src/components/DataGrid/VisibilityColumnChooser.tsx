@@ -5,7 +5,7 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import Divider from '@mui/material/Divider'
 import { DataGridCheckbox } from './DataGridCheckbox'
-import styled from '@emotion/styled'
+import styled from 'styled-components'
 
 type Props = {
     IconComponent: (props: IconButtonProps) => React.ReactNode

@@ -22,7 +22,7 @@ import {
 import { DataGridTheme, defaultTheme } from './dataGridTheme'
 import { Container } from './Container'
 import { VisibilityMenu } from './VisibilityColumnChooser'
-import styled from '@emotion/styled'
+import styled from 'styled-components'
 import { ColumnDefinition, RowDefinition } from './types'
 import { useLocalSorting } from './hooks/useLocalSorting'
 import { useComputeFinalColumns } from './hooks/useComputeFinalColumns'

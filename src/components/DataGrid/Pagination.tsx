@@ -1,4 +1,4 @@
-import styled from '@emotion/styled'
+import styled from 'styled-components'
 import React, { ReactNode, useCallback, useMemo } from 'react'
 import TablePagination from '@mui/material/TablePagination'
 
