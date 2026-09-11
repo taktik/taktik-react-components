@@ -1,9 +1,12 @@
-# taktik-react-components
+# @taktik/taktik-react-components
 
 A **collection view** for React: a set of records a reader browses, filters, selects and pages.
 Built on react-data-grid (bundled), MUI and styled-components, and designed to be dressed by its
 host — the controls, the words and every design token arrive from the consumer, so one application's
 tables and another's read as their own rather than as this package's.
+
+Published on Taktik's own Nexus registry — the same one `@taktik/flowr-common-js` comes from — and
+consumed today by `flowr-admin-react`, `studio-frontend` and `flowr-studio-admin`.
 
 ⚠ **Before adding anything to this package, read [What belongs in here](#what-belongs-in-here-and-what-does-not).**
 It is a ruled boundary, not a preference.
@@ -34,12 +37,25 @@ rather than deep-importing: the `exports` map has closed that route since `1.0.0
 
 ### 1. Install
 
+The `@taktik` scope has to be mapped to the Nexus registry — already the case in any project using
+`@taktik/flowr-common-js` — in the project's `.npmrc` or `~/.npmrc`:
+
+```
+@taktik:registry=https://npm.taktik.be/repository/npm/
+```
+
+Reads are anonymous, so installing needs no login. Then:
+
 ```bash
-npm install taktik-react-components
+npm install @taktik/taktik-react-components@<exact version>
 npm install react react-dom @mui/material @mui/icons-material styled-components
 # MUI needs emotion for itself, whatever this library's own styles are written with
 npm install @emotion/react @emotion/styled
 ```
+
+⚠ **Pin the exact version.** Published versions carry a `-g<commit>` pre-release suffix, and a `^`
+range never matches a pre-release — so a caret would silently stay on whatever it first resolved.
+See [Releasing](#releasing).
 
 Nothing else. `react-data-grid` and `date-fns` in particular are bundled — see
 [The package is BUNDLED](#the-package-is-bundled).
@@ -47,7 +63,7 @@ Nothing else. `react-data-grid` and `date-fns` in particular are bundled — see
 ### 2. Import the stylesheet once
 
 ```ts
-import 'taktik-react-components/style.css'
+import '@taktik/taktik-react-components/style.css'
 ```
 
 Once, anywhere the bundler will reach — the application entry point is the usual place. It is
@@ -85,7 +101,7 @@ so a table renders before a host has a theme, and deliberately not any product's
 from it and override what you have:
 
 ```tsx
-import { defaultTableTheme, type TableTheme } from 'taktik-react-components'
+import { defaultTableTheme, type TableTheme } from '@taktik/taktik-react-components'
 
 const myTheme: TableTheme = { ...defaultTableTheme, primaryMain: '#0b5fff' }
 ```
@@ -100,7 +116,7 @@ functions that take a theme (`useGridPresentation`) name `TableTheme` and are ch
 
 ```ts
 // styled.d.ts, anywhere in the consumer's own sources
-import type { TableTheme } from 'taktik-react-components'
+import type { TableTheme } from '@taktik/taktik-react-components'
 
 declare module 'styled-components' {
     export interface DefaultTheme extends TableTheme {}
@@ -192,7 +208,7 @@ dependency of this one. `DataGrid` re-exports the two rdg types a consumer ends 
 `SortColumn` and `RenderCellProps` — **through this package**:
 
 ```ts
-import { DataGrid, SortColumn } from 'taktik-react-components'
+import { DataGrid, SortColumn } from '@taktik/taktik-react-components'
 ```
 
 ⚠ Never write `from 'react-data-grid'` in a consumer, and do not install it. A second copy is a
@@ -267,8 +283,11 @@ corepack yarn@1.22.22 build            # dist/ is NOT tracked: build before link
 corepack yarn@1.22.22 verify:consumer  # packs dist/ and typechecks examples/consumer-typecheck against it
 ```
 
-CI (`.github/workflows/verify.yml`) runs all five on every push and pull request. There is no
-pre-commit hook, so a local run before committing is still worth the seconds.
+All five run in CI, in two places and for two reasons: `ci/cloudbuild.yaml` runs them **before it
+publishes**, so what reaches the registry is never a red commit, and
+`.github/workflows/verify.yml` runs them on a pull request, where the feedback belongs. The only
+pre-commit hook is prettier through lint-staged, so a local run before committing is still worth
+the seconds.
 
 `verify:consumer` is the one that cannot be replaced by anything inside `src`: every bundled
 dependency is also a devDependency here, so a declaration file naming `react-data-grid` or
@@ -276,7 +295,7 @@ dependency is also a devDependency here, so a declaration file naming `react-dat
 
 ### Working against a consumer locally
 
-A consumer can depend on a checkout (`"taktik-react-components": "file:../taktik-react-components"`)
+A consumer can depend on a checkout (`"@taktik/taktik-react-components": "file:../taktik-react-components"`)
 while a change is in flight. ⚠ Two things bite, both silently:
 
 - `dist/` is untracked and the consumer resolves the built output, so **build here first** or the
@@ -285,13 +304,37 @@ while a change is in flight. ⚠ Two things bite, both silently:
   notice the directory changed. Remove the copy and reinstall:
 
 ```bash
-rm -rf <consumer>/node_modules/taktik-react-components && npm install   # or pnpm install
+rm -rf <consumer>/node_modules/@taktik/taktik-react-components && npm install   # or pnpm install
 ```
 
 A consumer with a bundler cache (vite's `node_modules/.vite`) clears that too.
 
-### Releasing
+### Releasing — the CI does it, and nobody bumps a version by hand
 
-`prepublishOnly` builds, so a publish always ships a fresh `dist/`. Pre-1.0 versions go out under the
-`alpha` dist-tag (`npm publish --tag alpha`), which leaves `latest` where it is for anyone still on
-an older line.
+Publishing is the Taktik CI's job (Cloud Build, driven by the build-manager):
+[`ci/cloudbuild.yaml`](ci/cloudbuild.yaml).
+
+1. The version is computed by [git-version](https://github.com/taktik/git-version) from the last git
+   tag — tag `2.0` plus N commits gives `2.0.N-g<commit>`, and a branch build carries a branch
+   identifier too. **The `version` field in `package.json` is never edited**; CI sets it at build
+   time, which is why the one committed here means nothing.
+2. The checks below run, then `yarn install --frozen-lockfile && yarn build`.
+3. `npm publish` to the Nexus — the registry comes from `publishConfig`, the credentials from the CI
+   account. **`main` publishes under the `latest` dist-tag; any other built branch publishes under a
+   dist-tag named after the branch**, so a branch build can never shadow what other projects install.
+
+To move the major or minor, push a tag on `main`: `git tag 2.1 && git push origin 2.1`.
+
+Because every version is a `-g<commit>` pre-release, **a consumer pins the exact version** — a `^`
+range will not match it.
+
+#### Manual publish (fallback only)
+
+```bash
+corepack yarn@1.22.22 install && corepack yarn@1.22.22 build
+npm version <version> --no-git-tag-version
+npm login --registry=https://npm.taktik.be/repository/npm/ --scope=@taktik   # your Nexus account
+npm publish
+```
+
+`prepublishOnly` builds too, so a hand publish cannot ship a stale `dist/`.

@@ -8,10 +8,26 @@ steps:
         name: 'taktik/git-version:2.0.23-g54f3ef7b6e'
         args: [ '-f', 'git.version' ]
 
-    -   id: 'build'
+    # Gates the publish: whatever reaches the registry is what other projects install, so a red
+    # commit must not get that far. Steps share /workspace, so the install here serves the build too.
+    -   id: 'verify'
         name: 'node:22'
         entrypoint: 'bash'
         env: [ 'HUSKY=0' ] # husky "prepare" hook is useless in CI
+        args:
+            - '-c'
+            - |
+                set -euo pipefail
+                yarn install --frozen-lockfile
+                yarn typecheck
+                yarn lint
+                yarn test
+
+    -   id: 'build'
+        waitFor: [ 'verify' ]
+        name: 'node:22'
+        entrypoint: 'bash'
+        env: [ 'HUSKY=0' ]
         args:
             - '-c'
             - |
@@ -21,8 +37,19 @@ steps:
                 yarn build
                 npm version "$$(cat git.version)" --no-git-tag-version
 
-    -   id: 'publish'
+    # The one check that cannot be done from inside src: every bundled dependency is also a
+    # devDependency here, so a declaration file naming react-data-grid or date-fns resolves locally
+    # and fails only in a consumer. This packs dist/ and typechecks a probe against it, with nothing
+    # installed but the peers.
+    -   id: 'verify-consumer'
         waitFor: [ 'build' ]
+        name: 'node:22'
+        entrypoint: 'bash'
+        env: [ 'HUSKY=0' ]
+        args: [ '-c', 'set -euo pipefail && yarn verify:consumer' ]
+
+    -   id: 'publish'
+        waitFor: [ 'verify-consumer' ]
         name: 'node:22'
         entrypoint: 'bash'
         env: [ 'HUSKY=0' ]

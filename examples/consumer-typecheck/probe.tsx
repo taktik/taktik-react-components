@@ -28,7 +28,7 @@ import {
     TableProvider,
     truncated,
     useGridPresentation
-} from 'taktik-react-components'
+} from '@taktik/taktik-react-components'
 import type {
     ColumnDefinition,
     CrudTableProps,
@@ -43,7 +43,7 @@ import type {
     TableProviderProps,
     TableSlots,
     TableTheme
-} from 'taktik-react-components'
+} from '@taktik/taktik-react-components'
 
 type Device = RowDefinition<{ name: string; online: boolean }>
 

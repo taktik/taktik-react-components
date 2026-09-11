@@ -1,9 +1,19 @@
 # Changelog
 
-## 1.0.0-alpha.2 — 2026-09-10
+Versions are computed by CI from the last git tag (`2.0.N-g<commit>`), so a release is named when it
+is built rather than here. An entry stays under Unreleased until it ships; the `1.0.0-alpha.*`
+headings below are from the period when the version was set by hand.
+
+## Unreleased
 
 ### ⚠ Breaking
 
+- **The package is `@taktik/taktik-react-components`, on Taktik's own Nexus registry**, where it was
+  `taktik-react-components` on the public npm. A consumer renames its dependency and every import,
+  maps the `@taktik` scope to that registry in its `.npmrc` (already the case wherever
+  `@taktik/flowr-common-js` is installed), and **pins the exact version** — every published version
+  carries a `-g<commit>` pre-release suffix, which a `^` range never matches. The stylesheet moves
+  with the name: `import '@taktik/taktik-react-components/style.css'`.
 - **The public surface was curated: 357 exported names are now 154.** The entry point declares every
   export BY NAME instead of re-exporting barrels, and `src/api.test.ts` pins the whole set, so
   either direction shows up as a diff in review. What went is the library's own business that a

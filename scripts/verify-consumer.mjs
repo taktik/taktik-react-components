@@ -106,7 +106,7 @@ try {
     }
 
     const shippedTypes = readFileSync(
-        join(consumerDir, 'node_modules/taktik-react-components/dist/index.d.ts'),
+        join(consumerDir, 'node_modules/@taktik/taktik-react-components/dist/index.d.ts'),
         'utf8'
     )
     const named = MUST_BE_ABSENT.filter((name) =>
