@@ -16,11 +16,14 @@ import type { JSX } from 'react'
 import { ThemeProvider } from 'styled-components'
 import {
     anyFilterActive,
+    cappedTrack,
     CrudTable,
     defaultTableSlots,
     defaultTableTheme,
+    flexTrack,
     LabelsProvider,
     NOTHING_SELECTED,
+    rowActionsColumn,
     StatusCell,
     TableProvider,
     truncated,
@@ -54,19 +57,27 @@ const filtering: boolean = anyFilterActive(filters)
 const selection: MatchingSelection = NOTHING_SELECTED
 const defaultSort: SortColumn[] = [{ columnKey: 'name', direction: 'ASC' }]
 
+// The column shape the README's quick start shows: a plain definition, a width stated as a TRACK,
+// and the actions column declared last. Pinned here so the documented example cannot rot.
 const columns: ColumnDefinition<Device>[] = [
     {
         key: 'name',
         name: 'Name',
         type: undefined,
+        width: flexTrack(160),
         renderCell: ({ row }: RenderCellProps<Device>) => truncated(row.name)
     },
     {
         key: 'online',
         name: 'Online',
+        width: cappedTrack(120, 160),
         renderCell: ({ row }: RenderCellProps<Device>) =>
             row.online ? <StatusCell tone='success' label='Online' /> : <StatusCell {...offline} />
-    }
+    },
+    rowActionsColumn<Device>({
+        items: (row) => [{ id: `rename:${row.id}`, name: 'rename', onClick: () => undefined }],
+        label: (row) => `Actions for ${row.name}`
+    })
 ]
 
 const tableProps: CrudTableProps<Device> = {
@@ -81,7 +92,11 @@ const tableProps: CrudTableProps<Device> = {
 const runtime: Omit<TableProviderProps, 'children'> = {
     slots,
     remeasureEvent: 'probe:layout-settled',
-    formatRelativeTime: (value) => String(value)
+    formatRelativeTime: (value) => String(value),
+    // The two inputs that exist because what they name belongs to the host: its `/` shortcut stack,
+    // and its own interaction pause.
+    registerSearchField: () => () => undefined,
+    filterDebounceMs: 300
 }
 
 const GridVariables = (): string => {
