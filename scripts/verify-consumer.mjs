@@ -10,7 +10,15 @@
  * Run it with `yarn verify:consumer` after a build; CI runs the same script.
  */
 import { execFileSync } from 'node:child_process'
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+    cpSync,
+    existsSync,
+    mkdtempSync,
+    readdirSync,
+    readFileSync,
+    rmSync,
+    writeFileSync
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -68,11 +76,18 @@ let failure
 
 try {
     console.log(`Packing the library into ${consumerDir}`)
-    const tarball = run(
-        'npm',
-        ['pack', '--ignore-scripts', '--silent', '--pack-destination', consumerDir],
-        repoRoot
-    ).trim()
+    run('npm', ['pack', '--ignore-scripts', '--silent', '--pack-destination', consumerDir], repoRoot)
+
+    // The tarball is READ OFF DISK rather than taken from npm's stdout. A lifecycle hook or npm
+    // itself may write a line of its own there — husky announces `HUSKY=0 skip install` under the
+    // env CI sets — and a filename scraped from that stdout becomes the noise plus the name. The
+    // destination directory is ours and empty until this point, so the single `.tgz` in it is the
+    // artefact, whatever anything printed.
+    const tarballs = readdirSync(consumerDir).filter((entry) => entry.endsWith('.tgz'))
+    if (tarballs.length !== 1) {
+        fail(`expected exactly one packed tarball in ${consumerDir}, found ${tarballs.length}`)
+    }
+    const tarball = tarballs[0]
 
     writeFileSync(
         join(consumerDir, 'package.json'),
