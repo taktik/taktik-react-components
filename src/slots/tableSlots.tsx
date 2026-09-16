@@ -92,6 +92,12 @@ export interface TableMenuItem {
      * unconditionally.
      */
     disabledReason?: string
+    /**
+     * A LIST behind this entry rather than an act — the consumer's menu opens these beside it. The
+     * library passes them through untouched, exactly as it passes every other field: what a nested
+     * entry looks like and how it opens is the consumer's menu's business.
+     */
+    children?: TableMenuItem[]
 }
 
 export interface TableContextMenuProps {
