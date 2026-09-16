@@ -42,6 +42,7 @@ import {
     useGridPresentation,
     useSelectAllLabel
 } from './useGridPresentation'
+import { RowMenuReportContext } from './rowMenuContext'
 import { useRowGestures } from './useRowGestures'
 
 /** How a table pages — one discriminated choice, so two answers cannot be given at once. */
@@ -511,6 +512,8 @@ export const CrudTable = <R extends RowDefinition>({
         gridProps: rowGestures,
         rowHover,
         menu,
+        menuRowId,
+        reportRowMenu,
         copyCue,
         copiedBubble
     } = useRowGestures<R>({
@@ -569,6 +572,7 @@ export const CrudTable = <R extends RowDefinition>({
             selectedRows={selectionEnabled ? selected : undefined}
             onSelectedRowsChange={selectionEnabled ? setSelected : undefined}
             activeRowId={activeRowId}
+            menuRowId={menuRowId}
             loading={loading}
             expandable={expandable}
             {...rowGestures}
@@ -663,7 +667,9 @@ export const CrudTable = <R extends RowDefinition>({
         ) : undefined
 
     return (
-        <>
+        // The provider is what lets a row's kebab — rendered by the consumer's column — tell this
+        // table its menu is open, so the row is painted while the pointer is on the menu
+        <RowMenuReportContext.Provider value={reportRowMenu}>
             {band ? (
                 <WithBand>
                     {band}
@@ -675,6 +681,6 @@ export const CrudTable = <R extends RowDefinition>({
             {menu}
             {copyCue}
             {copiedBubble}
-        </>
+        </RowMenuReportContext.Provider>
     )
 }

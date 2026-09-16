@@ -1,4 +1,4 @@
-import { JSX, MouseEventHandler } from 'react'
+import { JSX, MouseEventHandler, useContext } from 'react'
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded'
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded'
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
@@ -7,6 +7,7 @@ import { useTableSlots, type TableMenuItem } from '../../slots'
 import { VisibilityColumnChooser } from '../DataGrid/VisibilityColumnChooser'
 import type { ColumnDefinition, RowDefinition } from '../DataGrid/types'
 import { ActionCell, actionColumnSizing } from './gridCells'
+import { RowMenuReportContext } from './rowMenuContext'
 
 /**
  * The one column every grid's row actions live in. Its key is shared so the column-visibility
@@ -154,6 +155,7 @@ export const rowActionsColumn = <R extends RowDefinition>({
                     />
                 ) : (
                     <RowActionsMenu
+                        rowId={row.id}
                         menuItems={menuItems}
                         label={label?.(row)}
                         tabIndex={tabIndex}
@@ -166,17 +168,21 @@ export const rowActionsColumn = <R extends RowDefinition>({
 })
 
 const RowActionsMenu = ({
+    rowId,
     menuItems,
     label,
     tabIndex,
     loading
 }: {
+    rowId: string
     menuItems: TableMenuItem[]
     label?: string
     tabIndex?: number
     loading?: boolean
 }): JSX.Element => {
     const { ContextMenu } = useTableSlots()
+    // the table paints the row whose menu is showing; the kebab is how it learns which one
+    const report = useContext(RowMenuReportContext)
     return (
         <ContextMenu
             menuIcon={<MoreVertRoundedIcon />}
@@ -184,6 +190,7 @@ const RowActionsMenu = ({
             label={label}
             tabIndex={tabIndex}
             loading={loading}
+            onOpenChange={report && ((open) => report(rowId, open))}
         />
     )
 }

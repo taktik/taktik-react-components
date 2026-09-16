@@ -548,3 +548,46 @@ describe('right-clicking a row', () => {
         expect(await screen.findByRole('menu')).toBeInTheDocument()
     })
 })
+
+/**
+ * The pointer leaves the row for its menu, so the row's own hover goes with it — the class is what
+ * keeps the hover paint on the row the menu is about, whichever door opened it.
+ */
+describe('the row whose menu is open', () => {
+    const MENU_OPEN = 'rdg-row-menu-open'
+    // the open menu is a modal, so the grid behind it is aria-hidden — the rows are still there
+    const row = (index: number): HTMLElement =>
+        screen.getAllByRole('row', { hidden: true })[index] as HTMLElement
+
+    it('is marked while a right-click menu shows, and unmarked when it closes', async () => {
+        render(<Host />)
+        await rightClick(screen.getByText('Alpha'))
+        await screen.findByRole('menu')
+        expect(row(1)).toHaveClass(MENU_OPEN)
+        expect(row(2)).not.toHaveClass(MENU_OPEN)
+
+        await userEvent.keyboard('{Escape}')
+        expect(row(1)).not.toHaveClass(MENU_OPEN)
+    })
+
+    it('is marked while its kebab menu shows, and unmarked after an entry is picked', async () => {
+        render(<Host />)
+        await userEvent.click(screen.getByRole('button', { name: 'Actions for Alpha' }))
+        await screen.findByRole('menu')
+        expect(row(1)).toHaveClass(MENU_OPEN)
+
+        await userEvent.click(screen.getByRole('menuitem', { name: 'edit' }))
+        expect(row(1)).not.toHaveClass(MENU_OPEN)
+    })
+
+    it('moves to the row whose kebab opened last', async () => {
+        render(<Host />)
+        await userEvent.click(screen.getByRole('button', { name: 'Actions for Alpha' }))
+        await screen.findByRole('menu')
+        await userEvent.keyboard('{Escape}')
+        await userEvent.click(screen.getByRole('button', { name: 'Actions for Bravo' }))
+        await screen.findByRole('menu')
+        expect(row(1)).not.toHaveClass(MENU_OPEN)
+        expect(row(2)).toHaveClass(MENU_OPEN)
+    })
+})

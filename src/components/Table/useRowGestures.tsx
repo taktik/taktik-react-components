@@ -15,6 +15,7 @@ import type { ColumnDefinition, RowDefinition } from '../DataGrid/types'
 import { CopiedBubble } from './CopiedBubble'
 import { CopyCue } from './CopyCue'
 import { ACTIONS_COLUMN_KEY, rowMenuItems } from './rowActions'
+import type { RowMenuReport } from './rowMenuContext'
 import { useClickToCopyLabel, useCopiedLabel } from './useGridPresentation'
 
 /** The kebab does not fill its cell — a click in the padding beside it is that column's, not the row's. */
@@ -102,6 +103,14 @@ export interface RowGestures<R extends RowDefinition> {
     }
     /** The right-click menu; render it beside the grid. */
     menu: ReactNode
+    /**
+     * The row whose actions menu is showing — opened by a right-click here, or by its kebab, which
+     * says so through `reportRowMenu`. Hand it to the grid's `menuRowId`, so the row keeps its hover
+     * paint while the pointer is on the menu.
+     */
+    menuRowId?: string
+    /** What a row's kebab calls as its menu opens and closes; provide it through `RowMenuReportContext`. */
+    reportRowMenu: RowMenuReport
     /** The armed line's hint, and the confirmation a copy leaves; render both beside the grid. */
     copyCue: ReactNode
     copiedBubble: ReactNode
@@ -138,6 +147,14 @@ export const useRowGestures = <R extends RowDefinition>({
         undefined
     )
     const closeMenu = useCallback((): void => setMenuFor(undefined), [])
+    const [kebabRowId, setKebabRowId] = useState<string | undefined>(undefined)
+    // A close reported for a row whose menu is no longer the open one changes nothing: opening a
+    // second row's kebab closes the first's menu, and the first's close may land after the second's open
+    const reportRowMenu = useCallback<RowMenuReport>(
+        (rowId, open) =>
+            setKebabRowId((current) => (open ? rowId : current === rowId ? undefined : current)),
+        []
+    )
     const copiedLabel = useCopiedLabel()
     const clickToCopyLabel = useClickToCopyLabel()
     // `nonce` distinguishes one copy from the next, which is what remounts the bubble
@@ -360,6 +377,8 @@ export const useRowGestures = <R extends RowDefinition>({
     return {
         gridProps,
         rowHover,
+        menuRowId: menuFor?.row.id ?? kebabRowId,
+        reportRowMenu,
         menu: menuFor ? (
             <MenuSurface
                 open

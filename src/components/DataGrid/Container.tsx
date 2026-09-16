@@ -225,7 +225,10 @@ export const Container = styled.div<{ $pagination?: boolean }>`
             background-color: var(--rdg-background-color);
         }
 
-        &:hover .rdg-cell {
+        /* The row whose actions menu is open (menuRowId) keeps the hover paint the pointer left
+           behind when it moved onto the menu — it is what says which row the menu is about. */
+        &:hover .rdg-cell,
+        &.rdg-row-menu-open .rdg-cell {
             background-color: var(--rdg-row-hover-background-color);
         }
 
@@ -238,7 +241,8 @@ export const Container = styled.div<{ $pagination?: boolean }>`
                 background-color: var(--rdg-row-selected-background-color);
             }
 
-            &:hover .rdg-cell {
+            &:hover .rdg-cell,
+            &.rdg-row-menu-open .rdg-cell {
                 background-color: var(--rdg-row-selected-hover-background-color);
             }
         }

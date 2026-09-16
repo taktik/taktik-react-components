@@ -166,11 +166,16 @@ const DefaultContextMenu = ({
     label,
     menuIcon,
     tabIndex,
-    loading
+    loading,
+    onOpenChange
 }: TableContextMenuProps): JSX.Element => {
     const labels = useLabels()
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
     const menuId = useId()
+    const close = (): void => {
+        setAnchorEl(null)
+        onOpenChange?.(false)
+    }
     return (
         <>
             <IconButton
@@ -185,6 +190,7 @@ const DefaultContextMenu = ({
                     event.stopPropagation()
                     event.preventDefault()
                     setAnchorEl(event.currentTarget)
+                    onOpenChange?.(true)
                 }}>
                 {menuIcon ?? <MoreVertRoundedIcon />}
             </IconButton>
@@ -192,10 +198,10 @@ const DefaultContextMenu = ({
                 id={menuId}
                 anchorEl={anchorEl}
                 open={!!anchorEl}
-                onClose={() => setAnchorEl(null)}
+                onClose={close}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                 transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
-                <MenuEntries menuItems={menuItems} onClose={() => setAnchorEl(null)} />
+                <MenuEntries menuItems={menuItems} onClose={close} />
             </Menu>
         </>
     )

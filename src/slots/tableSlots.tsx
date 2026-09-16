@@ -109,6 +109,11 @@ export interface TableContextMenuProps {
     tabIndex?: number
     /** An action started from this menu is still running, so its trigger says so. */
     loading?: boolean
+    /**
+     * Reports the menu opening and closing. The table paints the row whose menu is showing, and the
+     * kebab's menu is the consumer's — this is how the table learns about it.
+     */
+    onOpenChange?: (open: boolean) => void
 }
 
 export interface TableMenuSurfaceProps {

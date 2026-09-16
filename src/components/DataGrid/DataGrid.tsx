@@ -109,6 +109,8 @@ export interface DataGridRenderRowProps<Row> extends RenderRowProps<Row> {
 
 /** The class the row named by `activeRowId` carries — `Container` paints it as a picked row. */
 export const ACTIVE_ROW_CLASS = 'rdg-row-active'
+/** The class the row named by `menuRowId` carries — `Container` holds its hover paint. */
+export const MENU_ROW_CLASS = 'rdg-row-menu-open'
 
 export type DataGridRenderers<Row> = Omit<Renderers<Row, unknown>, 'renderRow'> & {
     renderRow?: (key: Key, props: DataGridRenderRowProps<Row>) => ReactNode
@@ -189,6 +191,13 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
      * set to tick, and a highlight that needed the checkbox column would force one on it.
      */
     activeRowId?: string
+    /**
+     * The row whose actions menu is open — from its kebab or from a right-click. It keeps its HOVER
+     * paint while the menu shows, since the pointer has left it for the menu and nothing else on
+     * screen would say which row the menu is about. Deliberately not the picked paint: that one
+     * says "this is the one shown elsewhere", and a menu is a passing thing.
+     */
+    menuRowId?: string
     /**
      * Rendered centered in the empty grid body when there are no rows (and not loading). A string
      * shows as a plain message; pass a node for a richer empty state (icon + title + hint).
@@ -342,6 +351,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     selectedRows,
     onSelectedRowsChange,
     activeRowId,
+    menuRowId,
     selectAllLabel = DEFAULT_SELECT_ALL_LABEL,
     noDataMessage,
     filters,
@@ -558,12 +568,13 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
             const own = [
                 detailRowClass(row, expandable?.expandedIds),
                 activeRowId !== undefined && row.id === activeRowId ? ACTIVE_ROW_CLASS : '',
+                menuRowId !== undefined && row.id === menuRowId ? MENU_ROW_CLASS : '',
                 index === 0 ? 'first-row' : '',
                 index === rowsWithDetails.length - 1 ? 'last-row' : ''
             ]
             return [rowClass?.(row, index), ...own].filter(Boolean).join(' ')
         },
-        [rowsWithDetails, expandable?.expandedIds, rowClass, activeRowId]
+        [rowsWithDetails, expandable?.expandedIds, rowClass, activeRowId, menuRowId]
     )
 
     /** What a click on the row means: the consumer's action, or opening the row where it expands. */
