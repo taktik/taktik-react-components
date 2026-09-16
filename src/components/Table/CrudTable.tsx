@@ -161,6 +161,12 @@ export interface CrudTableProps<R extends RowDefinition> {
     /** The selection this table reports outward, ids and handler together — see {@link CrudTableSelection}. */
     selection?: CrudTableSelection
     /**
+     * The ONE row the page is showing beside the grid, painted as a picked row is — for a table that
+     * opens one record at a time and therefore declares no `selection` and carries no checkbox column.
+     * Its click is the consumer's `onRowPrimaryAction`, which is what sets this.
+     */
+    activeRowId?: string
+    /**
      * What a single click on a row does. Leave it unset for the house defaults: on a selectable
      * table a click toggles the row's checkbox, and on a table that expands, expanding is what the
      * grid does with a click by itself. Pass a handler only where a click must do something MORE
@@ -276,6 +282,7 @@ export const CrudTable = <R extends RowDefinition>({
     sorting,
     selectable,
     selection,
+    activeRowId,
     onRowPrimaryAction,
     paging,
     columnVisibilityKey,
@@ -534,6 +541,7 @@ export const CrudTable = <R extends RowDefinition>({
             selectAllLabel={selectAllLabel}
             selectedRows={selectionEnabled ? selected : undefined}
             onSelectedRowsChange={selectionEnabled ? setSelected : undefined}
+            activeRowId={activeRowId}
             loading={loading}
             expandable={expandable}
             {...rowGestures}

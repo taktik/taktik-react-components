@@ -107,6 +107,9 @@ export interface DataGridRenderRowProps<Row> extends RenderRowProps<Row> {
     viewportColumns: readonly CalculatedColumn<Row, unknown>[]
 }
 
+/** The class the row named by `activeRowId` carries — `Container` paints it as a picked row. */
+export const ACTIVE_ROW_CLASS = 'rdg-row-active'
+
 export type DataGridRenderers<Row> = Omit<Renderers<Row, unknown>, 'renderRow'> & {
     renderRow?: (key: Key, props: DataGridRenderRowProps<Row>) => ReactNode
 }
@@ -180,6 +183,12 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
     loading?: boolean
     selectedRows?: string[]
     onSelectedRowsChange?: (rows: string[]) => void
+    /**
+     * The ONE row the consumer is showing elsewhere — a details panel beside the grid — painted as
+     * a picked row is, without a selection column: a table that opens one record at a time has no
+     * set to tick, and a highlight that needed the checkbox column would force one on it.
+     */
+    activeRowId?: string
     /**
      * Rendered centered in the empty grid body when there are no rows (and not loading). A string
      * shows as a plain message; pass a node for a richer empty state (icon + title + hint).
@@ -332,6 +341,7 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     selectable = true,
     selectedRows,
     onSelectedRowsChange,
+    activeRowId,
     selectAllLabel = DEFAULT_SELECT_ALL_LABEL,
     noDataMessage,
     filters,
@@ -547,12 +557,13 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
             // a page slice or an open detail row makes a different length.
             const own = [
                 detailRowClass(row, expandable?.expandedIds),
+                activeRowId !== undefined && row.id === activeRowId ? ACTIVE_ROW_CLASS : '',
                 index === 0 ? 'first-row' : '',
                 index === rowsWithDetails.length - 1 ? 'last-row' : ''
             ]
             return [rowClass?.(row, index), ...own].filter(Boolean).join(' ')
         },
-        [rowsWithDetails, expandable?.expandedIds, rowClass]
+        [rowsWithDetails, expandable?.expandedIds, rowClass, activeRowId]
     )
 
     /** What a click on the row means: the consumer's action, or opening the row where it expands. */

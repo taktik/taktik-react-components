@@ -229,7 +229,10 @@ export const Container = styled.div<{ $pagination?: boolean }>`
             background-color: var(--rdg-row-hover-background-color);
         }
 
-        &[aria-selected='true'] {
+        /* A ticked row, and the one row a consumer is showing elsewhere (activeRowId): the same
+           paint, because to the reader both say "this is the one". */
+        &[aria-selected='true'],
+        &.rdg-row-active {
             .rdg-cell {
                 color: var(--rdg-row-selected-color);
                 background-color: var(--rdg-row-selected-background-color);
