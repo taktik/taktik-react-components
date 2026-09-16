@@ -23,6 +23,7 @@ import {
 import { DataGrid, type DataGridRenderRowProps } from '../DataGrid/DataGrid'
 import { isDetailRow, type DataGridExpandable } from '../DataGrid/Expandable'
 import { withFillingColumn } from '../DataGrid/layout/columnFill'
+import { isFlexibleWidth } from '../DataGrid/layout/columnWidths'
 import { withColumnOrder } from '../DataGrid/layout/withColumnOrder'
 import { useColumnOrder } from '../DataGrid/layout/useColumnOrder'
 import { useColumnWidths } from '../DataGrid/layout/useColumnWidths'
@@ -394,6 +395,32 @@ export const CrudTable = <R extends RowDefinition>({
             ),
         [columns, columnOrder.order, localSortOnAServerPage, rowDrag, storedWidths, hiddenColumns]
     )
+
+    /**
+     * The width map the grid lays out from, minus the column `withFillingColumn` promoted.
+     *
+     * A promoted column is one whose stored width was turned back into a flexible track — and the
+     * grid takes a `resized` entry in this map over the column's own `width`, so handing the map
+     * over whole put the dragged pixels back and the table stopped short of its container again.
+     * The dragged width is not lost: it is the promoted track's floor. Every other stored width is
+     * a width the reader chose and stays.
+     */
+    const fillingKey = useMemo(
+        () =>
+            alignedColumns.find(
+                (column) => storedWidths[column.key] !== undefined && isFlexibleWidth(column.width)
+            )?.key,
+        [alignedColumns, storedWidths]
+    )
+    const gridWidths = useMemo(() => {
+        if (fillingKey === undefined || !columnWidths.gridWidths.has(fillingKey)) {
+            return columnWidths.gridWidths
+        }
+        const next = new Map(columnWidths.gridWidths)
+        next.delete(fillingKey)
+        return next
+    }, [columnWidths.gridWidths, fillingKey])
+
     const presentation = useGridPresentation()
     const paginationLabels = useGridPaginationLabels()
     const columnResetLabel = useColumnResetLabel()
@@ -550,7 +577,7 @@ export const CrudTable = <R extends RowDefinition>({
             // after the spread, so a table sizing its own rows wins — and the shared rhythm
             // survives for every table that does not
             rowHeight={rowHeight ?? presentation.rowHeight}
-            columnWidths={columnWidths.gridWidths}
+            columnWidths={gridWidths}
             onColumnWidthsChange={columnWidths.onGridWidthsChange}
             visibilityColumnFeature={{
                 enabled: true,

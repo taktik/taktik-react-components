@@ -21,11 +21,13 @@ interface CapturedGridProps {
     columns: {
         key: string
         name: string
+        width?: number | string
         sortable?: boolean
         renderCell?: (props: { row: DeviceRow }) => ReactNode
     }[]
     selectedRows?: string[]
     onSelectedRowsChange?: (ids: string[]) => void
+    columnWidths?: Map<string, { type: string; width: number }>
     loading?: boolean
     noDataMessage?: ReactNode
     defaultSortColumns?: { columnKey: string; direction: 'ASC' | 'DESC' }[]
@@ -379,6 +381,38 @@ describe('CrudTable', () => {
             'status',
             'nameWithExtraInfos'
         ])
+    })
+
+    /**
+     * The reported defect: drag EVERY column and the table stops short of its container. The last
+     * data column is promoted to a flexible track, but the grid lays out from the width map, where
+     * its dragged width still sat as a fixed entry.
+     */
+    it('keeps the promoted filling column out of the grid width map, its drag as the floor', () => {
+        writeColumnWidths('crudTableTest', { nameWithExtraInfos: 200, status: 300 })
+        renderTable({
+            columns: [
+                { key: 'nameWithExtraInfos', name: 'Name' },
+                { key: 'status', name: 'Status' }
+            ]
+        })
+        expect(lastGrid.columns.map((column) => column.width)).toEqual([200, 'minmax(300px, 1fr)'])
+        expect(lastGrid.columnWidths?.has('nameWithExtraInfos')).toBe(true)
+        expect(lastGrid.columnWidths?.has('status')).toBe(false)
+    })
+
+    it('hands every dragged width to the grid while a column still flexes', () => {
+        writeColumnWidths('crudTableTest', { nameWithExtraInfos: 200 })
+        renderTable({
+            columns: [
+                { key: 'nameWithExtraInfos', name: 'Name' },
+                { key: 'status', name: 'Status', width: 'minmax(120px, 1fr)' }
+            ]
+        })
+        expect(lastGrid.columnWidths?.get('nameWithExtraInfos')).toEqual({
+            type: 'resized',
+            width: 200
+        })
     })
 
     // ONE reset item, every stored layout: hidden columns, dragged widths, arranged order
