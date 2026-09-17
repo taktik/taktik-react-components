@@ -494,6 +494,57 @@ describe('type-ahead', () => {
 })
 
 /**
+ * A host listens for Escape too — a details panel beside the grid closes on it. A key this bar
+ * ANSWERS is spent here; one it does not answer travels on.
+ */
+describe('Escape', () => {
+    const hostEscapes = (): Mock => {
+        const heard = vi.fn()
+        render(
+            <div
+                onKeyDown={(event) => {
+                    if (event.key === 'Escape') heard()
+                }}>
+                <Host initial={seedFilters(['channel'])} />
+            </div>
+        )
+        return heard
+    }
+    const typeAhead = (): HTMLElement => screen.getAllByRole('combobox')[0] as HTMLElement
+
+    it('is kept by the type-ahead while it holds a draft', async () => {
+        const user = userEvent.setup()
+        const heard = hostEscapes()
+
+        await user.type(typeAhead(), 'rtbf')
+        await user.keyboard('{Escape}')
+
+        expect(heard).not.toHaveBeenCalled()
+    })
+
+    it('travels on from an empty type-ahead', async () => {
+        const user = userEvent.setup()
+        const heard = hostEscapes()
+
+        await user.click(typeAhead())
+        await user.keyboard('{Escape}')
+
+        expect(heard).toHaveBeenCalled()
+    })
+
+    it('is kept by an open chip editor, which it closes', async () => {
+        const user = userEvent.setup()
+        const heard = hostEscapes()
+
+        await user.click(screen.getByRole('button', { name: /^Edit the .+ filter$/ }))
+        await user.keyboard('{Escape}')
+
+        expect(heard).not.toHaveBeenCalled()
+        expect(screen.queryByRole('combobox', { name: /^Edit the .+ filter$/ })).toBeNull()
+    })
+})
+
+/**
  * The VALUE rows (B-5 S3): the values the page's own fields actually hold for what is being typed.
  * The bar renders what the page hands it and asks for nothing itself — the page owns the request.
  */

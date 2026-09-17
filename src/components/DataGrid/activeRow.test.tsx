@@ -33,9 +33,18 @@ describe('activeRowId', () => {
         expect(screen.queryAllByRole('checkbox')).toHaveLength(0)
     })
 
+    // The paint is colour, which a screen reader cannot hear and a forced-colours reader may lose
+    it('says so as well as paints it', () => {
+        renderWithTable(<DataGrid<Row> rows={rows} columns={[nameColumn]} activeRowId='b' />)
+
+        expect(rowOf('Bravo')).toHaveAttribute('aria-current', 'true')
+        expect(rowOf('Alpha')).not.toHaveAttribute('aria-current')
+    })
+
     it('marks nothing while no row is active', () => {
         renderWithTable(<DataGrid<Row> rows={rows} columns={[nameColumn]} />)
 
         expect(document.querySelector(`.${ACTIVE_ROW_CLASS}`)).toBeNull()
+        expect(document.querySelector('[role="row"][aria-current]')).toBeNull()
     })
 })

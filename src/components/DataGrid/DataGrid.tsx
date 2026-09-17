@@ -14,9 +14,9 @@ import {
     CellMouseEvent,
     DataGrid as Grid,
     DataGridProps as DataGridPropsFromLib,
-    RenderCheckboxProps,
     RenderRowProps,
     Renderers,
+    Row as GridRow,
     SortColumn
 } from 'react-data-grid'
 import { DataGridTheme, defaultTheme } from './dataGridTheme'
@@ -26,7 +26,7 @@ import styled from 'styled-components'
 import { ColumnDefinition, RowDefinition } from './types'
 import { useLocalSorting } from './hooks/useLocalSorting'
 import { useComputeFinalColumns } from './hooks/useComputeFinalColumns'
-import { DataGridCheckbox } from './DataGridCheckbox'
+import { renderGridCheckbox } from './GridCheckbox'
 import 'react-data-grid/lib/styles.css'
 import { PulseLoader } from 'react-spinners'
 import { FilterProvider, Filters } from './FilterProvider'
@@ -165,18 +165,15 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
      */
     defaultSortColumns?: SortColumn[]
     /**
-     * Whether the GRID orders the rows — a different question from where the sort VALUE lives, and
-     * the grid used to answer both with one prop.
+     * Whether the GRID orders the rows — a different question from where the sort VALUE lives.
      *
-     * Handing over `onSortColumnsChange` means the consumer holds the value, and until this existed
-     * it also meant the grid stopped ordering the rows: a consumer keeping its sort somewhere it
-     * survives a remount (a URL, a store) got a header that moved and rows that did not. Set it
-     * `true` alongside `sortColumns`/`onSortColumnsChange` and the grid still sorts the rows it
-     * holds, exactly as it does when it owns the value — the sorting counterpart of
-     * `pagination.control`, which lets a consumer own the page without giving up the slicing.
+     * Set it `true` alongside `sortColumns`/`onSortColumnsChange` and the grid still sorts the rows
+     * it holds while the consumer keeps the value somewhere it survives a remount (a URL, a store).
+     * It is the sorting counterpart of `pagination.control`, which lets a consumer own the page
+     * without giving up the slicing.
      *
-     * Omitted, it is inferred as it always was: the grid sorts unless the consumer took the value,
-     * which is the right answer for a grid the SERVER orders and pages.
+     * Omitted, it is inferred: the grid sorts unless the consumer took the value, which is the right
+     * answer for a grid the SERVER orders and pages.
      */
     sortRowsLocally?: boolean
     columns: ColumnDefinition<Row>[]
@@ -312,29 +309,6 @@ const LoadingScrim = styled.div<{ $color: string }>`
     height: 100%;
 `
 
-const RenderCheckbox = React.memo(
-    ({ checked, indeterminate, onChange, 'aria-label': ariaLabel }: RenderCheckboxProps) => {
-        const onChangeFn = useCallback(
-            (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
-                onChange(checked, (event.nativeEvent as MouseEvent).shiftKey)
-            },
-            [onChange]
-        )
-        return (
-            <DataGridCheckbox
-                checked={checked}
-                indeterminate={indeterminate}
-                slotProps={{ input: { 'aria-label': ariaLabel } }}
-                onChange={onChangeFn}
-            />
-        )
-    }
-)
-
-const renderDefaultCheckbox = (props: RenderCheckboxProps): React.JSX.Element => (
-    <RenderCheckbox {...props} />
-)
-
 /** What a select-all checkbox says when the consumer does not name it. */
 const DEFAULT_SELECT_ALL_LABEL = 'Select all rows'
 
@@ -374,7 +348,9 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         pagination?.control
     )
 
-    const renderCheckbox = renderers?.renderCheckbox ?? renderDefaultCheckbox
+    // The grid's own fallback goes through the `Checkbox` SLOT, so a consumer that injects one is
+    // followed in the selection column too — the one column every table has.
+    const renderCheckbox = renderers?.renderCheckbox ?? renderGridCheckbox
 
     /**
      * The consumer's theme over the library's. Everything INSIDE the grid element reads these as
@@ -537,10 +513,19 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         columns: readonly CalculatedColumn<R, unknown>[]
     }>(undefined)
     const renderRow = useMemo(() => {
-        if (!consumerRenderRow) {
-            return undefined
-        }
         return (key: Key, props: RenderRowProps<R>) => {
+            /**
+             * The picked row SAYS so, beside the paint. A table that opens one record at a time has
+             * no selection column, so the tint is otherwise the only statement that this is the
+             * record the panel beside the grid describes — nothing a screen reader or a
+             * forced-colours reader can read. `aria-current` rather than `aria-selected`, which
+             * belongs to the checkbox column and means a set the reader is acting on.
+             */
+            const current =
+                activeRowId !== undefined && props.row.id === activeRowId ? true : undefined
+            if (!consumerRenderRow) {
+                return <GridRow key={key} {...props} aria-current={current} />
+            }
             const { iterateOverViewportColumnsForRow: iterate } = props
             if (viewportColumns.current?.iterate !== iterate) {
                 viewportColumns.current = {
@@ -550,10 +535,11 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
             }
             return consumerRenderRow(key, {
                 ...props,
+                'aria-current': current,
                 viewportColumns: viewportColumns.current.columns
             })
         }
-    }, [consumerRenderRow])
+    }, [consumerRenderRow, activeRowId])
 
     /**
      * The grid's own row classes, composed with the consumer's `rowClass` rather than replaced by it:

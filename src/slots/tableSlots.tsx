@@ -80,8 +80,14 @@ export interface TableMenuItem {
     name?: string
     /** Already translated. Wins over `name`. */
     label?: string
-    icon?: ReactElement
-    onClick?: (event: MouseEvent) => void
+    /** The mark before the label. A NODE, so a consumer may hand over a wrapped or decorated icon. */
+    icon?: ReactNode
+    /**
+     * What the entry does. The event is OPTIONAL, because the same entry is also shown OUTSIDE a
+     * menu — a row's lone action, a panel mirroring the entries beside the record — and there is no
+     * pointer event to hand it there. An entry that reads the event must cope with it being absent.
+     */
+    onClick?: (event?: MouseEvent) => void
     /** Draws a rule before this entry — the destructive one, in practice. */
     divider?: boolean
     danger?: boolean
@@ -93,12 +99,23 @@ export interface TableMenuItem {
      */
     disabledReason?: string
     /**
-     * A LIST behind this entry rather than an act — the consumer's menu opens these beside it. The
-     * library passes them through untouched, exactly as it passes every other field: what a nested
-     * entry looks like and how it opens is the consumer's menu's business.
+     * A LIST behind this entry rather than an act: a menu opens it beside the entry, and the entry
+     * runs no `onClick` of its own. One level deep in the library's own menus; a consumer's menu may
+     * nest as far as its vocabulary goes.
+     *
+     * A FUNCTION is read when the list opens, so a surface holding one menu per row pays a closure
+     * per row rather than every label and gate the nested list could show.
      */
-    children?: TableMenuItem[]
+    children?: TableMenuItem[] | (() => TableMenuItem[])
 }
+
+/** The entries behind a parent entry, built now where the consumer deferred them. */
+export const menuChildren = (item: TableMenuItem): TableMenuItem[] =>
+    typeof item.children === 'function' ? item.children() : (item.children ?? [])
+
+/** Whether this entry opens a LIST instead of acting. A deferred list counts without being built. */
+export const hasMenuChildren = (item: TableMenuItem): boolean =>
+    typeof item.children === 'function' || !!item.children?.length
 
 export interface TableContextMenuProps {
     menuItems: TableMenuItem[]
@@ -112,6 +129,10 @@ export interface TableContextMenuProps {
     /**
      * Reports the menu opening and closing. The table paints the row whose menu is showing, and the
      * kebab's menu is the consumer's — this is how the table learns about it.
+     *
+     * ⚠ `false` is owed on EVERY close, unmounting included. A grid virtualises its rows, so the row
+     * holding an open menu can be scrolled away; without the report the table goes on painting a row
+     * whose menu is gone.
      */
     onOpenChange?: (open: boolean) => void
 }

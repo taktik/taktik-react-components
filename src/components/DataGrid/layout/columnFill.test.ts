@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ColumnDefinition, RowDefinition } from '../types'
-import { withFillingColumn } from './columnFill'
+import { withFillingColumn, type FilledColumns } from './columnFill'
 const ACTIONS_COLUMN_KEY = 'actions'
 
 const column = (
@@ -11,8 +11,8 @@ const column = (
 
 const actions = column(ACTIONS_COLUMN_KEY, 57, { name: '', frozenRight: true })
 
-const widthOf = (columns: ColumnDefinition<RowDefinition>[], key: string): unknown =>
-    columns.find((candidate) => candidate.key === key)?.width
+const widthOf = (filled: FilledColumns<RowDefinition>, key: string): unknown =>
+    filled.columns.find((candidate) => candidate.key === key)?.width
 
 describe('withFillingColumn', () => {
     // The device list's default set: five capped columns and a flexible tail
@@ -23,7 +23,8 @@ describe('withFillingColumn', () => {
             column('activeMac', 'minmax(150px, 1fr)'),
             actions
         ]
-        expect(withFillingColumn(columns, [])).toBe(columns)
+        expect(withFillingColumn(columns, []).columns).toBe(columns)
+        expect(withFillingColumn(columns, []).filledKey).toBeUndefined()
     })
 
     // The reported defect: hide the one flexible column and every visible track is capped
@@ -36,6 +37,8 @@ describe('withFillingColumn', () => {
         ]
         const filled = withFillingColumn(columns, ['activeMac'])
         expect(widthOf(filled, 'lastConnection')).toBe('minmax(150px, 1fr)')
+        // stated, so the width map handed to the grid can drop exactly this column's entry
+        expect(filled.filledKey).toBe('lastConnection')
         // nothing else moves, and the hidden column keeps the width it comes back with
         expect(widthOf(filled, 'device')).toBe('minmax(240px, 280px)')
         expect(widthOf(filled, 'activeMac')).toBe('minmax(150px, 1fr)')
@@ -79,10 +82,10 @@ describe('withFillingColumn', () => {
     // A table left with nothing but its kebab has nothing to promote, and must not blow up saying so
     it('answers the same columns when no data column is visible', () => {
         const onlyActions = [actions]
-        expect(withFillingColumn(onlyActions, [])).toBe(onlyActions)
+        expect(withFillingColumn(onlyActions, []).columns).toBe(onlyActions)
         const allHidden = [column('device', 240), actions]
-        expect(withFillingColumn(allHidden, ['device'])).toBe(allHidden)
-        expect(withFillingColumn([], [])).toEqual([])
+        expect(withFillingColumn(allHidden, ['device']).columns).toBe(allHidden)
+        expect(withFillingColumn([], []).columns).toEqual([])
     })
 
     // The identity of what the grid is handed is what it rebuilds its columns from
@@ -90,8 +93,8 @@ describe('withFillingColumn', () => {
         const device = column('device', 'minmax(240px, 280px)')
         const tail = column('lastSeen', 220)
         const filled = withFillingColumn([device, tail, actions], [])
-        expect(filled[0]).toBe(device)
-        expect(filled[2]).toBe(actions)
-        expect(filled[1]).not.toBe(tail)
+        expect(filled.columns[0]).toBe(device)
+        expect(filled.columns[2]).toBe(actions)
+        expect(filled.columns[1]).not.toBe(tail)
     })
 })

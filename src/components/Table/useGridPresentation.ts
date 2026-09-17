@@ -4,7 +4,7 @@ import type { CellKeyboardEvent } from 'react-data-grid'
 import { useLabels, useTranslate } from '../../labels'
 import type { TableTheme } from '../../theme/tableTheme'
 import { defaultTheme, type DataGridTheme } from '../DataGrid/dataGridTheme'
-import { renderGridCheckbox } from './GridCheckbox'
+import { renderGridCheckbox } from '../DataGrid/GridCheckbox'
 
 /**
  * What a HOST says the grid's header band stands on — its own ground, whatever that is.
@@ -100,8 +100,11 @@ const GRID_ROW_HEIGHT = 50
  * cell is tabbable) then moves focus out of the grid — or into the focused cell's own controls
  * first, which is the behaviour a kebab or a link in a cell wants anyway. Arrow keys, Home/End and
  * PageUp/Down are untouched.
+ *
+ * A table that also answers Enter or Space on a row composes with this rather than replacing it —
+ * see `useRowGestures` — since the grid takes ONE key handler.
  */
-const releaseTabFromGrid = (_args: unknown, event: CellKeyboardEvent): void => {
+export const releaseTabFromGrid = (_args: unknown, event: CellKeyboardEvent): void => {
     if (event.key === 'Tab') {
         event.preventGridDefault()
     }

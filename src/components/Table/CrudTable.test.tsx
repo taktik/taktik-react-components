@@ -28,6 +28,7 @@ interface CapturedGridProps {
     selectedRows?: string[]
     onSelectedRowsChange?: (ids: string[]) => void
     columnWidths?: Map<string, { type: string; width: number }>
+    onColumnWidthsChange?: (widths: Map<string, { type: string; width: number }>) => void
     loading?: boolean
     noDataMessage?: ReactNode
     defaultSortColumns?: { columnKey: string; direction: 'ASC' | 'DESC' }[]
@@ -399,6 +400,35 @@ describe('CrudTable', () => {
         expect(lastGrid.columns.map((column) => column.width)).toEqual([200, 'minmax(300px, 1fr)'])
         expect(lastGrid.columnWidths?.has('nameWithExtraInfos')).toBe(true)
         expect(lastGrid.columnWidths?.has('status')).toBe(false)
+    })
+
+    /**
+     * The other half of the same defect: the promoted column lays out from a track with no entry in
+     * the map, so the grid MEASURES it and reports it back as measured. That report must not take
+     * the width the reader dragged with it.
+     */
+    it('keeps the promoted column’s dragged width when the grid measures it', () => {
+        writeColumnWidths('crudTableTest', { nameWithExtraInfos: 200, status: 300 })
+        renderTable({
+            columns: [
+                { key: 'nameWithExtraInfos', name: 'Name' },
+                { key: 'status', name: 'Status' }
+            ]
+        })
+
+        act(() =>
+            lastGrid.onColumnWidthsChange?.(
+                new Map([
+                    ['nameWithExtraInfos', { type: 'resized', width: 200 }],
+                    ['status', { type: 'measured', width: 620 }]
+                ])
+            )
+        )
+
+        expect(readColumnWidths('crudTableTest')).toEqual({
+            nameWithExtraInfos: 200,
+            status: 300
+        })
     })
 
     it('hands every dragged width to the grid while a column still flexes', () => {

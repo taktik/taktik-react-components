@@ -22,8 +22,6 @@ import {
 } from '../../selection'
 import { DataGrid, type DataGridRenderRowProps } from '../DataGrid/DataGrid'
 import { isDetailRow, type DataGridExpandable } from '../DataGrid/Expandable'
-import { withFillingColumn } from '../DataGrid/layout/columnFill'
-import { isFlexibleWidth } from '../DataGrid/layout/columnWidths'
 import { withColumnOrder } from '../DataGrid/layout/withColumnOrder'
 import { useColumnOrder } from '../DataGrid/layout/useColumnOrder'
 import { useColumnWidths } from '../DataGrid/layout/useColumnWidths'
@@ -353,15 +351,6 @@ export const CrudTable = <R extends RowDefinition>({
      */
     const gridOrdersTheRows = sorting?.mode === 'url' && !localSortOnAServerPage
     /**
-     * The widths this reader dragged this table's columns to. They are applied as the column's own
-     * `width` — which is what the grid falls back to on every remount, so a stored width survives
-     * the remount a column toggle causes and a hidden column comes back the width it was left at.
-     */
-    const columnWidths = useColumnWidths(columnVisibilityKey)
-    // Wired here for every table, so no page listens for the host's own event itself
-    useRemeasureOnHostEvent(columnWidths.remeasure)
-    const storedWidths = columnWidths.widths
-    /**
      * The order this reader arranged this table's columns into, from the column chooser. It is
      * applied FIRST, before anything else shapes the array: which column ends up last is what decides
      * which one fills the container (`withFillingColumn`), so a reorder has to be a fact by the time
@@ -377,50 +366,26 @@ export const CrudTable = <R extends RowDefinition>({
         hiddenColumnsByDefault,
         onHiddenColumnsChange
     )
-    const alignedColumns = useMemo(
+    /** The columns arranged and aligned — everything about them that is not a width. */
+    const shapedColumns = useMemo(
         () =>
-            withFillingColumn(
-                withColumnOrder(columns, columnOrder.order).map((column) => {
-                    // The kebab answers its own press; a drag handle over it would swallow the click
-                    const dragFrom =
-                        rowDrag && column.key !== ACTIONS_COLUMN_KEY ? rowDrag : undefined
-                    const aligned = withAlignedColumn(column, dragFrom)
-                    const stored = storedWidths[column.key]
-                    const sized =
-                        aligned.resizable && stored !== undefined
-                            ? { ...aligned, width: stored }
-                            : aligned
-                    return localSortOnAServerPage ? { ...sized, sortable: false } : sized
-                }),
-                hiddenColumns
-            ),
-        [columns, columnOrder.order, localSortOnAServerPage, rowDrag, storedWidths, hiddenColumns]
+            withColumnOrder(columns, columnOrder.order).map((column) => {
+                // The kebab answers its own press; a drag handle over it would swallow the click
+                const dragFrom = rowDrag && column.key !== ACTIONS_COLUMN_KEY ? rowDrag : undefined
+                const aligned = withAlignedColumn(column, dragFrom)
+                return localSortOnAServerPage ? { ...aligned, sortable: false } : aligned
+            }),
+        [columns, columnOrder.order, localSortOnAServerPage, rowDrag]
     )
-
     /**
-     * The width map the grid lays out from, minus the column `withFillingColumn` promoted.
-     *
-     * A promoted column is one whose stored width was turned back into a flexible track — and the
-     * grid takes a `resized` entry in this map over the column's own `width`, so handing the map
-     * over whole put the dragged pixels back and the table stopped short of its container again.
-     * The dragged width is not lost: it is the promoted track's floor. Every other stored width is
-     * a width the reader chose and stays.
+     * The widths this reader dragged this table's columns to. They are applied as the column's own
+     * `width` — which is what the grid falls back to on every remount, so a stored width survives
+     * the remount a column toggle causes and a hidden column comes back the width it was left at.
      */
-    const fillingKey = useMemo(
-        () =>
-            alignedColumns.find(
-                (column) => storedWidths[column.key] !== undefined && isFlexibleWidth(column.width)
-            )?.key,
-        [alignedColumns, storedWidths]
-    )
-    const gridWidths = useMemo(() => {
-        if (fillingKey === undefined || !columnWidths.gridWidths.has(fillingKey)) {
-            return columnWidths.gridWidths
-        }
-        const next = new Map(columnWidths.gridWidths)
-        next.delete(fillingKey)
-        return next
-    }, [columnWidths.gridWidths, fillingKey])
+    const columnWidths = useColumnWidths(columnVisibilityKey, shapedColumns, hiddenColumns)
+    // Wired here for every table, so no page listens for the host's own event itself
+    useRemeasureOnHostEvent(columnWidths.remeasure)
+    const alignedColumns = columnWidths.columns
 
     const presentation = useGridPresentation()
     const paginationLabels = useGridPaginationLabels()
@@ -581,7 +546,7 @@ export const CrudTable = <R extends RowDefinition>({
             // after the spread, so a table sizing its own rows wins — and the shared rhythm
             // survives for every table that does not
             rowHeight={rowHeight ?? presentation.rowHeight}
-            columnWidths={gridWidths}
+            columnWidths={columnWidths.gridWidths}
             onColumnWidthsChange={columnWidths.onGridWidthsChange}
             visibilityColumnFeature={{
                 enabled: true,

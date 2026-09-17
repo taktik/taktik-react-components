@@ -136,9 +136,16 @@ export const toggleExpanded = <Row extends RowDefinition>(
     )
 }
 
-/** Anything that answers a click itself — toggling a switch must not also expand its row. */
+/**
+ * Anything that answers a click or a key itself — toggling a switch must not also expand its row,
+ * and Enter typed in a field inside a cell belongs to that field.
+ *
+ * The roles are named beside the elements because a control is as often a composed widget as a
+ * native tag: a picker or a rich text area is a div with a role, and reads as part of the row
+ * without one.
+ */
 const INTERACTIVE =
-    'button, a, input, select, textarea, [role="switch"], [role="checkbox"], [role="button"], [role="menuitem"]'
+    'button, a, input, select, textarea, [contenteditable], [role="switch"], [role="checkbox"], [role="button"], [role="menuitem"], [role="combobox"], [role="tab"]'
 
 /**
  * Whether a click here is the ROW's — the whole row is the target of a row-wide gesture, not just a

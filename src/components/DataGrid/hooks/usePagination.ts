@@ -69,9 +69,9 @@ export const usePagination = (
     )
 
     /**
-     * ⚠ Its identity changes with the caller's callbacks, where it used to be stable for the life of
-     * the grid. A consumer holding it in an effect's dependency array will see that effect re-run
-     * whenever it hands over a fresh handler — memoise the handlers, or depend on something narrower.
+     * ⚠ Its identity changes with the caller's callbacks. A consumer holding it in an effect's
+     * dependency array sees that effect re-run whenever it hands over a fresh handler — memoise the
+     * handlers, or depend on something narrower.
      */
     const resetPagination = useCallback(() => {
         setCurrentPage(0)
@@ -82,9 +82,9 @@ export const usePagination = (
      * A page size change puts the reader back on page 1 — the rows under the old offset are not the
      * rows they were looking at.
      *
-     * ⚠ It must NOT fire on mount. It always did, harmlessly, while the page was internal state that
-     * started at 0 anyway; against a CONTROLLED page it would overwrite the caller's opening page —
-     * so a grid deep-linked to page 4 would reset itself to page 1 before its first query settled.
+     * ⚠ It must NOT fire on mount: against a CONTROLLED page that would overwrite the caller's
+     * opening page, so a grid deep-linked to page 4 would reset itself to page 1 before its first
+     * query settled.
      */
     const sizeOnMount = useRef(pageSize)
     useEffect(() => {

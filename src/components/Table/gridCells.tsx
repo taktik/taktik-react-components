@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { columnResizeFloor } from '../DataGrid/layout/columnWidths'
 import { ColumnType, type ColumnDefinition, type RowDefinition } from '../DataGrid/types'
 import { convertDate, DATE_FORMAT } from '../../utils'
+import { CELL_PADDING_INLINE } from '../../theme/tableStyles'
 
 // Header and body use the same full-size flex box, so a header sits exactly above the values it
 // labels: both start at the left edge and both centre on the row's vertical middle.
@@ -67,11 +68,11 @@ const ACTION_ICON_SIZE = 32
 /**
  * A cell's horizontal padding on both sides, plus the 1px right border a row's last cell adds.
  *
- * ⚠ It restates `theme.table.cellPaddingInline`, and has to: this is a module constant a column
- * definition is built from, where no theme is in reach. A host authoring a different inline cell
- * padding has to revisit this number.
+ * ⚠ A column definition is built where no theme is in reach, so the padding is read from the
+ * constant the default theme's `cellPaddingInline` is itself written from. A host authoring a
+ * different inline cell padding has to revisit this number.
  */
-const ACTION_CELL_CHROME = 12 * 2 + 1
+const ACTION_CELL_CHROME = CELL_PADDING_INLINE * 2 + 1
 
 /**
  * The width fields of a row-action column holding `icons` buttons. Deriving them keeps the column

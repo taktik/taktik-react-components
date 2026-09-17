@@ -113,6 +113,32 @@ describe('rowActionsColumn', () => {
             })
             expect(screen.queryByRole('button', { name: 'app.edit' })).not.toBeInTheDocument()
         })
+
+        // An entry that opens a LIST is not an act: a button would run nothing, and the list behind
+        // it would be unreachable.
+        it('keeps the kebab when that one entry opens a list', () => {
+            renderCellClosed({
+                items: () => [
+                    {
+                        id: 'commands',
+                        label: 'Commands',
+                        children: [{ id: 'reload', label: 'Reload' }]
+                    }
+                ]
+            })
+            expect(screen.getByRole('button', { name: 'More actions' })).toBeInTheDocument()
+            expect(screen.queryByRole('button', { name: 'Commands' })).not.toBeInTheDocument()
+        })
+
+        it('keeps it for a list that is built only when it opens, too', () => {
+            const build = vi.fn(() => [{ id: 'reload', label: 'Reload' }])
+            renderCellClosed({
+                items: () => [{ id: 'commands', label: 'Commands', children: build }]
+            })
+            expect(screen.getByRole('button', { name: 'More actions' })).toBeInTheDocument()
+            // the cell decides from the entry alone; nothing behind it is built to draw a kebab
+            expect(build).not.toHaveBeenCalled()
+        })
     })
 
     it('appends the delete last, already translated, and calls it with the row', () => {

@@ -12,7 +12,6 @@ import {
 import { getHeaderFilter } from '../HeaderFilter'
 import { convertDate, DATE_FORMAT } from '../../../utils'
 import { VisibilityContext } from '../VisibilityProvider'
-import { DataGridCheckbox } from '../DataGridCheckbox'
 
 export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>({
     columns,
@@ -32,8 +31,12 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
     selectableRows?: R[]
     selectedRows?: string[]
     onSelectedRowsChange?: (rows: string[]) => void
-    /** The same renderer react-data-grid uses for the row checkboxes, so the header matches them. */
-    renderCheckbox?: (props: RenderCheckboxProps) => ReactNode
+    /**
+     * The same renderer react-data-grid uses for the row checkboxes, so the header matches them.
+     * Required, so that the `Checkbox` slot and its fallback are resolved in ONE place — the caller's
+     * — rather than answered a second time here with whichever of the two got there first.
+     */
+    renderCheckbox: (props: RenderCheckboxProps) => ReactNode
     /** Accessible name of the select-all checkbox. */
     selectAllLabel?: string
 }): ColumnDefinition<R>[] => {
@@ -119,23 +122,12 @@ export const useComputeFinalColumns = <R extends RowDefinition = RowDefinition>(
                 renderHeaderCell: () => (
                     <LeadingCell>
                         {expandable && <LeadingHeaderSpacer aria-hidden />}
-                        {renderCheckbox ? (
-                            renderCheckbox({
-                                checked: allSelected,
-                                indeterminate: someSelected,
-                                'aria-label': selectAllLabel,
-                                onChange: (checked) => onSelectedRowsChange?.(toggleAll(checked))
-                            })
-                        ) : (
-                            <DataGridCheckbox
-                                checked={allSelected}
-                                indeterminate={someSelected}
-                                slotProps={{ input: { 'aria-label': selectAllLabel } }}
-                                onChange={(_, checked) =>
-                                    onSelectedRowsChange?.(toggleAll(checked))
-                                }
-                            />
-                        )}
+                        {renderCheckbox({
+                            checked: allSelected,
+                            indeterminate: someSelected,
+                            'aria-label': selectAllLabel,
+                            onChange: (checked) => onSelectedRowsChange?.(toggleAll(checked))
+                        })}
                     </LeadingCell>
                 ),
                 renderCell: expandable

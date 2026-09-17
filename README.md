@@ -166,6 +166,11 @@ Every `CrudTable`, `FilterBar` and cell below reads those from context; no page 
 `LabelsProvider` and `SlotsProvider` stay exported for a consumer that wants only one of them (a
 test harness), but an application mounts `TableProvider`.
 
+⚠ **Hoist `labels`, `slots` and the callbacks out of the render.** The context value is rebuilt when
+one of them changes IDENTITY, so an object written inline (`slots={{ Button: MyButton }}`) is a new
+object on every render of the host and re-renders every table under it. Declare them as module
+constants, or memoise them.
+
 ### 6. A table, and its columns
 
 A column is a plain `ColumnDefinition` — alignment, the truncating cell box, the resize floor and the

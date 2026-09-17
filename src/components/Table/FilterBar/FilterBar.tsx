@@ -884,6 +884,11 @@ export const FilterBar = ({
 
     const onTypeAheadKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
         if (event.key === 'Escape') {
+            // A host listens for Escape too — a details panel beside the grid closes on it. Where
+            // this field ANSWERS the key the key is spent here: a draft to drop, and with it the
+            // lines that draft offered, which is the only way a list is open. An Escape in a field
+            // holding nothing readable is not this field's and travels on.
+            if (query.trim()) event.stopPropagation()
             setQuery('')
             return
         }
@@ -996,7 +1001,12 @@ export const FilterBar = ({
                 return
             }
         }
-        if (event.key === 'Enter' || event.key === 'Escape') closeEditor(key)
+        if (event.key === 'Enter' || event.key === 'Escape') {
+            // The key is spent closing this chip's editor, so it never reaches a host that closes
+            // its own panel on Escape.
+            event.stopPropagation()
+            closeEditor(key)
+        }
     }
 
     const onChipKeyDown = (event: KeyboardEvent<HTMLDivElement>, key: string): void => {

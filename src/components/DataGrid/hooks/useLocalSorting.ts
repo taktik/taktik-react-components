@@ -59,11 +59,9 @@ function getComparator<R = RowDefinition>(
 /**
  * The rows in the order a sort asks for, and the sort itself where the consumer does not hold it.
  *
- * **Who holds the sort VALUE and who ORDERS THE ROWS are two questions.** They used to be one: the
- * grid ordered its rows out of this hook's own state, so a consumer that took the value over — to put
- * it in a URL, a store, anywhere it survives a remount — got a header that moved and rows that did
- * not. `sortColumns` is the controlled value and `enabled` is the ordering, so a consumer may take
- * either without giving up the other.
+ * **Who holds the sort VALUE and who ORDERS THE ROWS are two questions.** `sortColumns` is the
+ * controlled value and `enabled` is the ordering, so a consumer keeping its sort somewhere that
+ * survives a remount — a URL, a store — takes either without giving up the other.
  */
 export const useLocalSorting = <R extends RowDefinition = RowDefinition>({
     columns,

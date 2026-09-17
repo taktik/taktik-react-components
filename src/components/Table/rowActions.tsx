@@ -3,7 +3,7 @@ import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded'
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded'
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
 import { useLabels, useTranslate } from '../../labels'
-import { useTableSlots, type TableMenuItem } from '../../slots'
+import { hasMenuChildren, useTableSlots, type TableMenuItem } from '../../slots'
 import { VisibilityColumnChooser } from '../DataGrid/VisibilityColumnChooser'
 import type { ColumnDefinition, RowDefinition } from '../DataGrid/types'
 import { ActionCell, actionColumnSizing } from './gridCells'
@@ -139,7 +139,10 @@ export const rowActionsColumn = <R extends RowDefinition>({
     // Passing it on is what keeps a 25-row table from being 25 tab stops.
     renderCell: ({ row, tabIndex }) => {
         const menuItems = withRemove(items(row), row, remove)
-        const only = menuItems.length === 1 ? menuItems[0] : undefined
+        const lone = menuItems.length === 1 ? menuItems[0] : undefined
+        // A lone entry that opens a LIST is not an act: a button would have nothing to run, and the
+        // list behind it would be unreachable. It keeps the kebab.
+        const only = lone && !hasMenuChildren(lone) ? lone : undefined
         return (
             <ActionCell>
                 {only ? (

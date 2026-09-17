@@ -48,7 +48,6 @@ export interface Labels {
     filterIsNot: string
     moreActions: string
     chooseDate: string
-    chooseTime: string
     selection: SelectionLabels
 }
 
@@ -84,7 +83,6 @@ export const englishLabels: Labels = {
     filterIsNot: 'is not',
     moreActions: 'More actions',
     chooseDate: 'Choose a date',
-    chooseTime: 'Choose a time',
     selection: {
         band: 'Selection',
         clear: 'Clear selection',

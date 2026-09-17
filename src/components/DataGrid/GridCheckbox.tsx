@@ -3,13 +3,12 @@ import type { RenderCheckboxProps } from 'react-data-grid'
 import { useTableSlots } from '../../slots'
 
 /**
- * The selection cell's checkbox — the CONSUMER's own, at the geometry a dense grid cell wants.
+ * The selection column's checkbox — the CONSUMER's own, at the geometry a dense grid cell wants.
  *
- * react-data-grid renders a bare MUI `Checkbox` when nothing is supplied, which in a host that
- * mounts no MUI `ThemeProvider` is MUI's stock `rgba(0,0,0,0.6)` — a black box on every dark row, in
- * the one column every table has. `renderers.renderCheckbox` is the extension point for exactly
- * this, so the grid's selection box is the same control, with the same tokens, as every other
- * checkbox around it.
+ * It is the grid's ONLY checkbox: the header's select-all and every row's box go through it, so a
+ * consumer that injects a `Checkbox` slot is followed in the one column every table has. Without it
+ * react-data-grid renders a bare MUI `Checkbox`, which in a host that mounts no MUI `ThemeProvider`
+ * is MUI's stock `rgba(0,0,0,0.6)` — a black box on every dark row.
  */
 export const GridCheckbox = memo(
     ({
@@ -40,7 +39,7 @@ export const GridCheckbox = memo(
     }
 )
 
-/** Handed to every grid through `useGridPresentation`, so no consumer wires it. */
+/** Handed to every grid through `useGridPresentation`, and the grid's own fallback besides. */
 export const renderGridCheckbox = (props: RenderCheckboxProps): JSX.Element => (
     <GridCheckbox {...props} />
 )

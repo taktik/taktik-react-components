@@ -10,6 +10,8 @@
  * of it with the theme it already has.
  */
 
+import { CELL_PADDING_INLINE } from './tableStyles'
+
 /** "This one is picked": the accent a picked thing is labelled in, and the wash behind it. */
 export interface TableSelectedTokens {
     color: string
@@ -113,7 +115,8 @@ export interface TableChromeTokens {
     cellPaddingBlock: string
     /**
      * ⚠ `actionColumnSizing` (gridCells) budgets a row-action column in JS from this number, and a
-     * module constant cannot read a theme: a consumer changing it has to revisit that constant.
+     * module constant cannot read a theme. `CELL_PADDING_INLINE` (tableStyles) is the SOURCE the
+     * default below is written from; a consumer authoring another value has to revisit it.
      */
     cellPaddingInline: string
     /** The band the pager stands in, under the grid. */
@@ -246,7 +249,7 @@ export const defaultTableTheme: TableTheme = {
         pagePadding: '16px',
         pageGap: '16px',
         cellPaddingBlock: '8px',
-        cellPaddingInline: '12px',
+        cellPaddingInline: `${CELL_PADDING_INLINE}px`,
         footerHeight: '56px',
         footerGap: '16px',
         focusRingWidth: '2px',

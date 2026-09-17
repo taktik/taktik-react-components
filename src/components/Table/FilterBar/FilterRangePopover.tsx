@@ -64,7 +64,10 @@ export const FilterRangePopover = ({
             open={!!anchorEl}
             anchorEl={anchorEl}
             onClose={onClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}>
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            // Which filter's bounds these are — two fields called "From" and "To" say nothing on
+            // their own to a reader who cannot see the chip they opened.
+            slotProps={{ paper: { 'aria-label': def.label } }}>
             <Body>
                 {def.rangeType === 'date' ? (
                     <>
@@ -103,7 +106,12 @@ export const FilterRangePopover = ({
                         />
                     </>
                 )}
-                {!isEmpty && <ClearButton onClick={() => onChange({})}>{labels.clear}</ClearButton>}
+                {/* `type` is stated: a bare button submits, and a filter bar can stand in a form. */}
+                {!isEmpty && (
+                    <ClearButton type='button' onClick={() => onChange({})}>
+                        {labels.clear}
+                    </ClearButton>
+                )}
             </Body>
         </Popover>
     )

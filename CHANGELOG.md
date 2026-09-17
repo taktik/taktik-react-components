@@ -77,6 +77,10 @@ headings below are from the period when the version was set by hand.
   already used for the same map, so forwarding one into the other cannot drift. A consumer's own
   filter state usually keeps a PARSED map under `values`, and the two names stay distinct on
   purpose.
+- **`Labels.chooseTime` is gone.** Nothing rendered it, so it was a string a consumer translated and
+  never saw. ⚠ A consumer that types its labels object as the whole `Labels` — rather than as the
+  `LabelOverrides` the provider accepts — must delete its own `chooseTime` line in the same change
+  that moves the pin, or the object is an excess property and its build fails.
 
 ### Changed
 
@@ -114,9 +118,50 @@ headings below are from the period when the version was set by hand.
 - **The column chooser renders through the slots contract.** Its menu items and its checkbox are the
   consumer's `MenuItem` and `Checkbox` slots rather than plain MUI, so a host that injected its own
   controls no longer has one menu that ignores them.
+- **`TableMenuItem.onClick` takes the event as OPTIONAL** (`(event?: MouseEvent) => void`). The same
+  entry is also shown outside a menu — a row's lone action, a panel mirroring the entries beside a
+  record — where there is no pointer event to hand it; the library already built such handlers and
+  already called them defensively. Source-compatible for every existing implementer, and a consumer
+  mirroring menu entries onto buttons can drop the cast it needed to invoke one.
+- **`TableMenuItem.icon` takes a `ReactNode`** rather than a `ReactElement`, so a consumer may hand
+  over a wrapped or decorated mark.
 
 ### Fixed
 
+- **A dragged width is no longer deleted seconds after the reader set it.** The column promoted to
+  the filling track lays out from that track rather than from the width map, so the grid MEASURES it
+  and reports it back as measured — and that report was written down as "this column has no dragged
+  width". `withFillingColumn` now STATES which column it promoted, and `useColumnWidths` owns both
+  halves of the answer: it applies the stored widths to the columns, prunes exactly that column's
+  dragged entry from the map the grid lays out from, and keeps that entry in its own state. So the
+  drag survives both doors it used to leave by — the measured report itself, and the dragged-widths
+  reset the grid is handed when the column set changes (hiding the flexible column, then showing it
+  again). The measurement answers the layout it was taken in and nothing after it: drag that column
+  again, or change the column set under it, and the grid lays out from the width the reader just set
+  while the filling track is measured afresh.
+- **The default menus render one level of `TableMenuItem.children`.** An entry carrying a nested
+  list used to draw as an ordinary row that closed the menu and did nothing. It now opens its list
+  beside it — on a pointer move, on a click or on ArrowRight — and ArrowLeft or Escape closes that
+  level alone and hands the focus back to the entry that owns it. One list shows at a time, so
+  dragging the pointer down a menu past two parent entries never leaves two open; an entry whose
+  deferred list turns out to be empty opens nothing.
+- **A row whose only action opens a LIST keeps its kebab.** `rowActionsColumn` collapsed a lone
+  entry into a bare icon button, which for a parent entry was a pressable button with no handler and
+  no way to reach the list behind it.
+- **A kebab that goes away while its menu is open reports the close.** A grid virtualises its rows,
+  so scrolling the open row out of the viewport unmounted the menu without MUI calling `onClose` —
+  and the table went on painting a row whose menu was gone. The requirement is now stated on
+  `TableContextMenuProps.onOpenChange`, so a consumer's own slot honours it too.
+- **Escape in a filter field is the FIELD's when the field answers it.** The type-ahead's Escape
+  (with a draft to drop or a list to shut) and a chip editor's Escape stop propagating, so a host
+  that closes a panel on Escape no longer loses it to a key the bar has already spent. An Escape in
+  an empty type-ahead still travels on.
+- **The grid's own checkbox fallback goes through the `Checkbox` slot.** A consumer that injected
+  one and mounted a bare `DataGrid` got plain MUI in the one column every table has. The third
+  checkbox implementation (`DataGridCheckbox`) is gone, and the slot's default now reads
+  `theme.table.checkboxSize` instead of a hardcoded 20px.
+- **`FilterRangePopover`'s Clear states `type='button'`**, so it no longer submits a form the filter
+  bar may stand in, and the popover carries the filter's name as its accessible name.
 - **The default `DatePicker` speaks the LOCAL calendar day**, in both directions: a bound of local
   midnight no longer offers the day before it east of Greenwich, and a picked day leaves as that
   day's local midnight rather than UTC's.
@@ -130,6 +175,30 @@ headings below are from the period when the version was set by hand.
 
 ### Added
 
+- **`DataGridProps.activeRowId` / `CrudTableProps.activeRowId`** — the ONE row a consumer is showing
+  elsewhere, painted as a picked row is and WITHOUT a selection column: a table that opens one
+  record at a time has no set to tick. The row carries `aria-current="true"` beside the class
+  (`.rdg-row-active`), so the state is not colour alone.
+- **`DataGridProps.menuRowId`** — the row whose actions menu is open, which keeps its HOVER paint
+  (`.rdg-row-menu-open`) while the pointer is on the menu. `CrudTable` drives it for every table
+  from both doors: a right-click, and a row's kebab reporting through the `ContextMenu` slot.
+- **Two slot props a consumer's own `ContextMenu` has to implement to get those two paints.**
+  `TableContextMenuProps.onOpenChange(open)` reports the menu opening and closing — ⚠ including on
+  UNMOUNT while open, or a virtualised grid paints a row whose menu is gone. And
+  `TableMenuItem.children` is a LIST behind an entry rather than an act: the entry runs no `onClick`
+  of its own, and a consumer's menu opens the list beside it. The default slots implement both.
+- **`TableMenuItem.children` may be a FUNCTION**, read when the list opens. A surface holding one
+  menu per row then pays one closure per row rather than every label and gate a nested list could
+  show.
+- **Enter and Space on a focused row run `onRowPrimaryAction`**, the keyboard twin of the row's
+  click — the same rule decides where it counts, so the leading cell, the row-actions column, a cell
+  whose own editor the grid would open (an editor declared, and no `editable` gate refusing that row)
+  and a control inside a cell all answer for themselves, and a MODIFIED key stays the grid's
+  (Shift+Space still ticks the focused row). Without it, a table that opens a
+  record with a click and carries no checkbox column had no keyboard way into that record at all.
+  ⚠ On a `CrudTable` with a selection column and no `onRowPrimaryAction` of the consumer's,
+  `onRowPrimaryAction` defaults to toggling the row — as the click already did — so on those tables
+  Enter and Space now TICK the focused row, and Space no longer scrolls the grid.
 - **The tables themselves.** `CrudTable`, `GridToolbar`, `GridPage`, `gridInDialog`, the cells
   (`ChipListCell`, `CopyCell`, `CountBarCell`, `InheritedCell`, `RelativeTimeCell`, `StatusCell`,
   `TwoLineCell`), `FilterBar` with its range popover, the row actions and gestures, the copy cue,

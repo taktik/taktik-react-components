@@ -1,5 +1,7 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { ColumnWidth, ColumnWidths as GridWidthMap } from 'react-data-grid'
+import type { ColumnDefinition, RowDefinition } from '../types'
+import { withFillingColumn } from './columnFill'
 import {
     StoredColumnWidths,
     columnWidthsStore,
@@ -9,7 +11,12 @@ import {
 } from './columnWidths'
 import { useStoredLayout } from './useStoredLayout'
 
-export interface GridColumnWidths {
+export interface GridColumnWidths<R extends RowDefinition> {
+    /**
+     * The columns the grid lays out: each one at the width the reader dragged it to, and one of them
+     * promoted to the track that fills the container.
+     */
+    columns: ColumnDefinition<R>[]
     /** The stored widths, by column key — applied over each column's declared `width`. */
     widths: StoredColumnWidths
     /** Hand these two to the grid: the widths it lays out with, and what it reports back. */
@@ -68,7 +75,42 @@ const withoutMeasuredWidths = (widths: GridWidthMap): GridWidthMap => {
     return next.size === widths.size ? widths : next
 }
 
+/** Whether two grid maps say the same thing, so a report that changes nothing costs no render. */
+const sameGridWidths = (a: GridWidthMap, b: GridWidthMap): boolean =>
+    a.size === b.size &&
+    [...a].every(([key, width]) => {
+        const other = b.get(key)
+        return other?.type === width.type && other.width === width.width
+    })
+
+/**
+ * The grid's report with every dragged width it does not carry put back. The grid drops a `resized`
+ * entry for no reason of its own, so a report missing one is this hook's own pruning of the promoted
+ * column echoing back, and adopting it loses the reader's answer — here, and then in storage the
+ * next time the column set changes and the table writes down what it holds. Identity is preserved
+ * when there is nothing to put back, or when the result says what the state already said.
+ */
+const withKeptDrags = (reported: GridWidthMap, current: GridWidthMap): GridWidthMap => {
+    let kept: Map<string, ColumnWidth> | undefined
+    current.forEach((width, key) => {
+        if (width.type === 'resized' && reported.get(key)?.type !== 'resized') {
+            kept = kept ?? new Map(reported)
+            kept.set(key, width)
+        }
+    })
+    if (kept === undefined) {
+        return reported
+    }
+    return sameGridWidths(kept, current) ? current : kept
+}
+
 const NO_WIDTHS: GridWidthMap = new Map<string, ColumnWidth>()
+
+/** What the grid measured the promoted column's filling track out to, and which column that was. */
+interface PromotedMeasure {
+    key: string
+    width: number
+}
 
 /**
  * The widths this table's columns were dragged to — read on mount, written when a drag settles, and
@@ -84,13 +126,26 @@ const NO_WIDTHS: GridWidthMap = new Map<string, ColumnWidth>()
  * measurements too, because it is the whole of what the grid lays out from; only the dragged half is
  * written down.
  *
- * ⚠ The stored width is ALSO re-applied through the COLUMN (by the consumer), which is what lets the
- * table compute the track that fills its container from a width the reader chose.
+ * The stored width is ALSO applied through the COLUMN, here, which is what lets the table compute
+ * the track that fills its container from a width the reader chose — so this one hook owns both
+ * halves of the answer and they cannot disagree. It takes the columns as the table shaped them
+ * (ordered, aligned) and hands back the columns the grid lays out.
  */
-export const useColumnWidths = (columnVisibilityKey: string): GridColumnWidths => {
+export const useColumnWidths = <R extends RowDefinition>(
+    columnVisibilityKey: string,
+    columns: ColumnDefinition<R>[],
+    hiddenColumns: string[]
+): GridColumnWidths<R> => {
     const [gridWidths, setGridWidths] = useState<GridWidthMap>(() =>
         withStoredWidths(NO_WIDTHS, readColumnWidths(columnVisibilityKey))
     )
+    /**
+     * Held apart from `gridWidths`, because that map keeps the reader's dragged width for the same
+     * column and a map holds one entry per key. The grid needs the measurement — a flexible column
+     * the map holds nothing for is measured again on every render — and the drag is the half worth
+     * storing, so the two cannot share the entry.
+     */
+    const [promotedMeasure, setPromotedMeasure] = useState<PromotedMeasure>()
 
     /** The grid's own map moves with the stored widths, keeping whatever it had measured beside them. */
     const onAdopted = useCallback(
@@ -110,24 +165,83 @@ export const useColumnWidths = (columnVisibilityKey: string): GridColumnWidths =
         onAdopted
     )
 
-    /** What is written down now, readable without rebuilding the grid's callback on every change. */
-    const stored = useRef(widths)
-    stored.current = widths
+    /**
+     * The columns as the grid lays them out: each stored width applied over the column's declared
+     * one, and one column promoted to the track that fills the container.
+     */
+    const { columns: filledColumns, filledKey } = useMemo(
+        () =>
+            withFillingColumn(
+                columns.map((column) => {
+                    const stored = widths[column.key]
+                    return column.resizable && stored !== undefined
+                        ? { ...column, width: stored }
+                        : column
+                }),
+                hiddenColumns
+            ),
+        [columns, widths, hiddenColumns]
+    )
+
+    /**
+     * What the grid lays out from: every stored width but the promoted column's DRAGGED one. The
+     * grid takes a `resized` entry over the column's own `width`, so handing that one over would put
+     * the dragged pixels back and the table would stop short of its container again. The width is
+     * not lost — it is the promoted track's floor.
+     *
+     * ⚠ Whatever the grid MEASURED that track out to goes back in its place, because the grid
+     * measures a flexible column again whenever the map holds nothing for it — handing it nothing
+     * for good would be a measure-report-drop cycle with no end.
+     */
+    const forGrid = useMemo(() => {
+        if (filledKey === undefined || gridWidths.get(filledKey)?.type !== 'resized') {
+            return gridWidths
+        }
+        const next = new Map(gridWidths)
+        if (promotedMeasure?.key === filledKey) {
+            next.set(filledKey, { type: 'measured', width: promotedMeasure.width })
+        } else {
+            next.delete(filledKey)
+        }
+        return next
+    }, [gridWidths, filledKey, promotedMeasure])
 
     /**
      * What the grid reports: its whole layout, measurements included. The measurements are kept —
      * they are what the grid lays out from — and only a change to the DRAGGED half is written down,
      * so a window resize re-measuring every flexible column touches no storage.
+     *
+     * ⚠ The promoted column lays out from a track with no dragged entry in the map, so the grid
+     * MEASURES it and reports it as measured. That measurement is kept beside the state rather than
+     * in it, and the state keeps the drag, so neither report nor storage can lose the width the
+     * reader had just set.
      */
     const onGridWidthsChange = useCallback(
         (next: GridWidthMap): void => {
-            setGridWidths(next)
-            const dragged = draggedWidths(next)
-            if (!sameColumnWidths(dragged, stored.current)) {
+            const promoted = filledKey === undefined ? undefined : next.get(filledKey)
+            if (filledKey !== undefined && promoted?.type === 'measured') {
+                const { width } = promoted
+                setPromotedMeasure((held) =>
+                    held?.key === filledKey && held.width === width
+                        ? held
+                        : { key: filledKey, width }
+                )
+            } else {
+                // A measurement answers the layout it was taken in, and this report says something
+                // else about that column: a fresh DRAG of it, or the dragged-widths-only report a
+                // column-set change sends. Letting it go is what asks for the track measured now.
+                setPromotedMeasure(undefined)
+            }
+            setGridWidths((current) => withKeptDrags(next, current))
+            // The dragged half of the report over what is STORED: the promoted column's drag is in
+            // neither the report nor the map the grid lays out from, and two reports can land in one
+            // commit, so this render's copy of the state is not a value to write from either.
+            const dragged = { ...widths, ...draggedWidths(next) }
+            if (!sameColumnWidths(dragged, widths)) {
                 writeColumnWidths(columnVisibilityKey, dragged)
             }
         },
-        [columnVisibilityKey]
+        [columnVisibilityKey, filledKey, widths]
     )
 
     /**
@@ -145,7 +259,17 @@ export const useColumnWidths = (columnVisibilityKey: string): GridColumnWidths =
      * The consumer knows when its chrome settles — a sidebar collapse, a released pane seam, a window
      * resize — so it wires the event and calls this.
      */
-    const remeasure = useCallback((): void => setGridWidths(withoutMeasuredWidths), [])
+    const remeasure = useCallback((): void => {
+        setGridWidths(withoutMeasuredWidths)
+        setPromotedMeasure(undefined)
+    }, [])
 
-    return { widths, gridWidths, onGridWidthsChange, reset, remeasure }
+    return {
+        columns: filledColumns,
+        widths,
+        gridWidths: forGrid,
+        onGridWidthsChange,
+        reset,
+        remeasure
+    }
 }

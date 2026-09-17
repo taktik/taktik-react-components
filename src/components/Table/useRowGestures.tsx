@@ -1,5 +1,11 @@
 import { MouseEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { CalculatedColumn, CellMouseArgs, CellMouseEvent } from 'react-data-grid'
+import type {
+    CalculatedColumn,
+    CellKeyDownArgs,
+    CellKeyboardEvent,
+    CellMouseArgs,
+    CellMouseEvent
+} from 'react-data-grid'
 import { useTableSlots } from '../../slots'
 import {
     cueAnchor,
@@ -16,10 +22,26 @@ import { CopiedBubble } from './CopiedBubble'
 import { CopyCue } from './CopyCue'
 import { ACTIONS_COLUMN_KEY, rowMenuItems } from './rowActions'
 import type { RowMenuReport } from './rowMenuContext'
-import { useClickToCopyLabel, useCopiedLabel } from './useGridPresentation'
+import { releaseTabFromGrid, useClickToCopyLabel, useCopiedLabel } from './useGridPresentation'
 
 /** The kebab does not fill its cell — a click in the padding beside it is that column's, not the row's. */
 const EXCLUDED_COLUMNS = [ACTIONS_COLUMN_KEY]
+
+/**
+ * Whether Enter in this cell opens the grid's own editor, asked the way the grid asks it: a column
+ * that declares an editor may still gate it, per row. A gated cell opens nothing at all, so the key
+ * is the ROW's there after all.
+ */
+const opensItsOwnEditor = <R extends RowDefinition>(
+    column: CalculatedColumn<R> | undefined,
+    row: R
+): boolean => {
+    if (!column?.renderEditCell) {
+        return false
+    }
+    const { editable } = column
+    return (typeof editable === 'function' ? editable(row) : editable) !== false
+}
 
 /**
  * How long the pointer must rest on a line before it is armed to be copied. Long enough that scanning
@@ -85,6 +107,7 @@ export interface RowGestures<R extends RowDefinition> {
         rowGestures: DataGridRowGestures<R>
         onCellContextMenu: (args: CellMouseArgs<R>, event: CellMouseEvent) => void
         onCellClick: (args: CellMouseArgs<R>, event: CellMouseEvent) => void
+        onCellKeyDown: (args: CellKeyDownArgs<R>, event: CellKeyboardEvent) => void
     }
     /**
      * What a ROW answers to the pointer moving over it — the row renderer wires these, since a cell
@@ -336,6 +359,46 @@ export const useRowGestures = <R extends RowDefinition>({
         signal({ on: 'drag' })
     }, [signal, stopDwell])
 
+    /**
+     * The keyboard twin of the row's own click: Enter or Space on a focused cell opens the row.
+     *
+     * A table that shows one record beside the grid carries no checkbox column, so the click is the
+     * only door to it — and without this the panel's whole content is mouse-only. The same rule the
+     * click follows decides here: a key pressed on a control of its own, in the leading cell, or in
+     * a column the table excluded belongs to that control, not to the row.
+     *
+     * It composes with the Tab release because the grid takes ONE key handler.
+     */
+    const onCellKeyDown = useCallback(
+        (args: CellKeyDownArgs<R>, event: CellKeyboardEvent): void => {
+            releaseTabFromGrid(args, event)
+            if (!onRowPrimaryAction || args.mode !== 'ACTIVE' || !args.row) {
+                return
+            }
+            if (event.key !== 'Enter' && event.key !== ' ') {
+                return
+            }
+            // A modified key is the grid's own vocabulary — Shift+Space ticks the focused row
+            if (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) {
+                return
+            }
+            // Enter is how an editable cell is opened, and that cell answers for itself
+            if (opensItsOwnEditor(args.column, args.row)) {
+                return
+            }
+            if (
+                !clickBelongsToRow(args.row, args.column?.key ?? '', event.target, EXCLUDED_COLUMNS)
+            ) {
+                return
+            }
+            // Space scrolls the page and Enter opens the grid's own cell editor
+            event.preventDefault()
+            event.preventGridDefault()
+            onRowPrimaryAction(args.row)
+        },
+        [onRowPrimaryAction]
+    )
+
     const onCellContextMenu = useCallback(
         (args: CellMouseArgs<R>, event: CellMouseEvent): void => {
             if (!rowMenuItems(columns, args.row).length) {
@@ -364,9 +427,10 @@ export const useRowGestures = <R extends RowDefinition>({
                 excludedColumns: EXCLUDED_COLUMNS
             },
             onCellContextMenu,
-            onCellClick
+            onCellClick,
+            onCellKeyDown
         }),
-        [onRowPrimaryAction, onCellContextMenu, onCellClick]
+        [onRowPrimaryAction, onCellContextMenu, onCellClick, onCellKeyDown]
     )
 
     const rowHover = useMemo(

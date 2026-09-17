@@ -9,7 +9,8 @@ steps:
         args: [ '-f', 'git.version' ]
 
     # Gates the publish: whatever reaches the registry is what other projects install, so a red
-    # commit must not get that far. Steps share /workspace, so the install here serves the build too.
+    # commit must not get that far. Every step installs for itself: /workspace is shared, so the
+    # repeat is a no-op, and a step still stands up on its own when the ones before it are skipped.
     -   id: 'verify'
         name: 'node:22'
         entrypoint: 'bash'

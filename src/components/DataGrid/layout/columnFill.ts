@@ -13,6 +13,18 @@ import { flexTrack, isFlexibleWidth, trackFloor } from './columnWidths'
 const absorbable = <R extends RowDefinition>(column: ColumnDefinition<R>): boolean =>
     !column.frozenRight
 
+/** The columns a table hands the grid, and which of them absorbs the container's leftover width. */
+export interface FilledColumns<R extends RowDefinition> {
+    columns: ColumnDefinition<R>[]
+    /**
+     * The column promoted to the filling track, where one was. It is STATED rather than left to be
+     * recognised again from the result: the width map handed to the grid must drop this column's
+     * dragged entry (a `resized` entry wins over the column's own track), and a caller that guessed
+     * the key back could quietly guess a different one.
+     */
+    filledKey?: string
+}
+
 /**
  * The columns a table hands the grid, with a filling one guaranteed: when nothing VISIBLE absorbs
  * slack, the last visible data column is promoted to `minmax(<its own width>, 1fr)`.
@@ -36,17 +48,20 @@ const absorbable = <R extends RowDefinition>(column: ColumnDefinition<R>): boole
 export const withFillingColumn = <R extends RowDefinition>(
     columns: ColumnDefinition<R>[],
     hiddenColumns: string[]
-): ColumnDefinition<R>[] => {
+): FilledColumns<R> => {
     const visible = columns.filter((column) => !hiddenColumns.includes(column.key))
     if (visible.some((column) => isFlexibleWidth(column.width))) {
-        return columns
+        return { columns }
     }
     const tail = visible.filter(absorbable).at(-1)
     if (!tail) {
-        return columns
+        return { columns }
     }
     const floor = trackFloor(tail.width) ?? tail.minWidth ?? 0
-    return columns.map((column) =>
-        column === tail ? { ...column, width: flexTrack(floor) } : column
-    )
+    return {
+        columns: columns.map((column) =>
+            column === tail ? { ...column, width: flexTrack(floor) } : column
+        ),
+        filledKey: tail.key
+    }
 }

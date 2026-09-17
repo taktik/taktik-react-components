@@ -29,9 +29,8 @@ export interface TableFilterState {
 }
 
 /**
- * The note's own look, so the second consumer to write one cannot look different from the first —
- * the slot used to hand its styling to the consumer, and the one consumer reached for a bare MUI
- * `Typography` (Roboto, MUI's size) to fill it.
+ * The note's own look, declared here rather than left to the consumer, so the second note to be
+ * written cannot read differently from the first.
  */
 const Summary = styled.span`
     ${tableFont};
@@ -81,8 +80,7 @@ export interface GridToolbarProps {
      * A node rather than a declaration: WHICH acts a kebab offers, and under which marks, is the
      * application's to decide and to keep consistent across its own surfaces — a calendar owes the
      * reader the same menu a grid does. What the toolbar owns is the PLACE, which is why this is a
-     * slot of its own instead of more `children`: convention alone had already let a kebab drift
-     * into the middle of a toolbar.
+     * slot of its own instead of more `children`.
      */
     trailingMenu?: ReactNode
     /**
@@ -107,9 +105,8 @@ export interface GridToolbarProps {
  * and the table's kebab at the very end of the row. `refresh` sits with the declared controls so a
  * consumer's own additions cannot land between the toolbar's own buttons.
  *
- * The trailing controls are DECLARED rather than handed in as children, because convention was the
- * only thing holding the order and it had already drifted: four sibling grids showed refresh in
- * three different places, and export was a labelled button on one page and a bare icon on another.
+ * The trailing controls are DECLARED rather than handed in as children, because the toolbar owns
+ * their ORDER: left to convention, sibling grids put the same control in different places.
  *
  * The consumer's kebab (`trailingMenu`) is the one trailing thing handed in as a node, because what
  * it offers is the consumer's own vocabulary. Only its PLACE is the toolbar's: last, the way a row's

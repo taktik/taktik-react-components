@@ -61,13 +61,27 @@ const actionsColumn = (onEdit = vi.fn()): RowActionsColumnDefinition<Row> =>
         ]
     })
 
-const columns = (withActions: boolean): ColumnDefinition<Row>[] => [
+/** A column a reader types in: Enter is how the grid opens its editor, unless a gate refuses. */
+const editableColumn = (gate?: ColumnDefinition<Row>['editable']): ColumnDefinition<Row> => ({
+    key: 'note',
+    name: 'Note',
+    renderCell: ({ row }) => `note ${row.id}`,
+    renderEditCell: () => <input aria-label='Note' />,
+    editable: gate
+})
+
+const columns = (
+    withActions: boolean,
+    editable = false,
+    editGate?: ColumnDefinition<Row>['editable']
+): ColumnDefinition<Row>[] => [
     { key: 'name', name: 'Name' },
     {
         key: 'link',
         name: 'Link',
         renderCell: () => <button type='button'>Open</button>
     },
+    ...(editable ? [editableColumn(editGate)] : []),
     ...(withActions ? [actionsColumn()] : [])
 ]
 
@@ -76,6 +90,9 @@ interface HostProps {
     /** Adds the master-detail feature, whose click-to-expand is the row's primary action. */
     expandable?: boolean
     withActions?: boolean
+    editable?: boolean
+    /** What the editable column's own `editable` says — a gate that may refuse this row. */
+    editGate?: ColumnDefinition<Row>['editable']
     onRowPrimaryAction?: (row: Row) => void
 }
 
@@ -83,6 +100,8 @@ const Host = ({
     selectable,
     expandable,
     withActions = true,
+    editable,
+    editGate,
     onRowPrimaryAction
 }: HostProps): ReactNode => {
     const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -94,7 +113,7 @@ const Host = ({
             <CrudTable<Row>
                 columnVisibilityKey='rowGesturesTest'
                 rows={rows}
-                columns={columns(withActions)}
+                columns={columns(withActions, editable, editGate)}
                 selectable={selectable}
                 selection={{ mode: 'ids', ids: selectedIds, onChange: setSelectedIds }}
                 onRowPrimaryAction={onRowPrimaryAction}
@@ -233,6 +252,114 @@ describe('clicking a row', () => {
         stubSelection(cell)
         fireEvent.click(cell)
         expect(expansion()).toBe('')
+    })
+})
+
+/**
+ * The keyboard twin of the click. A table that opens one record at a time carries no checkbox
+ * column, so without this the panel beside the grid is mouse-only.
+ *
+ * The click before each press is what focuses the cell — the grid dispatches its key handler from
+ * the ACTIVE position, which a press sets.
+ */
+describe('pressing Enter or Space on a focused row', () => {
+    it('runs the row’s action, as the click does', async () => {
+        const onRowPrimaryAction = vi.fn()
+        render(<Host onRowPrimaryAction={onRowPrimaryAction} />)
+        const cell = screen.getByText('Alpha')
+        await userEvent.click(cell)
+
+        onRowPrimaryAction.mockClear()
+        fireEvent.keyDown(cell, { key: 'Enter' })
+        expect(onRowPrimaryAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'a' }))
+
+        onRowPrimaryAction.mockClear()
+        fireEvent.keyDown(cell, { key: ' ' })
+        expect(onRowPrimaryAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'a' }))
+    })
+
+    it('leaves every other key to the grid', async () => {
+        const onRowPrimaryAction = vi.fn()
+        render(<Host onRowPrimaryAction={onRowPrimaryAction} />)
+        const cell = screen.getByText('Alpha')
+        await userEvent.click(cell)
+
+        onRowPrimaryAction.mockClear()
+        fireEvent.keyDown(cell, { key: 'ArrowDown' })
+        expect(onRowPrimaryAction).not.toHaveBeenCalled()
+    })
+
+    it('leaves the row-actions column to its kebab', async () => {
+        const onRowPrimaryAction = vi.fn()
+        render(<Host onRowPrimaryAction={onRowPrimaryAction} />)
+        const cells = cellsOfFirstRow()
+        const actionsCell = cells[cells.length - 1] as HTMLElement
+        await userEvent.click(actionsCell)
+
+        onRowPrimaryAction.mockClear()
+        fireEvent.keyDown(actionsCell, { key: 'Enter' })
+        expect(onRowPrimaryAction).not.toHaveBeenCalled()
+    })
+
+    it('leaves a control inside a cell to that control', async () => {
+        const onRowPrimaryAction = vi.fn()
+        render(<Host onRowPrimaryAction={onRowPrimaryAction} />)
+        const button = within(firstRow()).getByRole('button', { name: 'Open' })
+        await userEvent.click(button)
+
+        onRowPrimaryAction.mockClear()
+        fireEvent.keyDown(button, { key: 'Enter' })
+        expect(onRowPrimaryAction).not.toHaveBeenCalled()
+    })
+
+    // Shift+Space is how the grid itself ticks the focused row
+    it('leaves a modified key to the grid', async () => {
+        const onRowPrimaryAction = vi.fn()
+        render(<Host selectable onRowPrimaryAction={onRowPrimaryAction} />)
+        const cell = screen.getByText('Alpha')
+        await userEvent.click(cell)
+
+        onRowPrimaryAction.mockClear()
+        fireEvent.keyDown(cell, { key: ' ', shiftKey: true })
+        expect(onRowPrimaryAction).not.toHaveBeenCalled()
+        expect(selection()).toBe('a')
+
+        fireEvent.keyDown(cell, { key: 'Enter', ctrlKey: true })
+        expect(onRowPrimaryAction).not.toHaveBeenCalled()
+    })
+
+    it('leaves a cell the reader types in to its editor', async () => {
+        const onRowPrimaryAction = vi.fn()
+        render(<Host editable onRowPrimaryAction={onRowPrimaryAction} />)
+        const noteCell = screen.getByText('note a')
+        await userEvent.click(noteCell)
+
+        onRowPrimaryAction.mockClear()
+        fireEvent.keyDown(noteCell, { key: 'Enter' })
+        expect(onRowPrimaryAction).not.toHaveBeenCalled()
+        expect(screen.getByRole('textbox', { name: 'Note' })).toBeInTheDocument()
+    })
+
+    // A gate that refuses this row opens no editor, so the key would otherwise do nothing at all
+    it('runs the row’s action in a cell whose editor its column gates off', async () => {
+        const onRowPrimaryAction = vi.fn()
+        render(<Host editable editGate={() => false} onRowPrimaryAction={onRowPrimaryAction} />)
+        const noteCell = screen.getByText('note a')
+        await userEvent.click(noteCell)
+
+        onRowPrimaryAction.mockClear()
+        fireEvent.keyDown(noteCell, { key: 'Enter' })
+        expect(onRowPrimaryAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'a' }))
+        expect(screen.queryByRole('textbox', { name: 'Note' })).not.toBeInTheDocument()
+    })
+
+    it('says nothing on a table with no action of its own', async () => {
+        render(<Host expandable />)
+        const cell = screen.getByText('Alpha')
+        await userEvent.click(cell)
+        // the click already expanded it; the key must not toggle it back
+        fireEvent.keyDown(cell, { key: 'Enter' })
+        expect(expansion()).toBe('a')
     })
 })
 

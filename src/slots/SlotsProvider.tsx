@@ -5,7 +5,12 @@ import type { TableSlots } from './tableSlots'
 const SlotsContext = createContext<TableSlots>(defaultTableSlots)
 
 export interface SlotsProviderProps {
-    /** Any subset; the MUI-based default fills the rest. */
+    /**
+     * Any subset; the MUI-based default fills the rest.
+     *
+     * ⚠ Hoist it out of the render. The context value is rebuilt when this object changes IDENTITY,
+     * so one written inline is a fresh object per render of the host and re-renders every table.
+     */
     slots?: Partial<TableSlots>
     children: ReactNode
 }

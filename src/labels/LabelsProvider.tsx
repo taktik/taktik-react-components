@@ -34,7 +34,13 @@ const defaultValue: LabelsContextValue = {
 const LabelsContext = createContext<LabelsContextValue>(defaultValue)
 
 export interface LabelsProviderProps {
-    /** Any subset of the labels; the English default fills the rest. */
+    /**
+     * Any subset of the labels; the English default fills the rest.
+     *
+     * ⚠ Hoist it, and the callbacks beside it, out of the render. The context value is rebuilt when
+     * one of them changes IDENTITY, so an object written inline is a fresh object per render of the
+     * host and re-renders every table.
+     */
     labels?: LabelOverrides
     translate?: Translate
     formatRelativeTime?: LabelsContextValue['formatRelativeTime']

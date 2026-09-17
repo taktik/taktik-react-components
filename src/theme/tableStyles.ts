@@ -8,6 +8,16 @@ import { css } from 'styled-components'
  * as two different controls.
  */
 
+/**
+ * A cell's horizontal padding, as a NUMBER, because a row-action column's width is computed in JS
+ * where no theme is in reach.
+ *
+ * This constant is the SOURCE: `defaultTableTheme.cellPaddingInline` is written from it, so the two
+ * cannot drift. ⚠ A consumer authoring its own value has to revisit `actionColumnSizing`
+ * (`gridCells`), which budgets that column from this number.
+ */
+export const CELL_PADDING_INLINE = 12
+
 /** The house family and the type steps a table reads at. */
 export const tableFont = css`
     font-family: ${({ theme }) => theme.table.fontFamily};

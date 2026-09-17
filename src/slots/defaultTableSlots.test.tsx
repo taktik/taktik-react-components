@@ -1,9 +1,11 @@
-import { fireEvent, render, screen, type RenderResult } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, type RenderResult } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { ReactElement } from 'react'
 import { ThemeProvider } from 'styled-components'
 import { describe, expect, it, vi } from 'vitest'
 import { defaultTableTheme as lightTheme } from '../theme/tableTheme'
 import { defaultTableSlots } from './defaultTableSlots'
+import type { TableMenuItem } from './tableSlots'
 
 /**
  * The MUI defaults are what a consumer SEES before it injects anything, so every prop the library's
@@ -12,7 +14,7 @@ import { defaultTableSlots } from './defaultTableSlots'
 const renderSlot = (ui: ReactElement): RenderResult =>
     render(<ThemeProvider theme={lightTheme}>{ui}</ThemeProvider>)
 
-const { Button, IconButton, MenuSurface, DatePicker } = defaultTableSlots
+const { Button, IconButton, MenuSurface, ContextMenu, DatePicker } = defaultTableSlots
 
 const paddingLeftOf = (element: HTMLElement): string => window.getComputedStyle(element).paddingLeft
 
@@ -99,6 +101,220 @@ describe('the default MenuSurface', () => {
 
         expect(screen.getByRole('menuitem', { name: 'Copy value' })).toBeInTheDocument()
         expect(consoleError).not.toHaveBeenCalled()
+    })
+
+    // The nested list is the same renderer, so both default menus cascade or neither does
+    it('opens a nested list beside the entry that owns it', async () => {
+        renderSlot(<MenuSurface open onClose={vi.fn()} menuItems={CASCADE} />)
+
+        await userEvent.hover(screen.getByRole('menuitem', { name: /Commands/ }))
+
+        expect(await screen.findByRole('menuitem', { name: 'Reload' })).toBeInTheDocument()
+    })
+})
+
+/** One entry that acts, and one that opens a list of its own. */
+const CASCADE: TableMenuItem[] = [
+    { id: 'edit', label: 'Edit' },
+    {
+        id: 'commands',
+        label: 'Commands',
+        children: [
+            { id: 'reload', label: 'Reload' },
+            { id: 'reboot', label: 'Reboot' }
+        ]
+    }
+]
+
+/** Two entries that each own a list, for the one-list-at-a-time rule. */
+const TWO_CASCADES: TableMenuItem[] = [
+    ...CASCADE,
+    { id: 'exports', label: 'Export', children: [{ id: 'csv', label: 'As CSV' }] }
+]
+
+const openKebab = async (): Promise<void> => {
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+}
+
+describe('the default ContextMenu', () => {
+    it('opens a parent entry’s list on a pointer move, and closes it on ArrowLeft', async () => {
+        renderSlot(<ContextMenu menuItems={CASCADE} />)
+        await openKebab()
+        const parent = screen.getByRole('menuitem', { name: /Commands/ })
+
+        await userEvent.hover(parent)
+        expect(await screen.findByRole('menuitem', { name: 'Reload' })).toBeInTheDocument()
+        expect(parent).toHaveAttribute('aria-expanded', 'true')
+
+        fireEvent.keyDown(parent, { key: 'ArrowLeft' })
+        await waitFor(() =>
+            expect(screen.queryByRole('menuitem', { name: 'Reload' })).not.toBeInTheDocument()
+        )
+        // focus goes back to the entry that owns the list
+        expect(parent).toHaveFocus()
+    })
+
+    it('opens that list on ArrowRight too', async () => {
+        renderSlot(<ContextMenu menuItems={CASCADE} />)
+        await openKebab()
+
+        fireEvent.keyDown(screen.getByRole('menuitem', { name: /Commands/ }), { key: 'ArrowRight' })
+
+        expect(await screen.findByRole('menuitem', { name: 'Reload' })).toBeInTheDocument()
+    })
+
+    // The list a KEY opened holds the focus, so the way back up the tree has to hand it back
+    it('hands the focus back to the owning entry when a key closes the list', async () => {
+        renderSlot(<ContextMenu menuItems={CASCADE} />)
+        await openKebab()
+        const parent = screen.getByRole('menuitem', { name: /Commands/ })
+
+        fireEvent.keyDown(parent, { key: 'ArrowRight' })
+        const nested = await screen.findByRole('menuitem', { name: 'Reload' })
+        expect(nested).toHaveFocus()
+
+        fireEvent.keyDown(nested, { key: 'ArrowLeft' })
+
+        await waitFor(() =>
+            expect(screen.queryByRole('menuitem', { name: 'Reload' })).not.toBeInTheDocument()
+        )
+        expect(parent).toHaveFocus()
+    })
+
+    // Dragging the pointer down a list past two owners must not show both their lists
+    it('closes a sibling’s list when another entry opens its own', async () => {
+        renderSlot(<ContextMenu menuItems={TWO_CASCADES} />)
+        await openKebab()
+        const commands = screen.getByRole('menuitem', { name: /Commands/ })
+        const exports = screen.getByRole('menuitem', { name: /Export/ })
+
+        await userEvent.hover(commands)
+        expect(await screen.findByRole('menuitem', { name: 'Reload' })).toBeInTheDocument()
+
+        await userEvent.hover(exports)
+
+        expect(commands).toHaveAttribute('aria-expanded', 'false')
+        expect(exports).toHaveAttribute('aria-expanded', 'true')
+        await waitFor(() =>
+            expect(screen.queryByRole('menuitem', { name: 'Reload' })).not.toBeInTheDocument()
+        )
+    })
+
+    // A gated list that yields nothing for this row would otherwise draw an empty paper
+    it('opens nothing for an entry whose deferred list turns out to be empty', async () => {
+        // the pointer crossing an entry fires a move per pixel, and the thunk is the expensive half
+        const build = vi.fn(() => [])
+        renderSlot(
+            <ContextMenu menuItems={[{ id: 'commands', label: 'Commands', children: build }]} />
+        )
+        await openKebab()
+        const parent = screen.getByRole('menuitem', { name: /Commands/ })
+
+        await userEvent.hover(parent)
+        await userEvent.unhover(parent)
+        await userEvent.hover(parent)
+
+        expect(parent).toHaveAttribute('aria-expanded', 'false')
+        expect(screen.getAllByRole('menu')).toHaveLength(1)
+        expect(build).toHaveBeenCalledTimes(1)
+    })
+
+    // MUI's own list walks the focus between entries, and an entry nobody is on must not say it is open
+    it('closes a hovered entry’s list when the focus moves to a sibling', async () => {
+        renderSlot(<ContextMenu menuItems={TWO_CASCADES} />)
+        await openKebab()
+        // both entries are read before the list opens: MUI hides the rest of the page behind it
+        const commands = screen.getByRole('menuitem', { name: /Commands/ })
+        const exports = screen.getByRole('menuitem', { name: /Export/ })
+        act(() => commands.focus())
+
+        await userEvent.hover(commands)
+        expect(await screen.findByRole('menuitem', { name: 'Reload' })).toBeInTheDocument()
+
+        act(() => exports.focus())
+
+        expect(commands).toHaveAttribute('aria-expanded', 'false')
+        await waitFor(() =>
+            expect(screen.queryByRole('menuitem', { name: 'Reload' })).not.toBeInTheDocument()
+        )
+    })
+
+    // Moving INTO the list is the way down the tree, not a walk away from the entry
+    it('keeps the list open when the focus moves into it', async () => {
+        renderSlot(<ContextMenu menuItems={CASCADE} />)
+        await openKebab()
+        const parent = screen.getByRole('menuitem', { name: /Commands/ })
+
+        fireEvent.keyDown(parent, { key: 'ArrowRight' })
+
+        const nested = await screen.findByRole('menuitem', { name: 'Reload' })
+        expect(nested).toHaveFocus()
+        expect(parent).toHaveAttribute('aria-expanded', 'true')
+    })
+
+    it('runs a nested entry and closes every level', async () => {
+        const onReload = vi.fn()
+        const items: TableMenuItem[] = [
+            {
+                id: 'commands',
+                label: 'Commands',
+                children: [{ id: 'reload', label: 'Reload', onClick: onReload }]
+            }
+        ]
+        renderSlot(<ContextMenu menuItems={items} />)
+        await openKebab()
+        await userEvent.hover(screen.getByRole('menuitem', { name: /Commands/ }))
+
+        await userEvent.click(await screen.findByRole('menuitem', { name: 'Reload' }))
+
+        expect(onReload).toHaveBeenCalled()
+        await waitFor(() =>
+            expect(screen.queryByRole('menuitem', { name: /Commands/ })).not.toBeInTheDocument()
+        )
+    })
+
+    // A surface holding one menu per row pays a closure per row, not every label its list could show
+    it('builds a deferred list only when that list opens', async () => {
+        const build = vi.fn(() => [{ id: 'reload', label: 'Reload' }])
+        renderSlot(
+            <ContextMenu menuItems={[{ id: 'commands', label: 'Commands', children: build }]} />
+        )
+        expect(build).not.toHaveBeenCalled()
+
+        await openKebab()
+        expect(build).not.toHaveBeenCalled()
+
+        await userEvent.hover(screen.getByRole('menuitem', { name: /Commands/ }))
+        expect(await screen.findByRole('menuitem', { name: 'Reload' })).toBeInTheDocument()
+        expect(build).toHaveBeenCalledTimes(1)
+    })
+
+    /**
+     * A grid virtualises its rows, so scrolling the open row away unmounts the kebab without MUI
+     * ever calling `onClose` — and the table would go on painting a row whose menu is gone.
+     */
+    it('reports the close when it goes away while open', async () => {
+        const onOpenChange = vi.fn()
+        const { unmount } = renderSlot(
+            <ContextMenu menuItems={CASCADE} onOpenChange={onOpenChange} />
+        )
+        await openKebab()
+        expect(onOpenChange).toHaveBeenLastCalledWith(true)
+
+        unmount()
+
+        expect(onOpenChange).toHaveBeenLastCalledWith(false)
+    })
+
+    it('says nothing on unmount when nothing was open', () => {
+        const onOpenChange = vi.fn()
+        const { unmount } = renderSlot(
+            <ContextMenu menuItems={CASCADE} onOpenChange={onOpenChange} />
+        )
+
+        unmount()
+
+        expect(onOpenChange).not.toHaveBeenCalled()
     })
 })
 

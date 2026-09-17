@@ -18,6 +18,7 @@ import {
     anyFilterActive,
     cappedTrack,
     CrudTable,
+    DataGrid,
     defaultTableSlots,
     defaultTableTheme,
     flexTrack,
@@ -32,6 +33,7 @@ import {
 import type {
     ColumnDefinition,
     CrudTableProps,
+    DataGridProps,
     DataGridTheme,
     FilterValue,
     GridPresentation,
@@ -40,6 +42,8 @@ import type {
     RowDefinition,
     SortColumn,
     StatusCellProps,
+    TableContextMenuProps,
+    TableMenuItem,
     TableProviderProps,
     TableSlots,
     TableTheme
@@ -48,7 +52,40 @@ import type {
 type Device = RowDefinition<{ name: string; online: boolean }>
 
 const theme: TableTheme = defaultTableTheme
-const slots: Partial<TableSlots> = { ...defaultTableSlots }
+
+/**
+ * A row's entries: one act, one list stated as an array, one list deferred until it opens. The mark
+ * is a NODE rather than an element, and the act is invoked with no event — the same entry is shown
+ * outside a menu, where there is no pointer event to hand it.
+ */
+const rowMenu: TableMenuItem[] = [
+    {
+        id: 'rename',
+        label: 'Rename',
+        icon: <span aria-hidden>✎</span>,
+        onClick: () => undefined
+    },
+    {
+        id: 'commands',
+        label: 'Commands',
+        children: [{ id: 'reload', label: 'Reload', onClick: () => undefined }]
+    },
+    {
+        id: 'export',
+        label: 'Export',
+        children: (): TableMenuItem[] => [{ id: 'csv', label: 'As CSV' }]
+    }
+]
+const loneAction = (): void => rowMenu[0].onClick?.()
+
+/** A consumer's own kebab owes the table the report the row's paint is driven from. */
+const ContextMenu = ({ menuItems, label, onOpenChange }: TableContextMenuProps): JSX.Element => (
+    <button type='button' aria-label={label} onClick={() => onOpenChange?.(true)}>
+        {menuItems.length}
+    </button>
+)
+
+const slots: Partial<TableSlots> = { ...defaultTableSlots, ContextMenu }
 // The tone is a bare literal on purpose: `StatusTone` is library-private, and a consumer maps its
 // own statuses onto the four words without ever naming the union.
 const offline: StatusCellProps = { tone: 'danger', label: 'Offline' }
@@ -75,18 +112,34 @@ const columns: ColumnDefinition<Device>[] = [
             row.online ? <StatusCell tone='success' label='Online' /> : <StatusCell {...offline} />
     },
     rowActionsColumn<Device>({
-        items: (row) => [{ id: `rename:${row.id}`, name: 'rename', onClick: () => undefined }],
+        items: (row) => [
+            ...rowMenu,
+            { id: `rename:${row.id}`, name: 'rename', onClick: () => undefined }
+        ],
         label: (row) => `Actions for ${row.name}`
     })
 ]
 
+const rows: Device[] = [{ id: 'a', name: 'Lobby', online: true }]
+
 const tableProps: CrudTableProps<Device> = {
-    rows: [{ id: 'a', name: 'Lobby', online: true }],
+    rows,
     columns,
     columnVisibilityKey: 'probe.devices',
     sorting: { mode: 'local', opening: defaultSort },
     selection: { mode: 'allMatching', value: selection, onChange: () => undefined, query: filters },
-    totalLabel: (count) => `${count} devices`
+    totalLabel: (count) => `${count} devices`,
+    // the one record a panel beside the table is describing
+    activeRowId: 'a',
+    onRowPrimaryAction: () => loneAction()
+}
+
+/** The two paints a bare grid takes from its host: the active row, and the row whose menu is open. */
+const gridProps: DataGridProps<Device> = {
+    rows,
+    columns,
+    activeRowId: 'a',
+    menuRowId: 'a'
 }
 
 const runtime: Omit<TableProviderProps, 'children'> = {
@@ -112,6 +165,7 @@ export const Probe = (): JSX.Element => (
                 <LabelsProvider labels={{ clear: 'Clear' }}>
                     <GridVariables />
                     <CrudTable {...tableProps} />
+                    <DataGrid {...gridProps} />
                 </LabelsProvider>
             </TableProvider>
         </ThemeProvider>
