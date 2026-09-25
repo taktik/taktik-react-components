@@ -175,6 +175,9 @@ headings below are from the period when the version was set by hand.
 
 ### Added
 
+- **`CrudTablePaging` takes `rowsPerPageOptions`**, in `url` and `server` mode alike — the sizes
+  the footer's dropdown offers, which `DataGrid` already took but `CrudTable` never passed on: a
+  table holding a whole fleet could not offer a page of 500. Unsaid, the four defaults stay.
 - **`DataGridProps.activeRowId` / `CrudTableProps.activeRowId`** — the ONE row a consumer is showing
   elsewhere, painted as a picked row is and WITHOUT a selection column: a table that opens one
   record at a time has no set to tick. The row carries `aria-current="true"` beside the class

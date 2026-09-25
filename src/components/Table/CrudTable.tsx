@@ -53,6 +53,8 @@ export type CrudTablePaging =
           onPageChange: (page: number) => void
           pageSize: number
           onPageSizeChange: (pageSize: number) => void
+          /** The sizes the footer's dropdown offers, when the four it offers by default are not the table's */
+          rowsPerPageOptions?: number[]
       }
 
 /**
@@ -134,6 +136,8 @@ export interface CrudTablePagination {
      * to page 1 by itself: the rows under the old offset are not the rows the reader was on.
      */
     onPageSizeChange: (pageSize: number) => void
+    /** The sizes the footer's dropdown offers, when the four it offers by default are not the table's */
+    rowsPerPageOptions?: number[]
 }
 
 export interface CrudTableProps<R extends RowDefinition> {
@@ -572,6 +576,7 @@ export const CrudTable = <R extends RowDefinition>({
                             enabled: true,
                             labels: paginationLabels,
                             totalLabel,
+                            rowsPerPageOptions: paging.rowsPerPageOptions,
                             remotePagination: {
                                 currentPage: paging.currentPage,
                                 setCurrentPage: paging.onPageChange,
@@ -592,6 +597,8 @@ export const CrudTable = <R extends RowDefinition>({
                             defaultPageSize: GRID_PAGE_SIZE,
                             labels: paginationLabels,
                             totalLabel,
+                            rowsPerPageOptions:
+                                paging?.mode === 'url' ? paging.rowsPerPageOptions : undefined,
                             control:
                                 paging?.mode === 'url'
                                     ? {
