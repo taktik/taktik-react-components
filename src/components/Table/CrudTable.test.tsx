@@ -55,6 +55,7 @@ interface CapturedGridProps {
         enabled?: boolean
         defaultPageSize?: number
         totalLabel?: (count: number) => string
+        rowsPerPageOptions?: number[]
         remotePagination?: {
             currentPage: number
             setCurrentPage: (page: number) => void
@@ -148,6 +149,38 @@ describe('CrudTable', () => {
         })
         lastGrid.pagination?.remotePagination?.setPageSize(50)
         expect(onPageSizeChange).toHaveBeenCalledWith(50)
+    })
+
+    // A table holding a whole fleet may want a page the four default sizes do not offer
+    it('hands the rows-per-page options to the grid, url-paged and server-paged alike', () => {
+        renderTable({
+            paging: {
+                mode: 'url' as const,
+                page: 0,
+                onPageChange: vi.fn(),
+                pageSize: 50,
+                onPageSizeChange: vi.fn(),
+                rowsPerPageOptions: [10, 50, 500]
+            }
+        })
+        expect(lastGrid.pagination?.rowsPerPageOptions).toEqual([10, 50, 500])
+
+        renderTable({
+            paging: {
+                mode: 'server' as const,
+                total: 100,
+                pageSize: 20,
+                currentPage: 1,
+                onPageChange: vi.fn(),
+                onPageSizeChange: vi.fn(),
+                rowsPerPageOptions: [20, 200]
+            }
+        })
+        expect(lastGrid.pagination?.rowsPerPageOptions).toEqual([20, 200])
+
+        // unsaid, the grid keeps its own
+        renderTable()
+        expect(lastGrid.pagination?.rowsPerPageOptions).toBeUndefined()
     })
 
     it('paginates locally when the consumer gives no server pagination', () => {
