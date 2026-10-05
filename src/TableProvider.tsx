@@ -42,6 +42,17 @@ export interface TableRuntime {
      * neutral 300ms.
      */
     filterDebounceMs?: number
+    /**
+     * Tells the host that a table is refreshing the rows it already shows, and hands back the way
+     * to say it has finished.
+     *
+     * A host with one loading indicator of its own (a bar across the window) shows the wait there,
+     * so a table calls this when its refresh starts and calls the result when it ends, and draws no
+     * veil over its rows — which stay clickable meanwhile. Unset means each table veils its own rows
+     * while it refreshes. A table whose FIRST answer is on its way is not refreshing: it drafts
+     * placeholder rows either way. ⚠ Keep it stable: a new identity ends and restarts every report.
+     */
+    reportRefresh?: () => () => void
 }
 
 const TableRuntimeContext = createContext<TableRuntime>({})
@@ -69,11 +80,12 @@ export const TableProvider = ({
     remeasureEvent,
     registerSearchField,
     filterDebounceMs,
+    reportRefresh,
     children
 }: TableProviderProps): ReactNode => {
     const runtime = useMemo<TableRuntime>(
-        () => ({ remeasureEvent, registerSearchField, filterDebounceMs }),
-        [remeasureEvent, registerSearchField, filterDebounceMs]
+        () => ({ remeasureEvent, registerSearchField, filterDebounceMs, reportRefresh }),
+        [remeasureEvent, registerSearchField, filterDebounceMs, reportRefresh]
     )
     return (
         <LabelsProvider

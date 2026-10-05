@@ -147,6 +147,12 @@ One provider, mounted once above every table. Each input is optional, and each h
   library claims no key at all.
 - **`filterDebounceMs`** — how long until typing has settled. It is the application's interaction
   pause rather than a table's, so the consumer states it; the default is a neutral 300 ms.
+- **`reportRefresh`** — how a table's REFRESH joins the host's own loading indicator (a bar across
+  the window). A table calls it when it starts refreshing the rows it shows and calls the returned
+  function when it is done, and draws no veil over its rows — so they stay clickable while they
+  refresh. Unset, each table veils its own rows. A table whose first answer is still on its way
+  never reports: it drafts placeholder rows in its own columns (`surface.skeleton`) either way. Pass
+  a STABLE function (a module-level one, or memoised): a new identity ends and restarts every report.
 
 ```tsx
 <TableProvider
@@ -157,7 +163,8 @@ One provider, mounted once above every table. Each input is optional, and each h
     formatRelativeTime={(value) => formatDistanceToNow(new Date(value))}
     dateLocale={fr}
     registerSearchField={registerSlashTarget}
-    filterDebounceMs={300}>
+    filterDebounceMs={300}
+    reportRefresh={beginLoading}>
     <MyPage />
 </TableProvider>
 ```

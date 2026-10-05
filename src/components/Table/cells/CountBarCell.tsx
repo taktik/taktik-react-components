@@ -1,6 +1,6 @@
 import { JSX, ReactNode } from 'react'
-import Skeleton from '@mui/material/Skeleton'
 import styled from 'styled-components'
+import { Placeholder } from '../../DataGrid/Placeholder'
 import { useTableSlots } from '../../../slots'
 import { fontSizeSmall, fontSizeSmaller, tableFont } from '../../../theme/tableStyles'
 import { capacityPercent } from './capacity'
@@ -148,7 +148,7 @@ export const CountBarCell = ({
             <Line>
                 {label && <Label title={label}>{label}</Label>}
                 {loading ? (
-                    <Skeleton variant='text' width={48} />
+                    <Placeholder variant='text' width={48} />
                 ) : granted ? (
                     <Count $tone={tone} $color={color?.mark}>
                         {variant === 'share' ? used : `${used}/${total}`}
@@ -159,7 +159,7 @@ export const CountBarCell = ({
                 {suffix && <Suffix>{suffix}</Suffix>}
             </Line>
             {loading ? (
-                <Skeleton variant='rectangular' height={BAR_HEIGHT} />
+                <Placeholder variant='rectangular' height={BAR_HEIGHT} />
             ) : (
                 granted && (
                     <Track

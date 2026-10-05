@@ -70,6 +70,7 @@ export type { DataGridProps } from './components/DataGrid/DataGrid'
 export type { DataGridTheme } from './components/DataGrid/dataGridTheme'
 export type { DataGridExpandable } from './components/DataGrid/Expandable'
 export {
+    GRID_DRAFT_HEIGHT,
     GRID_HEADER_GROUND_VAR,
     GRID_HEADER_ROW_HEIGHT,
     GRID_PAGE_SIZE,

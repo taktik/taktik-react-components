@@ -81,9 +81,21 @@ headings below are from the period when the version was set by hand.
   never saw. ⚠ A consumer that types its labels object as the whole `Labels` — rather than as the
   `LabelOverrides` the provider accepts — must delete its own `chooseTime` line in the same change
   that moves the pin, or the object is an excess property and its build fails.
+- **`TableTheme.surface` takes a `skeleton` token**: the placeholder bars a table draws while its
+  first rows are on their way, and `CountBarCell`'s loading state. A consumer's theme adds the one
+  colour; it must read on the rows, a dialog's paper and a card alike.
 
 ### Changed
 
+- **A table whose first answer is on its way drafts it** instead of veiling an empty body: six
+  placeholder rows in the table's own columns, header, widths and frozen edges included, under
+  `aria-busy`, with the pager kept in the layout but not drawn. A placeholder row answers nothing —
+  no click, menu, selection, sort, per-row height, row key or consumer row or cell renderer is
+  handed one — and while it shows, the grid neither clamps its local page nor drops selected ids,
+  since neither the rows nor how many there are is known yet. The grid remounts once the rows
+  arrive, so their widths are measured afresh. A table that has answered once is never drafted
+  again: refetching an empty result, or the rows it already shows, is a refresh, veiled as before
+  unless the host takes the wait over through the new `TableProvider` `reportRefresh`.
 - **The shipped types are ONE rolled-up `dist/index.d.ts`**, with the types of every bundled
   dependency inlined into it. The per-file emit named `react-data-grid` and `date-fns` as bare
   imports across ten declaration files, and a registry install has neither: the package's own types
@@ -175,6 +187,11 @@ headings below are from the period when the version was set by hand.
 
 ### Added
 
+- **`TableProvider` takes `reportRefresh`** — see the README's `TableProvider` section. A host with a
+  loading indicator of its own hands it over, and its tables report their refreshes there instead of
+  veiling their rows.
+- **`GRID_DRAFT_HEIGHT`** — the height of the placeholder rows, beside `GRID_HEADER_ROW_HEIGHT`, for a
+  consumer that sizes its grids by hand and must make room for the draft.
 - **`CrudTablePaging` takes `rowsPerPageOptions`**, in `url` and `server` mode alike — the sizes
   the footer's dropdown offers, which `DataGrid` already took but `CrudTable` never passed on: a
   table holding a whole fleet could not offer a page of 500. Unsaid, the four defaults stay.

@@ -6,7 +6,8 @@ import React, {
     useEffect,
     useLayoutEffect,
     useMemo,
-    useRef
+    useRef,
+    useState
 } from 'react'
 import {
     CalculatedColumn,
@@ -34,6 +35,9 @@ import { useLocalFiltering } from './hooks/useLocalFiltering'
 import { Pagination, Props as PaginationProps } from './Pagination'
 import { PaginationControl, usePagination } from './hooks/usePagination'
 import { VisibilityContext, VisibilityProvider } from './VisibilityProvider'
+import { draftColumns, draftRowClass, draftRows } from './draft'
+import { DEFAULT_ROW_HEIGHT } from './rowRhythm'
+import { useTableRuntime } from '../../TableProvider'
 import {
     clickBelongsToRow,
     DataGridExpandable,
@@ -61,9 +65,6 @@ export {
     EXPANDER_COLUMN_KEY
 } from './Expandable'
 export type { DataGridExpandable } from './Expandable'
-
-/** The row rhythm every grid shares unless a consumer overrides it. */
-const DEFAULT_ROW_HEIGHT = 50
 
 /**
  * What the row answers to a mouse, for the whole row rather than one cell — a click opening the
@@ -179,6 +180,10 @@ export type DataGridProps<Row extends RowDefinition> = Omit<
     columns: ColumnDefinition<Row>[]
     rows: Row[]
     theme?: DataGridTheme
+    /**
+     * With no rows yet, the grid drafts placeholder rows in its own columns. With rows on screen, it
+     * keeps them and shows the refresh: over its rows, or through the host's `reportRefresh`.
+     */
     loading?: boolean
     selectedRows?: string[]
     onSelectedRowsChange?: (rows: string[]) => void
@@ -340,9 +345,34 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     onColumnResize,
     columnWidths,
     onColumnWidthsChange,
+    onCellMouseDown,
+    onCellDoubleClick,
+    onCellContextMenu,
+    onCellKeyDown,
+    onCellCopy,
+    onCellPaste,
+    onActivePositionChange,
+    onRowsChange,
+    onFill,
+    isRowSelectionDisabled,
+    rowKeyGetter,
     ...rest
 }: DataGridProps<R>): React.JSX.Element => {
     const { gridKey } = useContext(VisibilityContext)
+    const { reportRefresh } = useTableRuntime()
+
+    // Once a load has answered, an empty table is an answer: refetching it is a refresh, not a draft
+    const [answered, setAnswered] = useState(!loading)
+    if (!loading && !answered) {
+        setAnswered(true)
+    }
+    // The first answer is on its way: nothing about the rows is known yet, not even how many there are
+    const drafting = !!loading && !answered && rows.length === 0
+    const refreshing = !!loading && !drafting
+    useEffect(
+        () => (refreshing && reportRefresh ? reportRefresh() : undefined),
+        [refreshing, reportRefresh]
+    )
     const { pageSize, currentPage, setCurrentPage, setPageSize } = usePagination(
         pagination?.defaultPageSize,
         pagination?.control
@@ -388,13 +418,16 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
     // its measured widths BY KEY, so a reorder leaves every one of them right and needs no fresh
     // measurement — and an order-sensitive key would throw the grid away and rebuild it on each
     // step of a reorder (one per Alt+ArrowDown), losing the scroll position and every cell with it.
+    //
+    // A draft is a layout of its own too: its widths were measured against placeholder bars, so the
+    // rows that replace it are measured afresh.
     const columnsKey = useMemo(
         () =>
             finalColumns
                 .map((col) => col.key)
                 .sort()
-                .join('|'),
-        [finalColumns]
+                .join('|') + (drafting ? ':draft' : ''),
+        [finalColumns, drafting]
     )
 
     const filtersEnabled = useMemo(
@@ -433,14 +466,15 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
 
     // The row set can shrink under the current page (a filter narrows it, rows are deleted). Slicing
     // past the end would render an empty grid — and the consumer's "no results" message — while
-    // matches exist, so fall back to the last page that still holds rows.
+    // matches exist, so fall back to the last page that still holds rows. A draft has no last page
+    // yet: clamping there would send a table opened on page 3 back to page 1 before its rows arrive.
     const safePage = useMemo(() => {
-        if (!isLocalPagination) {
+        if (!isLocalPagination || drafting) {
             return currentPage
         }
         const lastPage = Math.max(0, Math.ceil(rowsFiltered.length / pageSize) - 1)
         return Math.min(currentPage, lastPage)
-    }, [isLocalPagination, currentPage, pageSize, rowsFiltered.length])
+    }, [isLocalPagination, drafting, currentPage, pageSize, rowsFiltered.length])
 
     useEffect(() => {
         if (safePage !== currentPage) {
@@ -464,8 +498,12 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
 
     const displayColumns = useMemo(
         () =>
-            expandable ? withDetailRendering(finalColumns, expandable.renderDetail) : finalColumns,
-        [expandable, finalColumns]
+            drafting
+                ? draftColumns(finalColumns)
+                : expandable
+                  ? withDetailRendering(finalColumns, expandable.renderDetail)
+                  : finalColumns,
+        [drafting, expandable, finalColumns]
     )
 
     const reportColumnResize = useCallback(
@@ -507,7 +545,11 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
      * factory, which is what changes when the column layout does, so the array is built once per
      * layout rather than once per row.
      */
-    const { renderRow: consumerRenderRow, ...consumerRenderers } = renderers ?? {}
+    const {
+        renderRow: consumerRenderRow,
+        renderCell: consumerRenderCell,
+        ...consumerRenderers
+    } = renderers ?? {}
     const viewportColumns = useRef<{
         iterate: unknown
         columns: readonly CalculatedColumn<R, unknown>[]
@@ -630,11 +672,12 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
      *
      * ⚠ Only when the grid holds EVERY row. Under server pagination `rows` is one page, so "not among
      * the rows" means "not on this page": a picker opened on thirty already-chosen devices would keep
-     * only those on page one and hand that back as the user's answer.
+     * only those on page one and hand that back as the user's answer. Nor while the grid drafts: its
+     * rows have not arrived, which says nothing about whether the selected ones still exist.
      */
     const holdsEveryRow = !pagination?.remotePagination
     useEffect(() => {
-        if (!holdsEveryRow) {
+        if (!holdsEveryRow || drafting) {
             return
         }
         const rowIds = new Set(rows.map((row) => row.id))
@@ -642,44 +685,74 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
         if (selectedRowsAvailable?.length !== selectedRows?.length) {
             onSelectedRowsChange?.(selectedRowsAvailable ?? [])
         }
-    }, [rows, selectedRows, holdsEveryRow, onSelectedRowsChange])
+    }, [rows, selectedRows, holdsEveryRow, drafting, onSelectedRowsChange])
 
     // Not truthiness: an empty message is one a consumer chose, and rendering it is still its wish.
     const hasEmptyMessage = noDataMessage !== undefined && noDataMessage !== null
 
+    // Everything below that is handed a row stays off while the grid drafts: a placeholder row has
+    // no fields to read and stands for no record to select, open or edit.
+    const rowHandlers = drafting
+        ? {}
+        : {
+              onCellMouseDown,
+              onCellDoubleClick,
+              onCellContextMenu,
+              onCellKeyDown,
+              onCellCopy,
+              onCellPaste,
+              onActivePositionChange,
+              onRowsChange,
+              onFill,
+              isRowSelectionDisabled
+          }
+    const rowsSelection = drafting
+        ? {}
+        : {
+              selectedRows: selectedRows ? new Set(selectedRows) : undefined,
+              onSelectedRowsChange: (value: ReadonlySet<unknown>) => {
+                  onSelectedRowsChange?.(Array.from(value) as string[])
+              }
+          }
+    // A height that is a function of the row cannot be asked of a placeholder; a fixed one is kept,
+    // so the draft has the table's own rhythm.
+    const draftRowHeight = typeof rowHeight === 'number' ? rowHeight : DEFAULT_ROW_HEIGHT
+
     return (
         <Container $pagination={!!pagination?.enabled}>
-            <div>
+            <div aria-busy={loading || undefined}>
                 <Grid
                     key={`${gridKey}:${columnsKey}`}
-                    selectedRows={selectedRows ? new Set(selectedRows) : undefined}
-                    onSelectedRowsChange={(value: ReadonlySet<unknown>) => {
-                        onSelectedRowsChange?.(Array.from(value) as string[])
-                    }}
-                    rowKeyGetter={(row: RowDefinition) => row.id}
-                    rows={rowsWithDetails}
+                    {...rowsSelection}
+                    rowKeyGetter={
+                        rowKeyGetter && !drafting ? rowKeyGetter : (row: RowDefinition) => row.id
+                    }
+                    rows={drafting ? draftRows<R>() : rowsWithDetails}
                     onSortColumnsChange={
                         isLocalSorting ? localSetSortedColumns : onSortColumnsChange
                     }
                     sortColumns={isLocalSorting ? localSortColumns : sortColumns}
                     columns={displayColumns}
-                    rowClass={computeRawClass}
+                    rowClass={drafting ? draftRowClass : computeRawClass}
                     headerRowHeight={filtersEnabled ? 70 : undefined}
-                    onCellClick={handleCellClick}
+                    onCellClick={drafting ? undefined : handleCellClick}
                     onColumnResize={onColumnResize ? reportColumnResize : undefined}
                     columnWidths={columnWidths}
                     onColumnWidthsChange={onColumnWidthsChange}
                     {...rest}
+                    {...rowHandlers}
                     // After the spread: a detail row's height is the feature's to decide, and a
                     // consumer's own rowHeight still applies to every ordinary row.
                     rowHeight={
-                        expandable
-                            ? detailAwareRowHeight(
-                                  rowHeight,
-                                  DEFAULT_ROW_HEIGHT,
-                                  expandable.detailHeight ?? DEFAULT_DETAIL_HEIGHT
-                              )
-                            : (rowHeight ?? DEFAULT_ROW_HEIGHT)
+                        drafting
+                            ? draftRowHeight
+                            : expandable
+                              ? detailAwareRowHeight(
+                                    rowHeight,
+                                    DEFAULT_ROW_HEIGHT,
+                                    expandable.detailHeight ?? DEFAULT_DETAIL_HEIGHT
+                                )
+                              : (rowHeight ?? DEFAULT_ROW_HEIGHT)
                     }
                     renderers={{
                         renderCheckbox,
@@ -691,7 +764,14 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                               }
                             : {}),
                         ...consumerRenderers,
-                        renderRow
+                        // the consumer's row and cell renderers read their row; a placeholder takes
+                        // rdg's own
+                        ...(drafting
+                            ? {}
+                            : {
+                                  renderRow,
+                                  ...(consumerRenderCell ? { renderCell: consumerRenderCell } : {})
+                              })
                     }}
                     style={gridTheme as React.CSSProperties}
                 />
@@ -699,7 +779,8 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
             {pagination?.enabled ? (
                 <Pagination
                     {...(pagination?.remotePagination ?? {
-                        currentPage: safePage,
+                        // a draft counts no rows, so it shows the first page rather than one past the end
+                        currentPage: drafting ? 0 : safePage,
                         setCurrentPage,
                         pageSize,
                         setPageSize,
@@ -711,9 +792,11 @@ const DataGridBase = <R extends RowDefinition = RowDefinition>({
                         pagination.rowsPerPageOptions ??
                         pagination.remotePagination?.rowsPerPageOptions
                     }
+                    // its counts would say "0 of 0" under rows that are on their way
+                    hidden={drafting}
                 />
             ) : null}
-            {loading ? (
+            {refreshing && !reportRefresh ? (
                 <ContainerLoading>
                     <LoadingScrim $color={loadingColor} />
                     <PulseLoader color={loadingColor} />

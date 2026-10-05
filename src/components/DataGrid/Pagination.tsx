@@ -25,9 +25,10 @@ const footerFace = css`
  * hand the pager the very tokens the left end reads; two classes deep, so they out-specify MUI's
  * own single-class styles whatever order the two stylesheets land in.
  */
-const Container = styled.div`
+const Container = styled.div<{ $hidden: boolean }>`
     height: ${({ theme }) => theme.table.footerHeight};
     width: 100%;
+    visibility: ${({ $hidden }) => ($hidden ? 'hidden' : 'visible')};
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -79,6 +80,8 @@ export type Props = {
      * paging in tens, or one opening a grid at one of `DEFAULT_PAGE_SIZES`, names its own.
      */
     rowsPerPageOptions?: number[]
+    /** Kept in the layout but not drawn — while the grid drafts, so the footer neither jumps nor counts. */
+    hidden?: boolean
 }
 
 /** What the footer offers when the consumer names nothing — MUI's own list, said out loud. */
@@ -91,7 +94,8 @@ export const Pagination = ({
     totalCount,
     labels,
     totalLabel,
-    rowsPerPageOptions = DEFAULT_ROWS_PER_PAGE_OPTIONS
+    rowsPerPageOptions = DEFAULT_ROWS_PER_PAGE_OPTIONS,
+    hidden = false
 }: Props): React.JSX.Element => {
     /**
      * ⚠ The setters ARE dependencies. A controlled consumer's own handler is part of them, so they
@@ -128,7 +132,7 @@ export const Pagination = ({
     )
 
     return (
-        <Container>
+        <Container $hidden={hidden}>
             {totalLabel ? <TotalLabel>{totalLabel(totalCount)}</TotalLabel> : null}
             <TablePagination
                 labelRowsPerPage={

@@ -41,6 +41,11 @@ export interface TableSurfaceTokens {
      * names here is the only thing saying "this is the row you are moving".
      */
     dragged: string
+    /**
+     * A placeholder bar, drawn where content is on its way. It must read on every ground one lands
+     * on — the rows (`row`), a dialog's paper, a card.
+     */
+    skeleton: string
     /** The column names in the header band, whose ground is whatever the grid's host stands on. */
     gridHeaderText: string
     /** Text on a row. */
@@ -208,6 +213,7 @@ export const defaultTableTheme: TableTheme = {
         rowHover: '#F5F5F5',
         rowSelected: '#E3F2FD',
         dragged: '#EEEEEE',
+        skeleton: '#EEEEEE',
         gridHeaderText: '#616161',
         text: '#212121',
         border: '#E0E0E0'

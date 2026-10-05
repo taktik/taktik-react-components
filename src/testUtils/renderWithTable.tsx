@@ -14,6 +14,8 @@ export interface RenderWithTableOptions extends Omit<RenderOptions, 'wrapper'> {
     remeasureEvent?: string
     /** Takes a filter bar's search field into the host's keyboard shortcut, as an application does. */
     registerSearchField?: (field: RefObject<HTMLInputElement | null>) => () => void
+    /** Takes a table's refreshes into the host's own loading indicator, as an application does. */
+    reportRefresh?: () => () => void
 }
 
 /**
@@ -28,6 +30,7 @@ export const renderWithTable = (
         slots,
         remeasureEvent,
         registerSearchField,
+        reportRefresh,
         ...options
     }: RenderWithTableOptions = {}
 ): RenderResult => {
@@ -36,7 +39,8 @@ export const renderWithTable = (
             <TableProvider
                 slots={slots}
                 remeasureEvent={remeasureEvent}
-                registerSearchField={registerSearchField}>
+                registerSearchField={registerSearchField}
+                reportRefresh={reportRefresh}>
                 {children}
             </TableProvider>
         </ThemeProvider>

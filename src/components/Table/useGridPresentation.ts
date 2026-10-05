@@ -5,6 +5,8 @@ import { useLabels, useTranslate } from '../../labels'
 import type { TableTheme } from '../../theme/tableTheme'
 import { defaultTheme, type DataGridTheme } from '../DataGrid/dataGridTheme'
 import { renderGridCheckbox } from '../DataGrid/GridCheckbox'
+import { DRAFT_ROW_COUNT } from '../DataGrid/draft'
+import { DEFAULT_ROW_HEIGHT } from '../DataGrid/rowRhythm'
 
 /**
  * What a HOST says the grid's header band stands on — its own ground, whatever that is.
@@ -87,8 +89,12 @@ export const GRID_PAGE_SIZE = 25
 
 /** The header row of every grid, exported for a consumer that sizes its grids by hand. */
 export const GRID_HEADER_ROW_HEIGHT = 40
-/** The row rhythm every grid keeps unless a table sizes its own rows. */
-const GRID_ROW_HEIGHT = 50
+/**
+ * The placeholder rows a grid drafts while its first rows are on their way, for a consumer that sizes
+ * its grids by hand. It is the shared rhythm's, which a table sizing its rows per row drafts at too;
+ * a table with a fixed `rowHeight` of its own drafts at that height instead.
+ */
+export const GRID_DRAFT_HEIGHT = DRAFT_ROW_COUNT * DEFAULT_ROW_HEIGHT
 
 /**
  * Tab LEAVES the grid, which is what the ARIA grid pattern asks of a table: one tab stop, arrow keys
@@ -134,7 +140,7 @@ export const useGridPresentation = (): GridPresentation => {
         () => ({
             theme: buildDataGridTheme(theme),
             headerRowHeight: GRID_HEADER_ROW_HEIGHT,
-            rowHeight: GRID_ROW_HEIGHT,
+            rowHeight: DEFAULT_ROW_HEIGHT,
             renderers: GRID_RENDERERS,
             onCellKeyDown: releaseTabFromGrid
         }),

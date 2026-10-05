@@ -27,6 +27,7 @@ const PUBLIC_VALUES = [
     'FROZEN_COLUMNS_WIDTH',
     'FilterBar',
     'FilterType',
+    'GRID_DRAFT_HEIGHT',
     'GRID_HEADER_GROUND_VAR',
     'GRID_HEADER_ROW_HEIGHT',
     'GRID_PAGE_SIZE',
