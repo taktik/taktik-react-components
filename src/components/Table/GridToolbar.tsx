@@ -91,6 +91,8 @@ export interface GridToolbarProps {
     suggestions?: ValueSuggestions
     /** What is being typed and where — the consumer's cue to read the values above. */
     onDraftChange?: (draft: FilterDraft) => void
+    /** A select chip's menu opened — the consumer's cue to read options it holds `optionsPending`. */
+    onOptionsWanted?: (key: string) => void
     /**
      * Whatever else this consumer owns — a settings popover, an inheritance indicator. Rendered
      * after the declared controls above and BEFORE the kebab, so the standard ones keep the same
@@ -123,6 +125,7 @@ export const GridToolbar = ({
     trailingMenu,
     suggestions,
     onDraftChange,
+    onOptionsWanted,
     children
 }: GridToolbarProps): JSX.Element => {
     const { Button, IconButton } = useTableSlots()
@@ -136,6 +139,7 @@ export const GridToolbar = ({
             onReset={filters.onReset}
             suggestions={suggestions}
             onDraftChange={onDraftChange}
+            onOptionsWanted={onOptionsWanted}
             trailing={
                 <>
                     {summary && <Summary>{summary}</Summary>}

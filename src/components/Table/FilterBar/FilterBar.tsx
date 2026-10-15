@@ -5,7 +5,17 @@ import FilterAltOffRoundedIcon from '@mui/icons-material/FilterAltOffRounded'
 import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded'
 import Menu from '@mui/material/Menu'
 import Paper from '@mui/material/Paper'
-import { JSX, KeyboardEvent, ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+    JSX,
+    KeyboardEvent,
+    ReactNode,
+    useEffect,
+    useEffectEvent,
+    useId,
+    useMemo,
+    useRef,
+    useState
+} from 'react'
 import styled from 'styled-components'
 import { useLabels, type Labels } from '../../../labels'
 import { useTableSlots } from '../../../slots'
@@ -119,6 +129,13 @@ export interface FilterDefinition {
     suggestField?: string | readonly string[]
     /** select kind: the options offered */
     options?: { value: string; label: string }[]
+    /**
+     * select kind: the options are not read yet. A consumer whose options cost a request reads them
+     * when the chip's menu opens (`onOptionsWanted`) rather than on every visit, and holds this
+     * meanwhile: the chip stays on offer, since it cannot know yet whether it has any, and its menu
+     * says the values are on their way.
+     */
+    optionsPending?: boolean
     /** range kind: 'number' (min/max) or 'date' (from/to date pickers) */
     rangeType?: 'number' | 'date'
     /** range(number) kind: unit suffix shown after the value (e.g. "min") */
@@ -195,6 +212,12 @@ export interface FilterBarProps {
      * `suggestable` chip; the consumer answers through `suggestions`.
      */
     onDraftChange?: (draft: FilterDraft) => void
+    /**
+     * A select chip's menu opened, so its options are wanted now — once per opening. A consumer
+     * whose options cost a request reads them on this cue and marks the chip `optionsPending` until
+     * they answer.
+     */
+    onOptionsWanted?: (key: string) => void
 }
 
 /**
@@ -572,7 +595,7 @@ type Suggestion =
  * same answer. A chip already ON the bar is never withdrawn: that would drop live filter state.
  */
 const isOfferable = (def: FilterDefinition): boolean =>
-    (def.kind ?? 'text') !== 'select' || (def.options?.length ?? 0) > 0
+    (def.kind ?? 'text') !== 'select' || !!def.optionsPending || (def.options?.length ?? 0) > 0
 
 // Five value rows plus the ranks below them, which is the "5-10 closest results" the list aims at.
 const MAX_SUGGESTIONS = 10
@@ -763,7 +786,8 @@ export const FilterBar = ({
     onReset,
     trailing,
     suggestions: valueSuggestions,
-    onDraftChange
+    onDraftChange,
+    onOptionsWanted
 }: FilterBarProps): JSX.Element => {
     const labels = useLabels()
     const { Button, IconButton, MenuItem } = useTableSlots()
@@ -926,6 +950,12 @@ export const FilterBar = ({
         setEditingAnchor(editingKey ? (chipRefs.current.get(editingKey) ?? null) : null)
         // a highlight belongs to ONE chip's list of values, never to the next chip's
         setChipHighlight(-1)
+    }, [editingKey, editingKind])
+
+    // the consumer's callback is read when a menu opens, never a reason to say it opened again
+    const reportOptionsWanted = useEffectEvent((key: string) => onOptionsWanted?.(key))
+    useEffect(() => {
+        if (editingKey && editingKind === 'select') reportOptionsWanted(editingKey)
     }, [editingKey, editingKind])
 
     const addFilter = (def: FilterDefinition): void => {
@@ -1283,6 +1313,13 @@ export const FilterBar = ({
                                 {option.label}
                             </MenuItem>
                         ))}
+                        {/* the bar's own word for values on their way, as its type-ahead says it */}
+                        {editingDef.optionsPending && (
+                            <MenuItem disabled>
+                                <CheckSlot />
+                                {labels.searching}
+                            </MenuItem>
+                        )}
                     </Menu>
                 )}
 

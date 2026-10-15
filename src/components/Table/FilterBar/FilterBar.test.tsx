@@ -49,7 +49,8 @@ const Host = ({
     pinned,
     resettable,
     suggestions,
-    onDraftChange
+    onDraftChange,
+    onOptionsWanted
 }: {
     initial?: Record<string, FilterValue | undefined>
     definitions?: FilterDefinition[]
@@ -58,6 +59,7 @@ const Host = ({
     resettable?: boolean
     suggestions?: ValueSuggestions
     onDraftChange?: (draft: FilterDraft) => void
+    onOptionsWanted?: (key: string) => void
 }): ReactNode => {
     const [values, setValues] = useState<Record<string, FilterValue | undefined>>(initial)
     return (
@@ -71,6 +73,7 @@ const Host = ({
                 onReset={resettable ? () => setValues({}) : undefined}
                 suggestions={suggestions}
                 onDraftChange={onDraftChange}
+                onOptionsWanted={onOptionsWanted}
             />
         </ThemeProvider>
     )
@@ -271,6 +274,41 @@ describe('FilterBar', () => {
 
         await user.click(screen.getByRole('button', { name: 'Add filter' }))
         expect(screen.getByRole('menuitem', { name: 'Zone' })).toBeInTheDocument()
+    })
+
+    // Options that cost a request are read when they are wanted, not on every visit
+    describe('options read on demand', () => {
+        const pendingZone: FilterDefinition[] = [
+            ...DEFINITIONS,
+            { key: 'zone', label: 'Zone', kind: 'select', options: [], optionsPending: true }
+        ]
+
+        it('offers a select whose options are not read yet, and says they are on their way', async () => {
+            const user = userEvent.setup()
+            render(<Host definitions={pendingZone} />)
+
+            await user.click(screen.getByRole('button', { name: 'Add filter' }))
+            await user.click(screen.getByRole('menuitem', { name: 'Zone' }))
+            expect(screen.getByRole('menuitem', { name: 'Searching…' })).toHaveAttribute(
+                'aria-disabled',
+                'true'
+            )
+        })
+
+        it("asks for a select's options once each time its menu opens, and for no other chip", async () => {
+            const user = userEvent.setup()
+            const wanted = vi.fn()
+            render(<Host definitions={pendingZone} onOptionsWanted={wanted} />)
+
+            await user.click(screen.getByRole('button', { name: 'Add filter' }))
+            await user.click(screen.getByRole('menuitem', { name: 'Name' }))
+            await user.keyboard('{Escape}')
+            expect(wanted).not.toHaveBeenCalled()
+
+            await user.click(screen.getByRole('button', { name: 'Add filter' }))
+            await user.click(screen.getByRole('menuitem', { name: 'Zone' }))
+            expect(wanted).toHaveBeenCalledExactlyOnceWith('zone')
+        })
     })
 
     // Withdrawing an offer is not withdrawing a filter: a chip on the bar keeps filtering even if

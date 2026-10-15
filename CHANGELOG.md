@@ -187,6 +187,12 @@ headings below are from the period when the version was set by hand.
 
 ### Added
 
+- **A select chip's options can be read on demand: `FilterDefinition.optionsPending` and
+  `FilterBar`/`GridToolbar`'s `onOptionsWanted`.** A consumer whose options cost a request reads
+  them when the chip's menu opens — `onOptionsWanted(key)` fires once per opening — instead of on
+  every visit, and marks the chip `optionsPending` until they answer. A pending chip stays on offer
+  (it cannot know yet whether it has any options) and its menu says the values are on their way,
+  in the type-ahead's own word (`labels.searching`). Nothing changes for a chip declaring neither.
 - **`TableProvider` takes `reportRefresh`** — see the README's `TableProvider` section. A host with a
   loading indicator of its own hands it over, and its tables report their refreshes there instead of
   veiling their rows.
